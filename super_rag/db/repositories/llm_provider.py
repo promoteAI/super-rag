@@ -731,9 +731,9 @@ class AsyncLlmProviderRepositoryMixin(AsyncRepositoryProtocol):
                 provider_conditions.append(LLMProvider.user_id == user_id)
 
             # Query models with tag from accessible providers
-            # Cast json to jsonb for @> operator support
-            from sqlalchemy import cast
-            from sqlalchemy.dialects.postgresql import JSONB
+            # Use JSON_CONTAINS for MySQL/OceanBase compatibility
+            import json
+            from sqlalchemy import func
 
             stmt = (
                 select(LLMProviderModel)
@@ -741,7 +741,7 @@ class AsyncLlmProviderRepositoryMixin(AsyncRepositoryProtocol):
                 .where(
                     LLMProvider.gmt_deleted.is_(None),
                     LLMProviderModel.gmt_deleted.is_(None),
-                    cast(LLMProviderModel.tags, JSONB).op("@>")(cast([tag], JSONB)),
+                    func.json_contains(LLMProviderModel.tags, json.dumps([tag])),
                 )
             )
 
@@ -821,9 +821,9 @@ class AsyncLlmProviderRepositoryMixin(AsyncRepositoryProtocol):
             provider_conditions.append(LLMProvider.user_id == user_id)
 
         # Query models with tag from accessible providers
-        # Cast json to jsonb for @> operator support
-        from sqlalchemy import cast
-        from sqlalchemy.dialects.postgresql import JSONB
+        # Use JSON_CONTAINS for MySQL/OceanBase compatibility
+        import json
+        from sqlalchemy import func
 
         stmt = (
             select(LLMProviderModel)
@@ -831,7 +831,7 @@ class AsyncLlmProviderRepositoryMixin(AsyncRepositoryProtocol):
             .where(
                 LLMProvider.gmt_deleted.is_(None),
                 LLMProviderModel.gmt_deleted.is_(None),
-                cast(LLMProviderModel.tags, JSONB).op("@>")(cast([tag], JSONB)),
+                func.json_contains(LLMProviderModel.tags, json.dumps([tag])),
             )
         )
 
