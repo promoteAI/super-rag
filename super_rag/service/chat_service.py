@@ -195,9 +195,16 @@ class ChatService:
         # Get chat history
         messages = await query_chat_messages(user, chat_id)
 
+        # Convert ChatMessage objects to dicts for Pydantic validation
+        # messages is list[list[ChatMessage]], need to convert each ChatMessage to dict
+        history = [
+            [msg.model_dump() if hasattr(msg, 'model_dump') else msg for msg in turn]
+            for turn in messages
+        ]
+
         # Build response object
         chat_obj = self.build_chat_response(chat)
-        return ChatDetails(**chat_obj.model_dump(), history=messages)
+        return ChatDetails(**chat_obj.model_dump(), history=history)
 
     async def update_chat(
         self, user: str, bot_id: str, chat_id: str, chat_in: view_models.ChatUpdate
@@ -238,15 +245,54 @@ class ChatService:
         return None
 
     def stream_frontend_sse_response(
-        self, generator: AsyncGenerator[Any, Any], formatter: FrontendFormatter, msg_id: str
+        self,
+        generator: AsyncGenerator[Any, Any],
+        formatter: FrontendFormatter,
+        msg_id: str,
+        history: MySQLChatMessageHistory = None,
+        chat_id: str = None,
     ):
         """Yield SSE events for FastAPI StreamingResponse."""
 
         async def event_stream():
+            full_content = ""
+            references = []
+            urls = []
+
             yield f"data: {json.dumps(formatter.format_stream_start(msg_id))}\n\n"
             async for chunk in generator:
+                # Handle special tokens for references and URLs
+                if chunk.startswith(DOC_QA_REFERENCES):
+                    try:
+                        references = json.loads(chunk[len(DOC_QA_REFERENCES) :])
+                        continue
+                    except Exception as e:
+                        logger.exception(f"Error parsing doc qa references: {chunk}, {e}")
+
+                if chunk.startswith(DOCUMENT_URLS):
+                    try:
+                        urls = eval(chunk[len(DOCUMENT_URLS) :])
+                        continue
+                    except Exception as e:
+                        logger.exception(f"Error parsing document urls: {chunk}, {e}")
+
                 yield f"data: {json.dumps(formatter.format_stream_content(msg_id, chunk))}\n\n"
-            yield f"data: {json.dumps(formatter.format_stream_end(msg_id))}\n\n"
+                full_content += chunk
+
+            yield f"data: {json.dumps(formatter.format_stream_end(msg_id, references=references, urls=urls))}\n\n"
+
+            # Save AI message to history after streaming completes
+            if history and chat_id:
+                try:
+                    await history.add_ai_message(
+                        content=full_content,
+                        chat_id=chat_id,
+                        message_id=msg_id,
+                        references=references,
+                        urls=urls,
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to save AI message to history: {e}")
 
         return event_stream()
 
@@ -339,14 +385,42 @@ class ChatService:
                         async_generator(),
                         formatter,
                         msg_id or str(uuid.uuid4()),
+                        history=history,
+                        chat_id=chat_id,
                     ),
                     media_type="text/event-stream",
                 )
             else:
                 # Collect all content for non-streaming response
                 full_content = ""
+                references = []
+                urls = []
                 async for chunk in async_generator():
+                    # Handle special tokens for references and URLs
+                    if chunk.startswith(DOC_QA_REFERENCES):
+                        try:
+                            references = json.loads(chunk[len(DOC_QA_REFERENCES) :])
+                            continue
+                        except Exception as e:
+                            logger.exception(f"Error parsing doc qa references: {chunk}, {e}")
+
+                    if chunk.startswith(DOCUMENT_URLS):
+                        try:
+                            urls = eval(chunk[len(DOCUMENT_URLS) :])
+                            continue
+                        except Exception as e:
+                            logger.exception(f"Error parsing document urls: {chunk}, {e}")
+
                     full_content += chunk
+
+                # Save AI message to history
+                await history.add_ai_message(
+                    content=full_content,
+                    chat_id=chat_id,
+                    message_id=msg_id or str(uuid.uuid4()),
+                    references=references,
+                    urls=urls,
+                )
                 return formatter.format_complete_response(msg_id or str(uuid.uuid4()), full_content)
 
         except Exception as e:
@@ -522,6 +596,15 @@ class ChatService:
                     memory_count = 0  # You might want to implement memory counting if needed
                     await websocket.send_text(references_response(message_id, references, memory_count, urls))
                     await websocket.send_text(stop_response(message_id))
+
+                    # Save AI message to history
+                    await history.add_ai_message(
+                        content=full_message,
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        references=references,
+                        urls=urls,
+                    )
 
                 except Exception as e:
                     logger.exception(f"Error processing WebSocket message: {e}")
