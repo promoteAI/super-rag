@@ -56,7 +56,7 @@ class CollectionConfig(BaseModel):
         True, description='Whether to enable vector index and fulltext index'
     )
     enable_knowledge_graph: Optional[bool] = Field(
-        True, description='Whether to enable knowledge graph index'
+        False, description='Whether to enable knowledge graph index'
     )
     enable_summary: Optional[bool] = Field(
         False, description='Whether to enable summary index'

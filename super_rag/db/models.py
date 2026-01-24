@@ -351,7 +351,7 @@ class ChatMessageTable(Base):
     id = Column(String(24), primary_key=True, default=lambda: "msg" + random_id())
     chat_id = Column(String(64), index=True, nullable=False)
     message_id = Column(String(128), nullable=True, index=True)
-    role = Column(String(32), nullable=False)  # e.g., "human", "ai"
+    role = Column(String(32), nullable=True)  # e.g., "human", "ai"
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False, index=True)
     raw_message = Column(Text, nullable=False)  # Store JSON string of message model here
     gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
