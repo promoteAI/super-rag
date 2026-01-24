@@ -284,7 +284,7 @@ class DocumentService:
                 if doc.id not in documents_dict:
                     documents_dict[doc.id] = doc
                     # Initialize index information for all types
-                    doc.indexes = {"VECTOR": None, "FULLTEXT": None, "GRAPH": None, "SUMMARY": None, "VISION": None}
+                    doc.indexes = {"VECTOR_AND_FULLTEXT": None, "GRAPH": None, "SUMMARY": None, "VISION": None}
 
                 # Add index information if exists
                 if row.index_type:
@@ -307,7 +307,7 @@ class DocumentService:
         """
         # Get all index information if available
         indexes = getattr(
-            document, "indexes", {"VECTOR": None, "FULLTEXT": None, "GRAPH": None, "SUMMARY": None, "VISION": None}
+            document, "indexes", {"VECTOR_AND_FULLTEXT": None, "GRAPH": None, "SUMMARY": None, "VISION": None}
         )
 
         # Parse summary from SUMMARY index's index_data
@@ -326,11 +326,8 @@ class DocumentService:
             name=document.name,
             status=document.status,
             # Vector index information
-            vector_index_status=indexes["VECTOR"]["status"] if indexes["VECTOR"] else "SKIPPED",
-            vector_index_updated=indexes["VECTOR"]["updated_at"] if indexes["VECTOR"] else None,
-            # Fulltext index information
-            fulltext_index_status=indexes["FULLTEXT"]["status"] if indexes["FULLTEXT"] else "SKIPPED",
-            fulltext_index_updated=indexes["FULLTEXT"]["updated_at"] if indexes["FULLTEXT"] else None,
+            vector_and_fulltext_index_status=indexes["VECTOR_AND_FULLTEXT"]["status"] if indexes["VECTOR_AND_FULLTEXT"] else "SKIPPED",
+            vector_and_fulltext_index_updated=indexes["VECTOR_AND_FULLTEXT"]["updated_at"] if indexes["VECTOR_AND_FULLTEXT"] else None,
             # Graph index information
             graph_index_status=indexes["GRAPH"]["status"] if indexes["GRAPH"] else "SKIPPED",
             graph_index_updated=indexes["GRAPH"]["updated_at"] if indexes["GRAPH"] else None,
@@ -525,7 +522,7 @@ class DocumentService:
                 # Attach index information to documents
                 for doc in documents:
                     # Initialize index information for all types
-                    doc.indexes = {"VECTOR": None, "FULLTEXT": None, "GRAPH": None, "SUMMARY": None, "VISION": None}
+                    doc.indexes = {"VECTOR_AND_FULLTEXT": None, "GRAPH": None, "SUMMARY": None, "VISION": None}
 
                     # Add actual index data if exists
                     if doc.id in indexes_by_doc:

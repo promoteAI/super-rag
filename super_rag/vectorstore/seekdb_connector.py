@@ -87,6 +87,14 @@ class SeekDBVectorStoreConnector:
     def delete_collection(self):
         self.client.delete_collection(self.collection_name)
 
+    def delete(self, **delete_kwargs: Any):
+        ids = delete_kwargs.get("ids")
+        collection=self.client.get_or_create_collection(self.collection_name)
+        if ids:
+            collection.delete(ids)
+        else:
+            raise ValueError("ids is required")
+
     def search(self, query: QueryWithEmbedding, **kwargs):
         score_threshold = kwargs.get("score_threshold", 0.1)
         filter_conditions = kwargs.get("filter")

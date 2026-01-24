@@ -579,18 +579,7 @@ class Document(BaseModel):
             'DELETED',
         ]
     ] = None
-    vector_index_status: Optional[
-        Literal[
-            'PENDING',
-            'CREATING',
-            'ACTIVE',
-            'DELETING',
-            'DELETION_IN_PROGRESS',
-            'FAILED',
-            'SKIPPED',
-        ]
-    ] = None
-    fulltext_index_status: Optional[
+    vector_and_fulltext_index_status: Optional[
         Literal[
             'PENDING',
             'CREATING',
@@ -634,11 +623,8 @@ class Document(BaseModel):
             'SKIPPED',
         ]
     ] = None
-    vector_index_updated: Optional[datetime] = Field(
+    vector_and_fulltext_index_updated: Optional[datetime] = Field(
         None, description='Vector index last updated time'
-    )
-    fulltext_index_updated: Optional[datetime] = Field(
-        None, description='Fulltext index last updated time'
     )
     graph_index_updated: Optional[datetime] = Field(
         None, description='Graph index last updated time'
