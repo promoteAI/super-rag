@@ -1,0 +1,186 @@
+
+
+import logging
+
+from super_rag.models import DocumentIndexType
+from super_rag.models import IndexTaskResult, LocalDocumentInfo, ParsedDocumentData
+from super_rag.tasks.utils import parse_document_content
+
+logger = logging.getLogger(__name__)
+
+
+class DocumentIndexTask:
+    """
+    Document index task orchestrator
+    """
+
+    def parse_document(self, document_id: str) -> ParsedDocumentData:
+        """
+        Parse document content
+
+        Args:
+            document_id: Document ID to parse
+
+        Returns:
+            ParsedDocumentData containing all parsed information
+        """
+        logger.info(f"Parsing document {document_id}")
+
+        from super_rag.tasks.utils import get_document_and_collection
+
+        document, collection = get_document_and_collection(document_id)
+        print(collection)
+        content, doc_parts, local_doc = parse_document_content(document, collection)
+
+        local_doc_info = LocalDocumentInfo(path=local_doc.path, is_temp=getattr(local_doc, "is_temp", False))
+
+        return ParsedDocumentData(
+            document_id=document_id,
+            collection_id=collection.id,
+            content=content,
+            doc_parts=doc_parts,
+            file_path=local_doc.path,
+            local_doc_info=local_doc_info,
+        )
+
+    def create_index(self, document_id: str, index_type: str, parsed_data: ParsedDocumentData) -> IndexTaskResult:
+        """
+        Create a single index for a document using parsed data
+
+        Args:
+            document_id: Document ID
+            index_type: Type of index to create
+            parsed_data: Parsed document data
+
+        Returns:
+            IndexTaskResult containing operation result
+        """
+        logger.info(f"Creating {index_type} index for document {document_id}")
+
+        # Get collection
+        from super_rag.tasks.utils import get_document_and_collection
+
+        _, collection = get_document_and_collection(document_id)
+
+        try:
+            if index_type == DocumentIndexType.VECTOR_AND_FULLTEXT.value:
+                from super_rag.index.vector_and_full_text_index import vector_and_full_text_indexer
+
+                result = vector_and_full_text_indexer.create_index(
+                    document_id=document_id,
+                    content=parsed_data.content,
+                    doc_parts=parsed_data.doc_parts,
+                    collection=collection,
+                    file_path=parsed_data.file_path,
+                )
+                if not result.success:
+                    raise Exception(result.error)
+                result_data = result.data or {"success": True}
+            else:
+                raise ValueError(f"Unknown index type: {index_type}")
+
+            return IndexTaskResult.success_result(
+                index_type=index_type,
+                document_id=document_id,
+                data=result_data,
+                message=f"Successfully created {index_type} index",
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to create {index_type} index: {str(e)}"
+            logger.error(f"Document {document_id}: {error_msg}")
+            return IndexTaskResult.failed_result(index_type=index_type, document_id=document_id, error=error_msg)
+
+    def delete_index(self, document_id: str, index_type: str) -> IndexTaskResult:
+        """
+        Delete a single index for a document
+
+        Args:
+            document_id: Document ID
+            index_type: Type of index to delete
+
+        Returns:
+            IndexTaskResult containing operation result
+        """
+        logger.info(f"Deleting {index_type} index for document {document_id}")
+
+        from super_rag.tasks.utils import get_document_and_collection
+
+        _, collection = get_document_and_collection(document_id, ignore_deleted=False)
+
+        try:
+            if index_type == DocumentIndexType.VECTOR_AND_FULLTEXT.value:
+                from super_rag.index.vector_and_full_text_index import vector_and_full_text_indexer
+
+                result = vector_and_full_text_indexer.delete_index(document_id, collection)
+                if not result.success:
+                    raise Exception(result.error)
+            else:
+                raise ValueError(f"Unknown index type: {index_type}")
+
+            return IndexTaskResult.success_result(
+                index_type=index_type, document_id=document_id, message=f"Successfully deleted {index_type} index"
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to delete {index_type} index: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            return IndexTaskResult.failed_result(index_type=index_type, document_id=document_id, error=error_msg)
+
+    def update_index(self, document_id: str, index_type: str, parsed_data: ParsedDocumentData) -> IndexTaskResult:
+        """
+        Update a single index for a document using parsed data
+
+        Args:
+            document_id: Document ID
+            index_type: Type of index to update
+            parsed_data: Parsed document data
+
+        Returns:
+            IndexTaskResult containing operation result
+        """
+        logger.info(f"Updating {index_type} index for document {document_id}")
+
+        # Get collection
+        from super_rag.tasks.utils import get_document_and_collection
+
+        _, collection = get_document_and_collection(document_id)
+
+        try:
+            if index_type == DocumentIndexType.VECTOR_AND_FULLTEXT.value:
+                from super_rag.index.vector_and_full_text_index import vector_and_full_text_indexer
+
+                result = vector_and_full_text_indexer.update_index(
+                    document_id=document_id,
+                    content=parsed_data.content,
+                    doc_parts=parsed_data.doc_parts,
+                    collection=collection,
+                    file_path=parsed_data.file_path,
+                )
+                if not result.success:
+                    raise Exception(result.error)
+                result_data = result.data or {"success": True}
+                
+            else:
+                raise ValueError(f"Unknown index type: {index_type}")
+
+            return IndexTaskResult.success_result(
+                index_type=index_type,
+                document_id=document_id,
+                data=result_data,
+                message=f"Successfully updated {index_type} index",
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to update {index_type} index: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            return IndexTaskResult.failed_result(index_type=index_type, document_id=document_id, error=error_msg)
+
+
+document_index_task = DocumentIndexTask()
+
+
+if __name__ == "__main__":
+    print(document_index_task.parse_document(
+        document_id="doc8266f81fe433b103"
+    ))

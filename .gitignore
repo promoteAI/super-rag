@@ -1,0 +1,69 @@
+# 编辑器和IDE相关文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编程语言相关
+## Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+.venv
+
+## Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+## Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+
+## 日志文件
+*.log
+
+# 构建和编译输出
+build/
+dist/
+out/
+*.compiled
+*.egg-info
+data/
+demo/
+*.db/
+*.objects/
+temp_workspace/
+
+# 个人配置文件
+*.local
+.local/
+
+# 安全相关
+*.pem
+*.key
+*.cert
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+volumes/
+
+demo/*
+references/*
+skills/*
+ 

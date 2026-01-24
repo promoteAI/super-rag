@@ -1,0 +1,1 @@
+alembic -c super_rag/alembic.ini upgrade head
