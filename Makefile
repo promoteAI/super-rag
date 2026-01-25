@@ -36,7 +36,7 @@ run-prod:
 	uvicorn super_rag.app:app --host 0.0.0.0 --log-config scripts/uvicorn-log-config.yaml
 
 run-dev:
-	uvicorn super_rag.app:app --reload --host 0.0.0.0 --log-config scripts/uvicorn-log-config.yaml
+	uvicorn super_rag.app:app --reload --reload-dir ./super_rag --host 0.0.0.0 --log-config scripts/uvicorn-log-config.yaml 
 
 run-ui:
 	bash ui/start.sh
