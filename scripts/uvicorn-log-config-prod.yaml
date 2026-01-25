@@ -1,0 +1,23 @@
+version: 1
+disable_existing_loggers: false
+formatters:
+  simple:
+    format: "%(asctime)s - %(levelname)s - %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+    level: INFO
+    stream: ext://sys.stdout
+loggers:
+  uvicorn:
+    level: INFO
+    handlers: [console]
+    propagate: false
+  LiteLLM:
+    level: INFO  # Set to INFO for production logs
+    handlers: [console]
+    propagate: false
+root:
+  level: INFO
+  handlers: [console]
