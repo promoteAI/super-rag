@@ -7,17 +7,17 @@ handlers:
   console:
     class: logging.StreamHandler
     formatter: simple
-    level: INFO
+    level: DEBUG
     stream: ext://sys.stdout
 loggers:
   uvicorn:
-    level: INFO
+    level: DEBUG
     handlers: [console]
     propagate: false
   LiteLLM:
-    level: WARNING  # Default level, can be overridden by env var
+    level: DEBUG  # Set to DEBUG for detailed logs
     handlers: [console]
     propagate: false
 root:
-  level: INFO
+  level: DEBUG
   handlers: [console]
