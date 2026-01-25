@@ -323,19 +323,6 @@ class ChatService:
         if not bot:
             return FrontendFormatter.format_error("Bot not found")
 
-        # Get or create chat session
-        chat = await self.db_ops.query_chat_by_peer(bot.user, db_models.ChatPeerType.FEISHU, chat_id)
-
-        if chat is None:
-            # Create chat with peer info atomically in single transaction
-            chat = await self.db_ops.create_chat(
-                user=bot.user,
-                bot_id=bot.id,
-                title="Feishu Chat",
-                peer_type=db_models.ChatPeerType.FEISHU,
-                peer_id=chat_id,
-            )
-
         # Use flow engine instead of MessageProcessor/pipeline
         formatter = FrontendFormatter()
 
