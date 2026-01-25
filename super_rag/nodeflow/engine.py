@@ -236,28 +236,42 @@ class NodeflowEngine:
 
     def _resolve_variable(self, expr: str, nodes_ctx: dict):
         """
-        Resolve variable path like 'nodes.start.output.query' from nodes_ctx.
+        Resolve variable path like 'nodes.start.output.query' or 'globals.query'.
         """
         parts = expr.strip().split(".")
         if not parts:
             return None
+
         if parts[0] == "nodes":
             if len(parts) < 4 or parts[2] != "output":
                 raise ValidationError(f"Invalid variable reference: ${{{{ {expr} }}}}")
             node_id = parts[1]
             field_path = parts[3:]
-            node_outputs = self.context.outputs.get(node_id, {})
-            value = node_outputs
-            for key in field_path:
-                if isinstance(value, dict) and key in value:
-                    value = value[key]
-                elif isinstance(value, object) and hasattr(value, key):
-                    value = getattr(value, key)
-                else:
-                    raise ValidationError(f"Cannot resolve variable: ${{{{ {expr} }}}}")
-            return value
-        else:
-            raise ValidationError(f"Unknown variable scope: ${{{{ {expr} }}}}")
+            value = self.context.outputs.get(node_id, {})
+            return self._resolve_path_value(value, field_path, expr)
+
+        if parts[0] in ("global", "globals"):
+            if len(parts) < 2:
+                raise ValidationError(f"Invalid global variable reference: ${{{{ {expr} }}}}")
+            field_path = parts[1:]
+            value = self.context.global_variables
+            return self._resolve_path_value(value, field_path, expr)
+
+        if parts[0] in self.context.global_variables:
+            value = self.context.global_variables
+            return self._resolve_path_value(value, parts, expr)
+
+        raise ValidationError(f"Unknown variable scope: ${{{{ {expr} }}}}")
+
+    def _resolve_path_value(self, value: Any, field_path: List[str], expr: str):
+        for key in field_path:
+            if isinstance(value, dict) and key in value:
+                value = value[key]
+            elif isinstance(value, object) and hasattr(value, key):
+                value = getattr(value, key)
+            else:
+                raise ValidationError(f"Cannot resolve variable: ${{{{ {expr} }}}}")
+        return value
 
     def resolve_expression(self, value, node_id=None, nodes_ctx=None):
         """
@@ -268,6 +282,7 @@ class NodeflowEngine:
         """
         if nodes_ctx is None:
             nodes_ctx = {nid: {"output": outputs} for nid, outputs in self.context.outputs.items()}
+        globals_ctx = self.context.global_variables or {}
         if isinstance(value, dict):
             return {k: self.resolve_expression(v, node_id, nodes_ctx) for k, v in value.items()}
         if isinstance(value, list):
@@ -285,7 +300,11 @@ class NodeflowEngine:
         # Otherwise, use jinja2 template rendering
         try:
             template = self.jinja_env.from_string(value)
-            rendered = template.render(nodes=nodes_ctx)
+            render_ctx = {"nodes": nodes_ctx, "globals": globals_ctx}
+            for key, val in globals_ctx.items():
+                if key not in render_ctx:
+                    render_ctx[key] = val
+            rendered = template.render(**render_ctx)
         except Exception as e:
             raise ValidationError(f"Jinja2 render error in node '{node_id}': {e}")
         return rendered
@@ -355,6 +374,7 @@ class NodeflowEngine:
         """
         raw_inputs = getattr(node, "input_values", {})
         resolved_inputs = self.resolve_expression(raw_inputs, node.id)
+        resolved_inputs = self._apply_global_overrides(resolved_inputs)
         input_model = runner_info["input_model"]
         try:
             user_input = input_model.model_validate(resolved_inputs)
@@ -362,6 +382,14 @@ class NodeflowEngine:
             raise ValidationError(f"Input validation error for node {node.id}: {e}")
         sys_input = SystemInput(**self.context.global_variables)
         return user_input, sys_input
+
+    def _apply_global_overrides(self, resolved_inputs: dict) -> dict:
+        if not self.context.global_variables:
+            return resolved_inputs
+        for key, value in self.context.global_variables.items():
+            if key in resolved_inputs:
+                resolved_inputs[key] = value
+        return resolved_inputs
 
     async def _execute_node(self, node: NodeInstance) -> None:
         """

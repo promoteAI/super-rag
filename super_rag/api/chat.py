@@ -71,11 +71,26 @@ async def feedback_message_view(
 
 @router.websocket("/bots/{bot_id}/chats/{chat_id}/connect")
 async def websocket_chat_endpoint(
-    websocket: WebSocket, bot_id: str, chat_id: str, user: User = Depends(default_user),
+    websocket: WebSocket,
+    bot_id: str,
+    chat_id: str,
+    user: User = Depends(default_user),
+    model_service_provider: str = None,
+    model_name: str = None,
+    custom_llm_provider: str = None,
 ):
-    """WebSocket endpoint for real-time chat with bots
-    """
-    await chat_service_global.handle_websocket_chat(websocket, user.id, bot_id, chat_id)
+    """WebSocket 端点，用于与机器人进行实时聊天"""
+    logger.info(f"WebSocket chat endpoint called with bot_id: {bot_id}, chat_id: {chat_id}, user: {user}")
+    logger.info(f"WebSocket chat endpoint called with model_service_provider: {model_service_provider}, model_name: {model_name}, custom_llm_provider: {custom_llm_provider}")
+    await chat_service_global.handle_websocket_chat(
+        websocket,
+        str(user.id),
+        bot_id,
+        chat_id,
+        model_service_provider,
+        model_name,
+        custom_llm_provider
+    )
 
 
 @router.post("/bots/{bot_id}/chats/{chat_id}/title")
@@ -118,9 +133,20 @@ async def frontend_chat_completions_view(request: Request, user: User = Depends(
     bot_id = query_params.get("bot_id", "")
     chat_id = query_params.get("chat_id", "")
     msg_id = request.headers.get("msg_id", "")
-
+    model_service_provider = query_params.get("model_service_provider", "")
+    model_name = query_params.get("model_name", "")
+    custom_llm_provider = query_params.get("custom_llm_provider", "")
     return await chat_service_global.frontend_chat_completions(
-        str(user.id), message, stream, bot_id, chat_id, msg_id, files
+        str(user.id), 
+        message, 
+        stream, 
+        bot_id, 
+        chat_id, 
+        msg_id, 
+        files,
+        model_service_provider,
+        model_name,
+        custom_llm_provider
     )
 
 
