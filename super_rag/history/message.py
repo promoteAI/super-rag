@@ -2,7 +2,7 @@ import time
 import uuid
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from super_rag.models import ChatMessage
 
@@ -37,6 +37,13 @@ class StoredChatMessage(BaseModel):
     # Message parts - this is now the core content
     parts: List[StoredChatMessagePart] = Field(default_factory=list, description="Message parts")
     files: List[Dict[str, Any]] = Field(default_factory=list, description="Associated document files")
+
+    @field_validator("files", mode="before")
+    @classmethod
+    def _coerce_files_list(cls, value: Any) -> List[Dict[str, Any]]:
+        if value is None:
+            return []
+        return value
 
     @property
     def chat_id(self) -> Optional[str]:
@@ -140,7 +147,7 @@ def create_user_message(
         metadata=metadata,
     )
 
-    return StoredChatMessage(parts=[part], files=files)
+    return StoredChatMessage(parts=[part], files=files or [])
 
 
 def create_assistant_message(
