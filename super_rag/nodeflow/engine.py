@@ -387,7 +387,7 @@ class NodeflowEngine:
         if not self.context.global_variables:
             return resolved_inputs
         for key, value in self.context.global_variables.items():
-            if key in resolved_inputs:
+            if key in resolved_inputs and value:
                 resolved_inputs[key] = value
         return resolved_inputs
 
