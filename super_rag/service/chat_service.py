@@ -305,9 +305,6 @@ class ChatService:
         chat_id: str,
         msg_id: str,
         upload_files: List[str] = None,
-        model_service_provider: str = None,
-        model_name: str = None,
-        custom_llm_provider: str = None,
     ) -> Any:
         """Frontend chat completions with special error handling for UI responses"""
 
@@ -345,9 +342,6 @@ class ChatService:
                 "user": user,
                 "message_id": msg_id or str(uuid.uuid4()),
                 "chat_id": chat_id,
-                "model_service_provider": model_service_provider,
-                "model_name": model_name,
-                "custom_llm_provider": custom_llm_provider
             }
 
             # Save user message to history with file metadata
@@ -472,9 +466,6 @@ class ChatService:
         user: str, 
         bot_id: str, 
         chat_id: str,
-        model_service_provider: str = None,
-        model_name: str = None,
-        custom_llm_provider: str = None,
     ):
         """Handle WebSocket chat connections and message streaming"""
 
@@ -546,9 +537,6 @@ class ChatService:
                         "message_id": message_id,
                         "history": history,
                         "chat_id": chat_id,
-                        "model_service_provider": model_service_provider,
-                        "model_name":model_name,
-                        "custom_llm_provider": custom_llm_provider
                     }
 
                     # Send start message

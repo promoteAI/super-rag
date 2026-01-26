@@ -73,16 +73,12 @@ async def websocket_chat_endpoint(
     bot_id: str,
     chat_id: str,
     user: User = Depends(default_user),
-    model_service_provider: str = None,
-    model_name: str = None,
-    custom_llm_provider: str = None,
 ):
     """
     WebSocket 端点，用于与机器人进行实时聊天。
     对协议头部和握手进行优化，提高兼容性和调试体验。
     """
     logger.info(f"WebSocket chat endpoint called with bot_id: {bot_id}, chat_id: {chat_id}, user: {user}")
-    logger.info(f"WebSocket chat endpoint called with model_service_provider: {model_service_provider}, model_name: {model_name}, custom_llm_provider: {custom_llm_provider}")
 
     # 自定义协议升级响应头部(兼容调试、扩展)
     await websocket.accept(
@@ -98,10 +94,7 @@ async def websocket_chat_endpoint(
         websocket,
         str(user.id),
         bot_id,
-        chat_id,
-        model_service_provider,
-        model_name,
-        custom_llm_provider
+        chat_id
     )
 
 
@@ -145,9 +138,6 @@ async def frontend_chat_completions_view(request: Request, user: User = Depends(
     bot_id = query_params.get("bot_id", "")
     chat_id = query_params.get("chat_id", "")
     msg_id = request.headers.get("msg_id", "")
-    model_service_provider = query_params.get("model_service_provider", "")
-    model_name = query_params.get("model_name", "")
-    custom_llm_provider = query_params.get("custom_llm_provider", "")
     return await chat_service_global.frontend_chat_completions(
         str(user.id), 
         message, 
@@ -156,9 +146,6 @@ async def frontend_chat_completions_view(request: Request, user: User = Depends(
         chat_id, 
         msg_id, 
         files,
-        model_service_provider,
-        model_name,
-        custom_llm_provider
     )
 
 
