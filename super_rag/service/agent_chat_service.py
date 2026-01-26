@@ -7,6 +7,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import WebSocket
+from starlette.websockets import WebSocketDisconnect
 from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -194,28 +195,36 @@ class AgentChatService:
                 # Convert SQLAlchemy models to Pydantic models
                 default_collections = await self._convert_db_collections_to_pydantic(db_collections)
 
-        while True:
-            # Receive message from WebSocket
-            data = await websocket.receive_text()
+        try:
+            while True:
+                # Receive message from WebSocket
+                data = await websocket.receive_text()
 
-            # Parse WebSocket message using Go-style error handling
-            agent_message, error_response = self._parse_websocket_message(data)
-            if error_response:
-                await websocket.send_text(json.dumps(error_response))
-                continue
+                # Parse WebSocket message using Go-style error handling
+                agent_message, error_response = self._parse_websocket_message(data)
+                if error_response:
+                    await websocket.send_text(json.dumps(error_response))
+                    continue
 
-            # Process each message in a new trace context
-            await self._handle_single_message(
-                websocket,
-                agent_message,
-                user,
-                bot,
-                chat_id,
-                bot_config=bot_config,
-                default_collections=default_collections,
-                custom_system_prompt=custom_system_prompt,
-                custom_query_prompt=custom_query_prompt,
-            )
+                # Process each message in a new trace context
+                await self._handle_single_message(
+                    websocket,
+                    agent_message,
+                    user,
+                    bot,
+                    chat_id,
+                    bot_config=bot_config,
+                    default_collections=default_collections,
+                    custom_system_prompt=custom_system_prompt,
+                    custom_query_prompt=custom_query_prompt,
+                )
+        except WebSocketDisconnect as e:
+            logger.info(f"WebSocket disconnected for agent chat {chat_id}: {e.code}")
+            return
+        except RuntimeError as e:
+            # Handle closed/abnormal socket states without surfacing as agent errors
+            logger.info(f"WebSocket runtime closed for agent chat {chat_id}: {e}")
+            return
 
     @trace_async_function("name=handle_single_websocket_message", new_trace=True)
     async def _handle_single_message(

@@ -477,7 +477,6 @@ class ChatService:
         custom_llm_provider: str = None,
     ):
         """Handle WebSocket chat connections and message streaming"""
-        await websocket.accept()
 
         try:
             # Get bot configuration first to determine bot type
