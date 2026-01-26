@@ -6,6 +6,7 @@ from super_rag.api.llm import router as llm_router
 from super_rag.api.bot import router as bot_router
 from super_rag.api.chat import router as chat_router
 from super_rag.api.web import router as web_router
+from super_rag.api.auth import router as auth_router
 
 # Create the main FastAPI app with combined lifespan
 app = FastAPI(
@@ -21,7 +22,7 @@ async def health_check():
     """Simple health check endpoint for container health monitoring"""
     return {"status": "healthy", "service": "super_rag-api"}
 
-
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(collections_router, prefix="/api/v1")  # Add collections router
 app.include_router(llm_router, prefix="/api/v1")  # Add llm router
 app.include_router(bot_router, prefix="/api/v1")

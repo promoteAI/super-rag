@@ -26,7 +26,9 @@ from super_rag.db.repositories.chat import (
 from super_rag.db.repositories.document_index import(
     AsyncDocumentIndexRepositoryMixin,
 )
-
+from super_rag.db.repositories.user import( 
+    AsyncUserRepositoryMixin,
+)
 logger = logging.getLogger(__name__)
 
 
@@ -49,6 +51,7 @@ class AsyncDatabaseOps(
     AsyncBotRepositoryMixin,
     AsyncChatRepositoryMixin,
     AsyncDocumentIndexRepositoryMixin,
+    AsyncUserRepositoryMixin
 ):
     pass
 

@@ -94,6 +94,10 @@ class Config(BaseSettings):
     cache_enabled: bool = Field(True, alias="CACHE_ENABLED")
     cache_ttl: int = Field(86400, alias="CACHE_TTL")
 
+    # JWT
+    jwt_secret: str = Field("your-super-secret-key-change-in-production", alias="JWT_SECRET")
+    jwt_lifetime_seconds: int = Field(86400, alias="JWT_LIFETIME_SECONDS")  # 24 hours
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
