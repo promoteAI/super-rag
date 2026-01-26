@@ -124,13 +124,22 @@ class AgentChatService:
             message_data = safe_json_parse(raw_data, "websocket_message")
 
             # Step 2: Validate required query field early
-            query = message_data.get("query", "").strip()
+            query = (
+                message_data.get("query")
+                or message_data.get("data")
+                or message_data.get("message")
+                or ""
+            ).strip()
             if not query:
                 from super_rag.agent.exceptions import agent_config_invalid
 
                 error = agent_config_invalid("query", "Query is required and cannot be empty")
                 error_response = format_websocket_error(error, raw_data)
                 return None, error_response
+
+            # Normalize query field for downstream validation
+            if not message_data.get("query"):
+                message_data["query"] = query
 
             # Step 3: Parse and validate AgentMessage using Pydantic
             agent_message = view_models.AgentMessage(**message_data)
