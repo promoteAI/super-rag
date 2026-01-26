@@ -161,7 +161,7 @@ class AgentConfigurationError(AgentError):
     def __init__(
         self,
         config_key: str,
-        reason: str,
+        reason: str="",
         provided_value: Optional[Any] = None,
     ):
         details = {"config_key": config_key, "reason": reason}
