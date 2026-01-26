@@ -144,6 +144,7 @@ class AgentChatService:
 
             # Step 3: Parse and validate AgentMessage using Pydantic
             agent_message = view_models.AgentMessage(**message_data)
+            logger.info(f"Agent message: {agent_message}")
             return agent_message, None
 
         except (JSONParsingError, AgentConfigurationError) as e:

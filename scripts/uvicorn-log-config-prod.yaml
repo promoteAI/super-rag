@@ -15,7 +15,7 @@ loggers:
     handlers: [console]
     propagate: false
   LiteLLM:
-    level: INFO  # Set to INFO for production logs
+    level: WARNING  # Default level, can be overridden by env var
     handlers: [console]
     propagate: false
 root:
