@@ -2,7 +2,7 @@
 import json
 import logging
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, WebSocket
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, WebSocket, status
 
 from super_rag.db.models import User
 from super_rag.exceptions import BusinessException
@@ -66,9 +66,7 @@ async def feedback_message_view(
         str(user.id), chat_id, message_id, feedback.type, feedback.tag, feedback.message
     )
 
-
-# Note: websocket dependencies such as UserManager and get_user_manager are not handled by default_user and are left as is.
-
+# 优化 WebSocket 握手响应，确保接管和定制协议头部
 @router.websocket("/bots/{bot_id}/chats/{chat_id}/connect")
 async def websocket_chat_endpoint(
     websocket: WebSocket,
@@ -79,9 +77,23 @@ async def websocket_chat_endpoint(
     model_name: str = None,
     custom_llm_provider: str = None,
 ):
-    """WebSocket 端点，用于与机器人进行实时聊天"""
+    """
+    WebSocket 端点，用于与机器人进行实时聊天。
+    对协议头部和握手进行优化，提高兼容性和调试体验。
+    """
     logger.info(f"WebSocket chat endpoint called with bot_id: {bot_id}, chat_id: {chat_id}, user: {user}")
     logger.info(f"WebSocket chat endpoint called with model_service_provider: {model_service_provider}, model_name: {model_name}, custom_llm_provider: {custom_llm_provider}")
+
+    # 自定义协议升级响应头部(兼容调试、扩展)
+    await websocket.accept(
+        headers=[
+            (b"Sec-WebSocket-Extensions", b"permessage-deflate"),
+            (b"Server", b"uvicorn"),
+        ]
+    )
+    logger.debug("WebSocket handshake: 协议升级和扩展头部已设置。")
+
+    # 继续进入业务处理
     await chat_service_global.handle_websocket_chat(
         websocket,
         str(user.id),
