@@ -242,13 +242,6 @@ async def register_view(
     from sqlalchemy import select
 
     is_first_user = not await async_db_ops.query_first_user_exists()
-    need_invitation = settings.register_mode == "invitation" and not is_first_user
-    invitation = None
-    if need_invitation:
-        if not data.token:
-            raise HTTPException(status_code=400, detail="Invitation token is required")
-        if not data.email:
-            raise HTTPException(status_code=400, detail="Email is required when using invitation")
     # Check if user already exists
     result = await session.execute(select(User).where(User.username == data.username))
     if result.scalars().first():
@@ -265,7 +258,7 @@ async def register_view(
         "username": data.username,
         "email": data.email,
         "password": data.password,
-        "role": invitation.role if invitation else Role.ADMIN if is_first_user else Role.RO,
+        "role": Role.ADMIN if is_first_user else Role.RO,
         "is_active": True,
         "is_verified": True,
         "date_joined": utc_now(),
@@ -276,12 +269,6 @@ async def register_view(
     session.add(user)
     await session.commit()
     await session.refresh(user)
-
-    if invitation:
-        invitation.is_used = True
-        invitation.used_at = utc_now()
-        session.add(invitation)
-        await session.commit()
 
     # Note: User resources (quotas, API keys, default bot) are now initialized
     # in the on_after_register method which is called automatically by fastapi-users
