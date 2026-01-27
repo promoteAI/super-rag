@@ -19,7 +19,7 @@ help:
 	@echo "  fix-migration-version Fix duplicate entries in alembic_version table."
 	@echo "  run-prod       Run API server in production mode (with migrations)."
 	@echo "  run-dev        Run API server in development mode (with --reload, with migrations)."
-	@echo "  run-ui         Start the UI (bash ui/start.sh)."
+	@echo "  run-ui-dev     Start the UI in development mode (npm run dev)."
 	@echo "  run-ray        Run Ray scheduler (config/ray_schedule.py)."
 
 makemigration:
@@ -68,8 +68,8 @@ run-prod:
 run-dev:
 	uvicorn super_rag.app:app --reload --reload-dir ./super_rag --host 0.0.0.0 --log-config scripts/uvicorn-log-config-dev.yaml 
 
-run-ui:
-	bash ui/start.sh
+run-ui-dev:
+	cd super-rag-frontend/frontend && npm run dev
 
 run-ray:
 	uv run config/ray_schedule.py

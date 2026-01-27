@@ -432,6 +432,9 @@ class BotUpdate(BaseModel):
     id: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
+    type: Optional[Literal['knowledge', 'common', 'agent']] = Field(
+        None, description='The type of bot', examples=['knowledge']
+    )
     config: Optional[BotConfig] = None
 
 

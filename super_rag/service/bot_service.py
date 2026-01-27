@@ -129,6 +129,8 @@ class BotService:
                 bot_to_update.title = bot_in.title
             if bot_in.description is not None:
                 bot_to_update.description = bot_in.description
+            if bot_in.type is not None:
+                bot_to_update.type = bot_in.type
             if new_config_str is not None:
                 bot_to_update.config = new_config_str
             session.add(bot_to_update)
