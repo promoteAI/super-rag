@@ -39,17 +39,49 @@ class FlowService:
             return self._convert_to_serializable(obj.__dict__)
         return obj
 
+    async def run_workflow_once(
+        self,
+        user: str,
+        data: view_models.WorkflowRunRequest,
+    ) -> view_models.WorkflowRunResponse:
+        """
+        直接使用 WorkflowDefinition 运行一次工作流（不做持久化），返回节点输出。
+
+        - 用于前端 Workflow Editor 的「运行」按钮；
+        - 输入会被放入 ExecutionContext.global_variables，并参与表达式解析。
+        """
+        # 将 Pydantic WorkflowDefinition 转成 dict，再交给 nodeflowParser 解析为 NodeflowInstance
+        workflow_dict = data.workflow.model_dump(by_alias=True, exclude_none=True)
+        flow = nodeflowParser.parse(workflow_dict)
+
+        engine = NodeflowEngine()
+
+        # initial_data 里至少带上 user，方便节点侧取用
+        initial_data = {"user": user}
+        if data.input:
+            initial_data.update(data.input)
+
+        outputs, system_outputs = await engine.execute_nodeflow(flow, initial_data)
+
+        # 转成可 JSON 序列化形式再返回
+        return view_models.WorkflowRunResponse(
+            outputs=self._convert_to_serializable(outputs),
+            system_outputs=self._convert_to_serializable(system_outputs),
+        )
+
     async def stream_flow_events(self, flow_generator, flow_task, engine, flow):
         # event stream
         async for event in flow_generator:
             serializable_event = self._convert_to_serializable(event)
             yield f"data: {json.dumps(serializable_event)}\n\n"
             event_type = event.get("event_type")
-            if event_type == "flow_end":
+            # Align with NodeflowEngine event types: nodeflow_start / nodeflow_end / nodeflow_error
+            if event_type == "nodeflow_end":
                 break
-            if event_type == "flow_error":
+            if event_type == "nodeflow_error":
                 return
 
+        # Flow execution finished, now stream LLM chunks from the end node (if any)
         _, system_outputs = await flow_task
         node_id = ""
         nodes = engine.find_end_nodes(flow)
@@ -88,7 +120,8 @@ class FlowService:
         flow = nodeflowParser.parse(flow_config)
         engine = NodeflowEngine()
         initial_data = {"query": debug.query, "user": user}
-        task = asyncio.create_task(engine.execute_flow(flow, initial_data))
+        # Use NodeflowEngine.execute_nodeflow which is the canonical execution entrypoint
+        task = asyncio.create_task(engine.execute_nodeflow(flow, initial_data))
 
         return StreamingResponse(
             self.stream_flow_events(engine.get_events(), task, engine, flow),

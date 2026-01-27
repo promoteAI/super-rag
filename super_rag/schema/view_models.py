@@ -369,6 +369,32 @@ class WorkflowDefinition(BaseModel):
     style: Optional[WorkflowStyle] = None
 
 
+class WorkflowRunRequest(BaseModel):
+    """
+    一次性运行一个工作流定义的请求
+    """
+
+    workflow: WorkflowDefinition = Field(..., description='Workflow 定义')
+    input: Optional[dict[str, Any]] = Field(
+        None,
+        description='工作流全局输入，会作为 ExecutionContext.global_variables 传入',
+    )
+
+
+class WorkflowRunResponse(BaseModel):
+    """
+    一次性运行工作流的执行结果
+    """
+
+    outputs: dict[str, Any] = Field(
+        ..., description='每个节点的输出，键为 node_id，值为该节点输出对象的可序列化形式'
+    )
+    system_outputs: Optional[dict[str, Any]] = Field(
+        None,
+        description='系统输出（如流式生成器元信息等），键为 node_id',
+    )
+
+
 class Agent(BaseModel):
     completion: Optional[ModelSpec] = None
     system_prompt_template: Optional[str] = None
