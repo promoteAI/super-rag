@@ -1,4 +1,4 @@
-from super_rag.db.models import User
-# 默认User依赖，id固定为123
+from super_rag.db.models import User, Role
+# 默认User依赖
 def default_user():
-    return User(id="public")
+    return User(id="public", username="public", email="public@public.com", role=Role.ADMIN)
