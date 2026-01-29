@@ -337,35 +337,97 @@ class WorkflowStyle(BaseModel):
     layoutDirection: Optional[Literal['TB', 'LR']] = None
 
 
+# ----- 工作流图格式（与 rag_flow3.json / nodeflow parser 对齐） -----
+
+
+class WorkflowGraphNode(BaseModel):
+    """
+    工作流图中的节点。id、type、data（扁平配置），可选 ui_properties（画布位置等）。
+    """
+
+    model_config = ConfigDict(extra='allow')
+
+    id: str = Field(..., description='节点唯一 ID', examples=['start', 'vector_search_3f8e2c1a'])
+    type: str = Field(..., description='节点类型（与 NODE_RUNNER_REGISTRY 一致）', examples=['start', 'vector_search'])
+    data: Optional[dict[str, Any]] = Field(
+        default_factory=dict,
+        description='节点扁平配置（如 top_k、prompt_template、name、value 等）',
+    )
+    ui_properties: Optional[dict[str, Any]] = Field(
+        None,
+        description='画布展示（position、width、height 等）',
+    )
+
+
+class WorkflowGraphEdge(BaseModel):
+    """
+    工作流图中的边。支持端口级连接：sourceHandle / targetHandle。
+    """
+
+    model_config = ConfigDict(extra='allow', populate_by_name=True)
+
+    id: Optional[str] = Field(None, description='边唯一 ID')
+    source: str = Field(..., description='源节点 ID', examples=['start'])
+    sourceHandle: Optional[str] = Field(
+        None,
+        alias='sourceHandle',
+        description='源节点输出端口名（如 output、query、docs）',
+        examples=['query', 'docs'],
+    )
+    target: str = Field(..., description='目标节点 ID', examples=['vector_search_3f8e2c1a'])
+    targetHandle: Optional[str] = Field(
+        None,
+        alias='targetHandle',
+        description='目标节点输入端口名',
+        examples=['query', 'vector_search_docs', 'docs'],
+    )
+    ui_properties: Optional[dict[str, Any]] = Field(None, description='边 UI 属性（如 className）')
+
+
+class WorkflowGraph(BaseModel):
+    """工作流图：nodes + edges（仅支持此格式解析与执行）。"""
+
+    nodes: list[WorkflowGraphNode] = Field(..., description='节点列表')
+    edges: list[WorkflowGraphEdge] = Field(..., description='边列表（端口级）')
+
+
 class WorkflowDefinition(BaseModel):
+    """
+    工作流定义。仅支持 graph 格式（graph.nodes / graph.edges），
+    与 nodeflow parser 及 rag_flow3.json 结构一致。
+    """
+
+    id: Optional[str] = Field(
+        None,
+        description='工作流唯一 ID',
+        examples=['rag-flow-v1'],
+    )
     name: str = Field(
         ...,
-        description='Machine-readable identifier for the workflow',
+        description='工作流名称（机器可读）',
         examples=['rag_flow'],
     )
-    title: str = Field(
-        ...,
-        description='Human-readable title of the workflow',
+    title: Optional[str] = Field(
+        None,
+        description='展示标题',
         examples=['RAG Knowledge Base Flow'],
     )
     description: Optional[str] = Field(
         None,
-        description='Detailed description of the workflow',
-        examples=['A typical RAG flow with parallel retrieval and reranking'],
+        description='工作流描述',
     )
-    version: str = Field(
-        ..., description='Version number of the workflow definition', examples=['1.0.0']
+    version: Optional[str] = Field(None, description='版本号', examples=['1.0.0'])
+    tags: Optional[list[str]] = Field(None, description='标签', examples=[['rag', 'query', 'retrieval']])
+    graph: WorkflowGraph = Field(..., description='图结构（nodes + edges），nodeflow 仅解析此格式')
+    input_schema: Optional[dict[str, Any]] = Field(
+        None,
+        description='工作流入参 JSON Schema（properties、required 等）',
+    )
+    output_schema: Optional[dict[str, Any]] = Field(
+        None,
+        description='工作流出参 JSON Schema',
     )
     execution: Optional[ExecutionConfig] = None
-    schema_: Optional[dict[str, SchemaDefinition]] = Field(
-        None,
-        alias='schema',
-        description='Custom schema definitions used across the workflow',
-    )
-    nodes: list[Node] = Field(..., description='List of nodes in the workflow')
-    edges: list[Edge] = Field(
-        ..., description='List of edges connecting nodes in the workflow'
-    )
     style: Optional[WorkflowStyle] = None
 
 

@@ -267,6 +267,12 @@ class NodeflowEngine:
         for key in field_path:
             if isinstance(value, dict) and key in value:
                 value = value[key]
+            elif key == "output" and (not isinstance(value, dict) or key not in value):
+                # 单端口输出：无 "output" 键或非 dict 时，整段视为 output 端口值
+                if isinstance(value, dict):
+                    value = value
+                else:
+                    value = getattr(value, key, value)
             elif isinstance(value, object) and hasattr(value, key):
                 value = getattr(value, key)
             else:

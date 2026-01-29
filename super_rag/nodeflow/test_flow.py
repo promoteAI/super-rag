@@ -11,7 +11,7 @@ async def test_rag_flow():
     """Test the RAG flow execution"""
     # Get current directory
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    yaml_path = os.path.join(current_dir, "examples", "rag_flow3.yaml")
+    yaml_path = os.path.join(current_dir, "examples", "rag_flow3.json")
 
     import yaml
 

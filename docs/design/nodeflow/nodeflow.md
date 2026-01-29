@@ -268,3 +268,53 @@
   - 先用 React Flow 打通一个最小 demo（简单 ingest + query 流）。
   - 然后逐步增加节点类型、模板、数据预览等高级功能。
 
+---
+
+### 8. 参考 JSON 格式与解析（易用性对齐）
+
+为与前端/画布及 nodetool 类 workflow JSON 对齐，nodeflow 支持**参考 JSON 结构**，便于导入导出与 API 一致。
+
+#### 8.1 顶层结构
+
+- **工作流元数据**：`id`、`name`、`description`、`tags`、`input_schema`、`output_schema`。
+- **图**：`graph.nodes`、`graph.edges`（端口级连接）。
+
+```json
+{
+  "id": "workflow-id",
+  "name": "Summarize Paper",
+  "description": "...",
+  "tags": ["audio", "example"],
+  "graph": {
+    "nodes": [...],
+    "edges": [...]
+  },
+  "input_schema": { "type": "object", "properties": { "url": { "type": "string" } }, "required": ["url"] },
+  "output_schema": { "type": "object", "properties": {} }
+}
+```
+
+#### 8.2 节点（graph.nodes）
+
+- `id`、`type`、`data`（扁平配置：`value`、`name`、`start_page`、`end_page`、`prompt`、`model` 等）。
+- 可选 `ui_properties`（画布位置、宽高等）。
+
+#### 8.3 边（graph.edges）
+
+- `source`、`target`、`sourceHandle`（默认 `"output"`）、`targetHandle`（目标输入端口名）。
+- 解析时自动将「目标节点的 `targetHandle`」绑定为 `{{ nodes.<source>.output.<sourceHandle> }}`。
+
+#### 8.4 工作流入参
+
+- `input_schema` 定义工作流级入参（如 `url`）。
+- 若某节点 `data.name` 与 `input_schema.properties` 的 key 一致，该节点的 `value` 端口会绑定为 `{{ globals.<key> }}`，运行时由 `initial_data` 覆盖。
+
+#### 8.5 解析与兼容
+
+- **Parser**：`nodeflowParser.parse(data)` 自动识别格式：
+  - 存在 `graph` → 按参考格式解析（边驱动 input_values、data 补默认值、input_schema 映射）。
+  - 否则 → 按原有 YAML 格式解析（顶层 `nodes`/`edges`，`node.data.input.values`）。
+- **Engine**：执行时 `initial_data` 写入 `global_variables`，端口引用 `nodes.X.output.Y` 与 `globals.Z` 行为不变；单端口输出时 `output` 键可省略（整段输出视为 output 端口）。
+
+示例见 `super_rag/nodeflow/examples/new_flow_structure.json`。
+

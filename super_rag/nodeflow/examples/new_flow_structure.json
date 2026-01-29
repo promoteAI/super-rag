@@ -1,0 +1,91 @@
+{
+  "id": "summarize-paper-v1",
+  "name": "Summarize Paper",
+  "description": "PDF URL -> 下载 -> 提取文本 -> 摘要 -> 预览",
+  "tags": ["audio", "start", "example"],
+  "graph": {
+    "edges": [
+      {
+        "id": "158a300a-f102-4a3d-b0e3-37dbf337c543",
+        "source": "5",
+        "sourceHandle": "output",
+        "target": "4",
+        "targetHandle": "pdf",
+        "ui_properties": { "className": "document" }
+      },
+      {
+        "id": "76c75f5a-4183-464f-a0d9-91258c1976ae",
+        "source": "4",
+        "sourceHandle": "output",
+        "target": "6",
+        "targetHandle": "text",
+        "ui_properties": { "className": "str" }
+      },
+      {
+        "id": "10ea911a-0741-49bd-90c2-b2f6298bc041",
+        "source": "f78b004b-a8fa-469e-9112-774c22fd81f5",
+        "sourceHandle": "output",
+        "target": "5",
+        "targetHandle": "url",
+        "ui_properties": { "className": "str" }
+      },
+      {
+        "id": "eb9ddb2a-0c46-438b-835b-47d7e37cfdd8",
+        "source": "6",
+        "sourceHandle": "chunk",
+        "target": "2",
+        "targetHandle": "value",
+        "ui_properties": { "className": "chunk" }
+      }
+    ],
+    "nodes": [
+      {
+        "id": "2",
+        "type": "nodetool.workflows.base_node.Preview",
+        "data": { "name": "audio_output_2025-01-12" },
+        "ui_properties": { "position": { "x": 1455, "y": 226 }, "width": 280, "height": 619 }
+      },
+      {
+        "id": "4",
+        "type": "lib.pymupdf.ExtractText",
+        "data": { "start_page": 0, "end_page": 4 },
+        "ui_properties": { "position": { "x": 661, "y": 107 }, "width": 280 }
+      },
+      {
+        "id": "5",
+        "type": "lib.http.GetRequestDocument",
+        "data": { "headers": null, "auth": null },
+        "ui_properties": { "position": { "x": 351, "y": 144 }, "width": 280 }
+      },
+      {
+        "id": "6",
+        "type": "nodetool.agents.Summarizer",
+        "data": {
+          "model": { "type": "language_model", "id": "fake-fast-model", "provider": "fake", "name": "Fake Fast Model" },
+          "prompt": "Create a summary following these rules:\n• Focus ONLY on the key information...",
+          "num_predict": 256,
+          "context_window": 4096,
+          "temperature": 0,
+          "top_k": 50,
+          "top_p": 0.95,
+          "keep_alive": 300
+        },
+        "ui_properties": { "position": { "x": 971, "y": 77 }, "width": 280 }
+      },
+      {
+        "id": "f78b004b-a8fa-469e-9112-774c22fd81f5",
+        "type": "nodetool.input.StringInput",
+        "data": { "value": "https://arxiv.org/pdf/1706.03762", "name": "url", "description": "" },
+        "ui_properties": { "position": { "x": 41, "y": 95 }, "width": 280 }
+      }
+    ]
+  },
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "url": { "type": "string", "default": "https://arxiv.org/pdf/1706.03762", "label": "" }
+    },
+    "required": ["url"]
+  },
+  "output_schema": { "type": "object", "properties": {}, "required": [] }
+}

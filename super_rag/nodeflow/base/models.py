@@ -19,6 +19,8 @@ class NodeInstance:
     input_values: dict = field(default_factory=dict)
     output_schema: dict = field(default_factory=dict)
     title: Optional[str] = None
+    # 节点原始配置（与参考 JSON 的 data 对齐：start_page, model, prompt 等）
+    data: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -27,6 +29,11 @@ class Edge:
 
     source: str
     target: str
+    # 端口级连接：source 的哪个输出 -> target 的哪个输入（便于与前端 graph 对齐）
+    source_handle: Optional[str] = None  # 默认 "output"
+    target_handle: Optional[str] = None  # 目标节点的输入端口名
+    edge_id: Optional[str] = None
+    ui_properties: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -37,6 +44,12 @@ class NodeflowInstance:
     title: str
     nodes: Dict[str, NodeInstance]
     edges: List[Edge]
+    # 工作流级元数据（与参考 JSON 对齐，便于 API/前端）
+    workflow_id: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    input_schema: Optional[Dict[str, Any]] = None  # JSON Schema，工作流入参
+    output_schema: Optional[Dict[str, Any]] = None  # JSON Schema，工作流出参
 
     def validate(self) -> None:
         """Validate the nodeflow configuration"""
