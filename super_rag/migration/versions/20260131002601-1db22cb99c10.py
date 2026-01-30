@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -20,41 +21,75 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.rename_table("bot", "agent")
-    op.drop_index("ix_bot_user", table_name="agent")
-    op.drop_index("ix_bot_status", table_name="agent")
-    op.drop_index("ix_bot_gmt_deleted", table_name="agent")
-    op.create_index("ix_agent_user", "agent", ["user"], unique=False)
-    op.create_index("ix_agent_status", "agent", ["status"], unique=False)
-    op.create_index("ix_agent_gmt_deleted", "agent", ["gmt_deleted"], unique=False)
+    bind = op.get_bind()
+    inspector = inspect(bind)
 
-    op.drop_constraint("uq_chat_bot_peer_deleted", "chat", type_="unique")
-    op.drop_index("ix_chat_bot_id", table_name="chat")
-    op.alter_column("chat", "bot_id", new_column_name="agent_id")
-    op.create_index("ix_chat_agent_id", "chat", ["agent_id"], unique=False)
-    op.create_unique_constraint(
-        "uq_chat_agent_peer_deleted",
-        "chat",
-        ["agent_id", "peer_type", "peer_id", "gmt_deleted"],
-    )
+    tables = set(inspector.get_table_names())
+    if "bot" in tables and "agent" not in tables:
+        op.rename_table("bot", "agent")
+        op.drop_index("ix_bot_user", table_name="agent")
+        op.drop_index("ix_bot_status", table_name="agent")
+        op.drop_index("ix_bot_gmt_deleted", table_name="agent")
+        op.create_index("ix_agent_user", "agent", ["user"], unique=False)
+        op.create_index("ix_agent_status", "agent", ["status"], unique=False)
+        op.create_index("ix_agent_gmt_deleted", "agent", ["gmt_deleted"], unique=False)
+
+    if "chat" in tables:
+        chat_columns = {col["name"] for col in inspector.get_columns("chat")}
+        if "bot_id" in chat_columns and "agent_id" not in chat_columns:
+            chat_uniques = {uc["name"] for uc in inspector.get_unique_constraints("chat") if uc.get("name")}
+            if "uq_chat_bot_peer_deleted" in chat_uniques:
+                op.drop_constraint("uq_chat_bot_peer_deleted", "chat", type_="unique")
+            chat_indexes = {idx["name"] for idx in inspector.get_indexes("chat") if idx.get("name")}
+            if "ix_chat_bot_id" in chat_indexes:
+                op.drop_index("ix_chat_bot_id", table_name="chat")
+            op.alter_column(
+                "chat",
+                "bot_id",
+                new_column_name="agent_id",
+                existing_type=sa.String(length=24),
+            )
+            op.create_index("ix_chat_agent_id", "chat", ["agent_id"], unique=False)
+            op.create_unique_constraint(
+                "uq_chat_agent_peer_deleted",
+                "chat",
+                ["agent_id", "peer_type", "peer_id", "gmt_deleted"],
+            )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_constraint("uq_chat_agent_peer_deleted", "chat", type_="unique")
-    op.drop_index("ix_chat_agent_id", table_name="chat")
-    op.alter_column("chat", "agent_id", new_column_name="bot_id")
-    op.create_index("ix_chat_bot_id", "chat", ["bot_id"], unique=False)
-    op.create_unique_constraint(
-        "uq_chat_bot_peer_deleted",
-        "chat",
-        ["bot_id", "peer_type", "peer_id", "gmt_deleted"],
-    )
+    bind = op.get_bind()
+    inspector = inspect(bind)
 
-    op.drop_index("ix_agent_gmt_deleted", table_name="agent")
-    op.drop_index("ix_agent_status", table_name="agent")
-    op.drop_index("ix_agent_user", table_name="agent")
-    op.create_index("ix_bot_user", "agent", ["user"], unique=False)
-    op.create_index("ix_bot_status", "agent", ["status"], unique=False)
-    op.create_index("ix_bot_gmt_deleted", "agent", ["gmt_deleted"], unique=False)
-    op.rename_table("agent", "bot")
+    tables = set(inspector.get_table_names())
+    if "chat" in tables:
+        chat_columns = {col["name"] for col in inspector.get_columns("chat")}
+        if "agent_id" in chat_columns and "bot_id" not in chat_columns:
+            chat_uniques = {uc["name"] for uc in inspector.get_unique_constraints("chat") if uc.get("name")}
+            if "uq_chat_agent_peer_deleted" in chat_uniques:
+                op.drop_constraint("uq_chat_agent_peer_deleted", "chat", type_="unique")
+            chat_indexes = {idx["name"] for idx in inspector.get_indexes("chat") if idx.get("name")}
+            if "ix_chat_agent_id" in chat_indexes:
+                op.drop_index("ix_chat_agent_id", table_name="chat")
+            op.alter_column(
+                "chat",
+                "agent_id",
+                new_column_name="bot_id",
+                existing_type=sa.String(length=24),
+            )
+            op.create_index("ix_chat_bot_id", "chat", ["bot_id"], unique=False)
+            op.create_unique_constraint(
+                "uq_chat_bot_peer_deleted",
+                "chat",
+                ["bot_id", "peer_type", "peer_id", "gmt_deleted"],
+            )
+
+    if "agent" in tables and "bot" not in tables:
+        op.drop_index("ix_agent_gmt_deleted", table_name="agent")
+        op.drop_index("ix_agent_status", table_name="agent")
+        op.drop_index("ix_agent_user", table_name="agent")
+        op.create_index("ix_bot_user", "agent", ["user"], unique=False)
+        op.create_index("ix_bot_status", "agent", ["status"], unique=False)
+        op.create_index("ix_bot_gmt_deleted", "agent", ["gmt_deleted"], unique=False)
+        op.rename_table("agent", "bot")
