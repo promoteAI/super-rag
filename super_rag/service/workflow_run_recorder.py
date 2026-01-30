@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from fastapi.encoders import jsonable_encoder
+
 from super_rag.db.models import NodeRunStatus, WorkflowRunStatus
 from super_rag.db.ops import AsyncDatabaseOps
 from super_rag.utils.utils import utc_now
@@ -26,13 +28,18 @@ class WorkflowRunRecorder:
         self.run_id: Optional[str] = None
         self._node_run_ids: dict[str, str] = {}
 
+    @staticmethod
+    def _json_safe(payload: Any) -> Any:
+        """确保写入数据库的快照可 JSON 序列化。"""
+        return jsonable_encoder(payload, by_alias=True, exclude_none=True)
+
     async def on_flow_start(self, execution_id: str):
         run = await self.db_ops.create_workflow_run(
             user=self.user,
             workflow_id=self.workflow_id,
             workflow_version=self.workflow_version,
             execution_id=execution_id,
-            input_payload=self.input_payload,
+            input_payload=self._json_safe(self.input_payload),
         )
         self.run_id = run.id
 
@@ -42,7 +49,7 @@ class WorkflowRunRecorder:
         await self.db_ops.update_workflow_run(
             run_id=self.run_id,
             status=WorkflowRunStatus.SUCCEEDED,
-            output_payload=output_payload,
+            output_payload=self._json_safe(output_payload),
             error=None,
             finished_at=utc_now(),
         )
@@ -65,7 +72,7 @@ class WorkflowRunRecorder:
             run_id=self.run_id,
             node_id=node_id,
             node_type=node_type,
-            input_snapshot=inputs,
+            input_snapshot=self._json_safe(inputs),
             started_at=utc_now(),
         )
         self._node_run_ids[node_id] = node_run.id
@@ -77,7 +84,7 @@ class WorkflowRunRecorder:
         await self.db_ops.update_node_run(
             node_run_id=node_run_id,
             status=NodeRunStatus.SUCCEEDED,
-            output_snapshot=outputs,
+            output_snapshot=self._json_safe(outputs),
             error=None,
             duration_ms=duration_ms,
             finished_at=utc_now(),
