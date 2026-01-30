@@ -469,6 +469,68 @@ class WorkflowRunResponse(BaseModel):
     )
 
 
+class WorkflowRunByIdRequest(BaseModel):
+    """
+    运行已持久化 workflow 的请求
+    """
+
+    input: Optional[dict[str, Any]] = Field(
+        None,
+        description='工作流全局输入，会作为 ExecutionContext.global_variables 传入',
+    )
+    workflow_version: Optional[int] = Field(
+        None,
+        description='可选的 workflow 版本',
+    )
+
+
+class WorkflowRunExecuteResponse(BaseModel):
+    run_id: str
+    outputs: dict[str, Any] = Field(
+        ..., description='每个节点的输出，键为 node_id，值为该节点输出对象的可序列化形式'
+    )
+    system_outputs: Optional[dict[str, Any]] = Field(
+        None,
+        description='系统输出（如流式生成器元信息等），键为 node_id',
+    )
+
+
+class WorkflowRunRecord(BaseModel):
+    id: str
+    workflow_id: Optional[str] = None
+    workflow_version: Optional[int] = None
+    execution_id: Optional[str] = None
+    status: Optional[str] = None
+    input: Optional[dict[str, Any]] = None
+    output: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
+
+
+class NodeRunRecord(BaseModel):
+    id: str
+    run_id: str
+    node_id: str
+    node_type: Optional[str] = None
+    status: Optional[str] = None
+    input_snapshot: Optional[dict[str, Any]] = None
+    output_snapshot: Optional[dict[str, Any]] = None
+    error: Optional[str] = None
+    duration_ms: Optional[int] = None
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
+
+
+class WorkflowRunList(BaseModel):
+    items: list[WorkflowRunRecord] = Field(default_factory=list)
+
+
+class WorkflowRunDetail(BaseModel):
+    run: WorkflowRunRecord
+    nodes: list[NodeRunRecord] = Field(default_factory=list)
+
+
 class WorkflowCreate(BaseModel):
     """
     创建一个可持久化的 workflow

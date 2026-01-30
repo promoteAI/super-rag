@@ -89,3 +89,34 @@ async def get_workflow_version_view(
     user: User = Depends(default_user),
 ) -> view_models.WorkflowVersionRecord:
     return await workflow_service.get_workflow_version(str(user.id), workflow_id, version)
+
+
+@router.post("/workflows/{workflow_id}/run", response_model=view_models.WorkflowRunExecuteResponse)
+async def run_workflow_view(
+    request: Request,
+    workflow_id: str,
+    body: view_models.WorkflowRunByIdRequest,
+    user: User = Depends(default_user),
+) -> view_models.WorkflowRunExecuteResponse:
+    return await workflow_service.run_workflow(str(user.id), workflow_id, body)
+
+
+@router.get("/workflows/{workflow_id}/runs", response_model=view_models.WorkflowRunList)
+async def list_workflow_runs_view(
+    request: Request,
+    workflow_id: str,
+    user: User = Depends(default_user),
+    limit: int = 100,
+    offset: int = 0,
+) -> view_models.WorkflowRunList:
+    return await workflow_service.list_workflow_runs(str(user.id), workflow_id, limit=limit, offset=offset)
+
+
+@router.get("/workflows/{workflow_id}/runs/{run_id}", response_model=view_models.WorkflowRunDetail)
+async def get_workflow_run_view(
+    request: Request,
+    workflow_id: str,
+    run_id: str,
+    user: User = Depends(default_user),
+) -> view_models.WorkflowRunDetail:
+    return await workflow_service.get_workflow_run(str(user.id), workflow_id, run_id)

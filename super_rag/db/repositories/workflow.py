@@ -296,3 +296,48 @@ class AsyncWorkflowRepositoryMixin(AsyncRepositoryProtocol):
             return instance
 
         return await self.execute_with_transaction(_operation)
+
+    async def query_workflow_runs(
+        self,
+        user: str,
+        workflow_id: str,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[WorkflowRunTable]:
+        async def _query(session):
+            stmt = (
+                select(WorkflowRunTable)
+                .where(WorkflowRunTable.user == user, WorkflowRunTable.workflow_id == workflow_id)
+                .order_by(desc(WorkflowRunTable.started_at))
+                .limit(limit)
+                .offset(offset)
+            )
+            result = await session.execute(stmt)
+            return result.scalars().all()
+
+        return await self._execute_query(_query)
+
+    async def query_workflow_run(
+        self,
+        user: str,
+        workflow_id: str,
+        run_id: str,
+    ) -> Optional[WorkflowRunTable]:
+        async def _query(session):
+            stmt = select(WorkflowRunTable).where(
+                WorkflowRunTable.user == user,
+                WorkflowRunTable.workflow_id == workflow_id,
+                WorkflowRunTable.id == run_id,
+            )
+            result = await session.execute(stmt)
+            return result.scalars().first()
+
+        return await self._execute_query(_query)
+
+    async def query_node_runs(self, run_id: str) -> list[NodeRunTable]:
+        async def _query(session):
+            stmt = select(NodeRunTable).where(NodeRunTable.run_id == run_id).order_by(NodeRunTable.started_at)
+            result = await session.execute(stmt)
+            return result.scalars().all()
+
+        return await self._execute_query(_query)

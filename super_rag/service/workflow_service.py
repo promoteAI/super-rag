@@ -8,7 +8,10 @@ from super_rag.db import models as db_models
 from super_rag.db.models import WorkflowStatus
 from super_rag.db.ops import AsyncDatabaseOps, async_db_ops
 from super_rag.exceptions import ResourceNotFoundException
+from super_rag.nodeflow.engine import NodeflowEngine
+from super_rag.nodeflow.parser import nodeflowParser
 from super_rag.schema import view_models
+from super_rag.service.workflow_run_recorder import WorkflowRunRecorder
 
 
 class WorkflowService:
@@ -51,6 +54,35 @@ class WorkflowService:
             save_type=version.save_type,
             autosave_metadata=version.autosave_metadata or {},
             created=version.gmt_created.isoformat(),
+        )
+
+    def _build_run_record(self, run: db_models.WorkflowRunTable) -> view_models.WorkflowRunRecord:
+        return view_models.WorkflowRunRecord(
+            id=run.id,
+            workflow_id=run.workflow_id,
+            workflow_version=run.workflow_version,
+            execution_id=run.execution_id,
+            status=run.status,
+            input=run.input,
+            output=run.output,
+            error=run.error,
+            started_at=run.started_at.isoformat() if run.started_at else None,
+            finished_at=run.finished_at.isoformat() if run.finished_at else None,
+        )
+
+    def _build_node_run_record(self, node_run: db_models.NodeRunTable) -> view_models.NodeRunRecord:
+        return view_models.NodeRunRecord(
+            id=node_run.id,
+            run_id=node_run.run_id,
+            node_id=node_run.node_id,
+            node_type=node_run.node_type,
+            status=node_run.status,
+            input_snapshot=node_run.input_snapshot,
+            output_snapshot=node_run.output_snapshot,
+            error=node_run.error,
+            duration_ms=node_run.duration_ms,
+            started_at=node_run.started_at.isoformat() if node_run.started_at else None,
+            finished_at=node_run.finished_at.isoformat() if node_run.finished_at else None,
         )
 
     async def create_workflow(
@@ -157,6 +189,94 @@ class WorkflowService:
         if not version_obj:
             raise ResourceNotFoundException("WorkflowVersion", f"{workflow_id}@{version}")
         return self._build_version_response(version_obj)
+
+    def _build_definition_payload(
+        self, workflow: db_models.WorkflowTable, version: Optional[db_models.WorkflowVersionTable]
+    ) -> dict[str, Any]:
+        source = version or workflow
+        return {
+            "id": workflow.id,
+            "name": workflow.name,
+            "title": workflow.title,
+            "description": workflow.description,
+            "tags": workflow.tags or [],
+            "graph": source.graph,
+            "input_schema": source.input_schema,
+            "output_schema": source.output_schema,
+        }
+
+    def _convert_to_serializable(self, obj):
+        if hasattr(obj, "model_dump"):
+            return obj.model_dump()
+        if isinstance(obj, dict):
+            return {k: self._convert_to_serializable(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self._convert_to_serializable(item) for item in obj]
+        if hasattr(obj, "__dict__"):
+            return self._convert_to_serializable(obj.__dict__)
+        return obj
+
+    async def run_workflow(
+        self, user: str, workflow_id: str, data: view_models.WorkflowRunByIdRequest
+    ) -> view_models.WorkflowRunExecuteResponse:
+        workflow = await self.db_ops.query_workflow(user, workflow_id)
+        if not workflow:
+            raise ResourceNotFoundException("Workflow", workflow_id)
+
+        version_obj = None
+        if data.workflow_version is not None:
+            version_obj = await self.db_ops.query_workflow_version(workflow_id, data.workflow_version)
+            if not version_obj:
+                raise ResourceNotFoundException("WorkflowVersion", f"{workflow_id}@{data.workflow_version}")
+
+        workflow_dict = self._build_definition_payload(workflow, version_obj)
+        flow = nodeflowParser.parse(workflow_dict)
+
+        recorder = WorkflowRunRecorder(
+            db_ops=self.db_ops,
+            user=user,
+            workflow_id=workflow_id,
+            workflow_version=data.workflow_version,
+            input_payload=data.input,
+        )
+        engine = NodeflowEngine(recorder=recorder)
+
+        initial_data = {"user": user}
+        if data.input:
+            initial_data.update(data.input)
+
+        outputs, system_outputs = await engine.execute_nodeflow(flow, initial_data)
+        run_id = recorder.run_id or ""
+
+        return view_models.WorkflowRunExecuteResponse(
+            run_id=run_id,
+            outputs=self._convert_to_serializable(outputs),
+            system_outputs=self._convert_to_serializable(system_outputs),
+        )
+
+    async def list_workflow_runs(
+        self, user: str, workflow_id: str, limit: int = 100, offset: int = 0
+    ) -> view_models.WorkflowRunList:
+        workflow = await self.db_ops.query_workflow(user, workflow_id)
+        if not workflow:
+            raise ResourceNotFoundException("Workflow", workflow_id)
+        runs = await self.db_ops.query_workflow_runs(user, workflow_id, limit=limit, offset=offset)
+        return view_models.WorkflowRunList(items=[self._build_run_record(run) for run in runs])
+
+    async def get_workflow_run(
+        self, user: str, workflow_id: str, run_id: str
+    ) -> view_models.WorkflowRunDetail:
+        workflow = await self.db_ops.query_workflow(user, workflow_id)
+        if not workflow:
+            raise ResourceNotFoundException("Workflow", workflow_id)
+        run = await self.db_ops.query_workflow_run(user, workflow_id, run_id)
+        if not run:
+            raise ResourceNotFoundException("WorkflowRun", run_id)
+        nodes = await self.db_ops.query_node_runs(run_id)
+        return view_models.WorkflowRunDetail(
+            run=self._build_run_record(run),
+            nodes=[self._build_node_run_record(node) for node in nodes],
+        )
 
 
 workflow_service = WorkflowService()
