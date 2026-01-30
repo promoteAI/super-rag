@@ -48,9 +48,9 @@ class UserManager(BaseUserManager[User, str]):
 
         # Initialize user resources for all new users (including OAuth users)
         try:
-            from super_rag.db.models import BotType
-            from super_rag.schema.view_models import BotCreate
-            from super_rag.service.bot_service import bot_service
+            from super_rag.db.models import AgentType
+            from super_rag.schema.view_models import AgentCreate
+            from super_rag.service.agent_service import agent_service
             from super_rag.service.chat_collection_service import chat_collection_service
 
             # Create a system API key for the user (not visible to user)
@@ -58,14 +58,13 @@ class UserManager(BaseUserManager[User, str]):
             # Create a normal API key for the user (visible to user)
             await async_db_ops.create_api_key(user=str(user.id), description="default", is_system=False)
 
-            # Create a default bot for the user (skip quota check for system bot)
-            bot_create = BotCreate(
-                title="Default Agent Bot",
-                type=BotType.AGENT,
-                description="Default agent bot created on registration.",
-                collection_ids=[],
+            # Create a default agent for the user (skip quota check for system agent)
+            agent_create = AgentCreate(
+                title="Default Agent",
+                type=AgentType.AGENT,
+                description="Default agent created on registration.",
             )
-            await bot_service.create_bot(user=str(user.id), bot_in=bot_create, skip_quota_check=True)
+            await agent_service.create_agent(user=str(user.id), agent_in=agent_create)
 
             # Create user's chat collection
             await chat_collection_service.initialize_user_chat_collection(str(user.id))

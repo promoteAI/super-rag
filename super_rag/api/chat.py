@@ -19,44 +19,44 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["chats"])
 
 
-@router.post("/bots/{bot_id}/chats")
-async def create_chat_view(request: Request, bot_id: str, user: User = Depends(default_user)) -> view_models.Chat:
-    return await chat_service_global.create_chat(str(user.id), bot_id)
+@router.post("/agents/{agent_id}/chats")
+async def create_chat_view(request: Request, agent_id: str, user: User = Depends(default_user)) -> view_models.Chat:
+    return await chat_service_global.create_chat(str(user.id), agent_id)
 
 
-@router.get("/bots/{bot_id}/chats")
+@router.get("/agents/{agent_id}/chats")
 async def list_chats_view(
     request: Request,
-    bot_id: str,
+    agent_id: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     user: User = Depends(default_user),
 ) -> view_models.ChatList:
-    return await chat_service_global.list_chats(str(user.id), bot_id, page, page_size)
+    return await chat_service_global.list_chats(str(user.id), agent_id, page, page_size)
 
 
-@router.get("/bots/{bot_id}/chats/{chat_id}")
+@router.get("/agents/{agent_id}/chats/{chat_id}")
 async def get_chat_view(
-    request: Request, bot_id: str, chat_id: str, user: User = Depends(default_user)
+    request: Request, agent_id: str, chat_id: str, user: User = Depends(default_user)
 ) -> view_models.ChatDetails:
-    return await chat_service_global.get_chat(str(user.id), bot_id, chat_id)
+    return await chat_service_global.get_chat(str(user.id), agent_id, chat_id)
 
 
-@router.put("/bots/{bot_id}/chats/{chat_id}")
+@router.put("/agents/{agent_id}/chats/{chat_id}")
 async def update_chat_view(
     request: Request,
-    bot_id: str,
+    agent_id: str,
     chat_id: str,
     chat_in: view_models.ChatUpdate,
     user: User = Depends(default_user),
 ) -> view_models.Chat:
-    return await chat_service_global.update_chat(str(user.id), bot_id, chat_id, chat_in)
+    return await chat_service_global.update_chat(str(user.id), agent_id, chat_id, chat_in)
 
 
-@router.post("/bots/{bot_id}/chats/{chat_id}/messages/{message_id}")
+@router.post("/agents/{agent_id}/chats/{chat_id}/messages/{message_id}")
 async def feedback_message_view(
     request: Request,
-    bot_id: str,
+    agent_id: str,
     chat_id: str,
     message_id: str,
     feedback: view_models.Feedback,
@@ -67,10 +67,10 @@ async def feedback_message_view(
     )
 
 # 优化 WebSocket 握手响应，确保接管和定制协议头部
-@router.websocket("/bots/{bot_id}/chats/{chat_id}/connect")
+@router.websocket("/agents/{agent_id}/chats/{chat_id}/connect")
 async def websocket_chat_endpoint(
     websocket: WebSocket,
-    bot_id: str,
+    agent_id: str,
     chat_id: str,
     user: User = Depends(default_user),
 ):
@@ -78,7 +78,7 @@ async def websocket_chat_endpoint(
     WebSocket 端点，用于与机器人进行实时聊天。
     对协议头部和握手进行优化，提高兼容性和调试体验。
     """
-    logger.info(f"WebSocket chat endpoint called with bot_id: {bot_id}, chat_id: {chat_id}, user: {user}")
+    logger.info(f"WebSocket chat endpoint called with agent_id: {agent_id}, chat_id: {chat_id}, user: {user}")
 
     # 自定义协议升级响应头部(兼容调试、扩展)
     await websocket.accept(
@@ -93,14 +93,14 @@ async def websocket_chat_endpoint(
     await chat_service_global.handle_websocket_chat(
         websocket,
         str(user.id),
-        bot_id,
+        agent_id,
         chat_id
     )
 
 
-@router.post("/bots/{bot_id}/chats/{chat_id}/title")
+@router.post("/agents/{agent_id}/chats/{chat_id}/title")
 async def generate_chat_title_view(
-    bot_id: str,
+    agent_id: str,
     chat_id: str,
     request_body: view_models.TitleGenerateRequest = view_models.TitleGenerateRequest(),
     user: User = Depends(default_user),
@@ -108,7 +108,7 @@ async def generate_chat_title_view(
     try:
         title = await chat_title_service.generate_title(
             user_id=str(user.id),
-            bot_id=bot_id,
+            agent_id=agent_id,
             chat_id=chat_id,
             max_length=request_body.max_length,
             language=request_body.language,
@@ -135,14 +135,14 @@ async def frontend_chat_completions_view(request: Request, user: User = Depends(
 
     query_params = dict(request.query_params)
     stream = query_params.get("stream", "false").lower() == "true"
-    bot_id = query_params.get("bot_id", "")
+    agent_id = query_params.get("agent_id", "")
     chat_id = query_params.get("chat_id", "")
     msg_id = request.headers.get("msg_id", "")
     return await chat_service_global.frontend_chat_completions(
         str(user.id), 
         message, 
         stream, 
-        bot_id, 
+        agent_id, 
         chat_id, 
         msg_id, 
         files,
@@ -226,7 +226,7 @@ async def get_chat_document_view(
     return document
 
 
-@router.delete("/bots/{bot_id}/chats/{chat_id}")
-async def delete_chat_view(request: Request, bot_id: str, chat_id: str, user: User = Depends(default_user)):
-    await chat_service_global.delete_chat(str(user.id), bot_id, chat_id)
+@router.delete("/agents/{agent_id}/chats/{chat_id}")
+async def delete_chat_view(request: Request, agent_id: str, chat_id: str, user: User = Depends(default_user)):
+    await chat_service_global.delete_chat(str(user.id), agent_id, chat_id)
     return Response(status_code=204)

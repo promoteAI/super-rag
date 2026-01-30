@@ -110,28 +110,27 @@ class ChatService:
         return Chat(
             id=chat.id,
             title=chat.title,
-            bot_id=chat.bot_id,
+            agent_id=chat.agent_id,
             peer_type=chat.peer_type,
             peer_id=chat.peer_id,
             created=chat.gmt_created.isoformat(),
             updated=chat.gmt_updated.isoformat(),
         )
 
-    async def create_chat(self, user: str, bot_id: str) -> view_models.Chat:
-        # First check if bot exists
-        bot = await self.db_ops.query_bot(user, bot_id)
-        if bot is None:
-            raise ResourceNotFoundException("Bot", bot_id)
+    async def create_chat(self, user: str, agent_id: str) -> view_models.Chat:
+        agent = await self.db_ops.query_agent(user, agent_id)
+        if agent is None:
+            raise ResourceNotFoundException("Agent", agent_id)
 
         # Direct call to repository method, which handles its own transaction
-        chat = await self.db_ops.create_chat(user=user, bot_id=bot_id)
+        chat = await self.db_ops.create_chat(user=user, agent_id=agent_id)
 
         return self.build_chat_response(chat)
 
     async def list_chats(
         self,
         user: str,
-        bot_id: str,
+        agent_id: str,
         page: int = 1,
         page_size: int = 50,
     ):
@@ -152,7 +151,7 @@ class ChatService:
             query = select(db_models.Chat).where(
                 and_(
                     db_models.Chat.user == user,
-                    db_models.Chat.bot_id == bot_id,
+                    db_models.Chat.agent_id == agent_id,
                     db_models.Chat.status != db_models.ChatStatus.DELETED,
                 )
             )
@@ -184,11 +183,11 @@ class ChatService:
 
         return await self.db_ops._execute_query(_execute_paginated_query)
 
-    async def get_chat(self, user: str, bot_id: str, chat_id: str) -> view_models.ChatDetails:
+    async def get_chat(self, user: str, agent_id: str, chat_id: str) -> view_models.ChatDetails:
         # Import here to avoid circular imports
         from super_rag.utils.history import query_chat_messages
 
-        chat = await self.db_ops.query_chat(user, bot_id, chat_id)
+        chat = await self.db_ops.query_chat(user, agent_id, chat_id)
         if chat is None:
             raise ChatNotFoundException(chat_id)
 
@@ -207,33 +206,33 @@ class ChatService:
         return ChatDetails(**chat_obj.model_dump(), history=history)
 
     async def update_chat(
-        self, user: str, bot_id: str, chat_id: str, chat_in: view_models.ChatUpdate
+        self, user: str, agent_id: str, chat_id: str, chat_in: view_models.ChatUpdate
     ) -> view_models.Chat:
         # First check if chat exists
-        chat = await self.db_ops.query_chat(user, bot_id, chat_id)
+        chat = await self.db_ops.query_chat(user, agent_id, chat_id)
         if chat is None:
             raise ChatNotFoundException(chat_id)
 
         # Direct call to repository method, which handles its own transaction
-        updated_chat = await self.db_ops.update_chat_by_id(user, bot_id, chat_id, chat_in.title)
+        updated_chat = await self.db_ops.update_chat_by_id(user, agent_id, chat_id, chat_in.title)
 
         if not updated_chat:
             raise ChatNotFoundException(chat_id)
 
         return self.build_chat_response(updated_chat)
 
-    async def delete_chat(self, user: str, bot_id: str, chat_id: str) -> Optional[view_models.Chat]:
+    async def delete_chat(self, user: str, agent_id: str, chat_id: str) -> Optional[view_models.Chat]:
         """Delete chat by ID (idempotent operation)
 
         Returns the deleted chat or None if already deleted/not found
         """
         # Check if chat exists - if not, silently succeed (idempotent)
-        chat = await self.db_ops.query_chat(user, bot_id, chat_id)
+        chat = await self.db_ops.query_chat(user, agent_id, chat_id)
         if chat is None:
             return None
 
         # Direct call to repository method, which handles its own transaction
-        deleted_chat = await self.db_ops.delete_chat_by_id(user, bot_id, chat_id)
+        deleted_chat = await self.db_ops.delete_chat_by_id(user, agent_id, chat_id)
 
         if deleted_chat:
             # Clear chat history from Redis
@@ -301,7 +300,7 @@ class ChatService:
         user: str,
         message: str,
         stream: bool,
-        bot_id: str,
+        agent_id: str,
         chat_id: str,
         msg_id: str,
         upload_files: List[str] = None,
@@ -315,22 +314,22 @@ class ChatService:
             chat_id=chat_id, message_id=msg_id, files=upload_files or [], user=user
         )
 
-        # Validate bot_id - return formatted error for frontend
-        if not bot_id:
-            return FrontendFormatter.format_error("bot_id is required")
+        # Validate agent_id - return formatted error for frontend
+        if not agent_id:
+            return FrontendFormatter.format_error("agent_id is required")
 
-        bot = await self.db_ops.query_bot(user, bot_id)
-        if not bot:
-            return FrontendFormatter.format_error("Bot not found")
+        agent = await self.db_ops.query_agent(user, agent_id)
+        if not agent:
+            return FrontendFormatter.format_error("Agent not found")
 
         # Use flow engine instead of MessageProcessor/pipeline
         formatter = FrontendFormatter()
 
-        # Get bot's flow configuration
-        bot_config = json.loads(bot.config or "{}")
-        flow_config = bot_config.get("flow")
+        # Get agent's flow configuration (deprecated)
+        agent_config = json.loads(agent.config or "{}")
+        flow_config = agent_config.get("flow")
         if not flow_config:
-            return FrontendFormatter.format_error("Bot flow config not found")
+            return FrontendFormatter.format_error("Agent flow config not found")
 
         try:
             flow = nodeflowParser.parse(flow_config)
@@ -461,148 +460,27 @@ class ChatService:
             result = {"action": "upserted", "feedback": feedback}
         return result
 
-    async def handle_websocket_chat(self, 
-        websocket: WebSocket, 
-        user: str, 
-        bot_id: str, 
+    async def handle_websocket_chat(
+        self,
+        websocket: WebSocket,
+        user: str,
+        agent_id: str,
         chat_id: str,
     ):
         """Handle WebSocket chat connections and message streaming"""
 
         try:
-            # Get bot configuration first to determine bot type
-            bot = await self.db_ops.query_bot(user, bot_id)
-            if not bot:
-                await websocket.send_text(fail_response("error", "Bot not found"))
+            agent = await self.db_ops.query_agent(user, agent_id)
+            if not agent:
+                await websocket.send_text(fail_response("error", "Agent not found"))
                 return
 
-            # Route to appropriate service based on bot type
-            if bot.type == db_models.BotType.AGENT:
-                # Use AgentChatService for agent-type bots
-                from super_rag.service.agent_chat_service import AgentChatService
+            from super_rag.service.agent_chat_service import AgentChatService
 
-                agent_service = AgentChatService()
-                await agent_service.handle_websocket_agent_chat(websocket, user, bot_id, chat_id)
-                return
-
-            # Continue with existing flow for knowledge and common bots
-            history = MySQLChatMessageHistory(chat_id)
-
-            while True:
-                # Receive message from client
-                text_data = await websocket.receive_text()
-                data = json.loads(text_data)
-
-                # Extract message content - support both "data" and "message" fields
-                message_content = data.get("data") or data.get("message", "")
-                if not message_content:
-                    await websocket.send_text(fail_response("error", "Message content is required"))
-                    continue
-
-                # Generate message ID
-                message_id = str(uuid.uuid4())
-
-                # Get document metadata and associate documents with message if files are provided
-                from super_rag.service.chat_document_service import chat_document_service
-
-                files = await chat_document_service.associate_documents_with_message(
-                    chat_id=chat_id, message_id=message_id, files=data.get("files", []), user=user
-                )
-
-                # Add user message to history with file metadata
-                await history.add_user_message(message_content, message_id, files=files)
-
-                try:
-                    # Get or create chat session
-                    try:
-                        await self.db_ops.query_chat(user, bot_id, chat_id)
-                    except Exception:
-                        # If chat doesn't exist, create it with direct repository call
-                        await self.db_ops.create_chat(user=user, bot_id=bot_id, title="WebSocket Chat")
-
-                    # Get bot's flow configuration
-                    bot_config = json.loads(bot.config or "{}")
-                    flow_config = bot_config.get("flow")
-                    if not flow_config:
-                        await websocket.send_text(fail_response(message_id, "Bot flow config not found"))
-                        continue
-
-                    flow = nodeflowParser.parse(flow_config)
-                    engine = NodeflowEngine()
-
-                    # Prepare initial data for flow execution
-                    initial_data = {
-                        "query": message_content,
-                        "user": user,
-                        "message_id": message_id,
-                        "history": history,
-                        "chat_id": chat_id,
-                    }
-
-                    # Send start message
-                    await websocket.send_text(start_response(message_id))
-
-                    # Execute flow
-                    _, system_outputs = await engine.execute_nodeflow(flow, initial_data)
-                    logger.info("Flow executed successfully for WebSocket!")
-
-                    # Find the async generator from flow outputs
-                    async_generator = None
-                    nodes = engine.find_end_nodes(flow)
-                    for node in nodes:
-                        async_generator = system_outputs[node].get("async_generator")
-                        if async_generator:
-                            break
-
-                    if not async_generator:
-                        await websocket.send_text(fail_response(message_id, "No output node found"))
-                        continue
-
-                    # Stream response tokens
-                    full_message = ""
-                    references = []
-                    urls = []
-
-                    async for chunk in async_generator():
-                        # Handle special tokens for references and URLs (similar to original implementation)
-                        if chunk.startswith(DOC_QA_REFERENCES):
-                            try:
-                                references = json.loads(chunk[len(DOC_QA_REFERENCES) :])
-                                continue
-                            except Exception as e:
-                                logger.exception(f"Error parsing doc qa references: {chunk}, {e}")
-
-                        if chunk.startswith(DOCUMENT_URLS):
-                            try:
-                                urls = eval(chunk[len(DOCUMENT_URLS) :])  # Using eval as in original code
-                                continue
-                            except Exception as e:
-                                logger.exception(f"Error parsing document urls: {chunk}, {e}")
-
-                        # Send streaming response
-                        await websocket.send_text(success_response(message_id, chunk))
-                        full_message += chunk
-
-                    # Send stop message with references and URLs
-                    memory_count = 0  # You might want to implement memory counting if needed
-                    await websocket.send_text(references_response(message_id, references, memory_count, urls))
-                    await websocket.send_text(stop_response(message_id))
-
-                    # Save AI message to history
-                    await history.add_ai_message(
-                        content=full_message,
-                        chat_id=chat_id,
-                        message_id=message_id,
-                        references=references,
-                        urls=urls,
-                    )
-
-                except Exception as e:
-                    logger.exception(f"Error processing WebSocket message: {e}")
-                    await websocket.send_text(fail_response(message_id, str(e)))
-
+            agent_service = AgentChatService()
+            await agent_service.handle_websocket_agent_chat(websocket, user, agent_id, chat_id)
         except WebSocketDisconnect:
-            logger.info(f"WebSocket disconnected for bot {bot_id}, chat {chat_id}")
+            logger.info(f"WebSocket disconnected for agent {agent_id}, chat {chat_id}")
         except Exception as e:
             logger.exception(f"WebSocket error: {e}")
             try:

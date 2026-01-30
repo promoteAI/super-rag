@@ -10,10 +10,10 @@ from super_rag.utils.utils import utc_now
 
 
 class AsyncChatRepositoryMixin(AsyncRepositoryProtocol):
-    async def query_chat(self, user: str, bot_id: str, chat_id: str):
+    async def query_chat(self, user: str, agent_id: str, chat_id: str):
         async def _query(session):
             stmt = select(Chat).where(
-                Chat.id == chat_id, Chat.bot_id == bot_id, Chat.user == user, Chat.status != ChatStatus.DELETED
+                Chat.id == chat_id, Chat.agent_id == agent_id, Chat.user == user, Chat.status != ChatStatus.DELETED
             )
             result = await session.execute(stmt)
             return result.scalars().first()
@@ -33,11 +33,11 @@ class AsyncChatRepositoryMixin(AsyncRepositoryProtocol):
 
         return await self._execute_query(_query)
 
-    async def query_chats(self, user: str, bot_id: str):
+    async def query_chats(self, user: str, agent_id: str):
         async def _query(session):
             stmt = (
                 select(Chat)
-                .where(Chat.user == user, Chat.bot_id == bot_id, Chat.status != ChatStatus.DELETED)
+                .where(Chat.user == user, Chat.agent_id == agent_id, Chat.status != ChatStatus.DELETED)
                 .order_by(desc(Chat.gmt_created))
             )
             result = await session.execute(stmt)
@@ -78,7 +78,7 @@ class AsyncChatRepositoryMixin(AsyncRepositoryProtocol):
 
     # Chat Operations
     async def create_chat(
-        self, user: str, bot_id: str, title: str = "New Chat", peer_type=None, peer_id: str = None
+        self, user: str, agent_id: str, title: str = "New Chat", peer_type=None, peer_id: str = None
     ) -> Chat:
         """Create a new chat in database with optional peer information"""
         from super_rag.db.models import ChatPeerType
@@ -86,7 +86,7 @@ class AsyncChatRepositoryMixin(AsyncRepositoryProtocol):
         async def _operation(session):
             instance = Chat(
                 user=user,
-                bot_id=bot_id,
+                agent_id=agent_id,
                 title=title,
                 status=ChatStatus.ACTIVE,
                 peer_type=peer_type or ChatPeerType.SYSTEM,
@@ -99,12 +99,12 @@ class AsyncChatRepositoryMixin(AsyncRepositoryProtocol):
 
         return await self.execute_with_transaction(_operation)
 
-    async def update_chat_by_id(self, user: str, bot_id: str, chat_id: str, title: str) -> Optional[Chat]:
+    async def update_chat_by_id(self, user: str, agent_id: str, chat_id: str, title: str) -> Optional[Chat]:
         """Update chat by ID"""
 
         async def _operation(session):
             stmt = select(Chat).where(
-                Chat.id == chat_id, Chat.bot_id == bot_id, Chat.user == user, Chat.status != ChatStatus.DELETED
+                Chat.id == chat_id, Chat.agent_id == agent_id, Chat.user == user, Chat.status != ChatStatus.DELETED
             )
             result = await session.execute(stmt)
             instance = result.scalars().first()
@@ -119,12 +119,12 @@ class AsyncChatRepositoryMixin(AsyncRepositoryProtocol):
 
         return await self.execute_with_transaction(_operation)
 
-    async def delete_chat_by_id(self, user: str, bot_id: str, chat_id: str) -> Optional[Chat]:
+    async def delete_chat_by_id(self, user: str, agent_id: str, chat_id: str) -> Optional[Chat]:
         """Soft delete chat by ID"""
 
         async def _operation(session):
             stmt = select(Chat).where(
-                Chat.id == chat_id, Chat.bot_id == bot_id, Chat.user == user, Chat.status != ChatStatus.DELETED
+                Chat.id == chat_id, Chat.agent_id == agent_id, Chat.user == user, Chat.status != ChatStatus.DELETED
             )
             result = await session.execute(stmt)
             instance = result.scalars().first()

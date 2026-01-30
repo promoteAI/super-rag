@@ -116,16 +116,16 @@ class FlowService:
             }
             yield f"data: {json.dumps(data)}\n\n"
 
-    async def debug_flow_stream(self, user: str, bot_id: str, debug: view_models.DebugFlowRequest):
+    async def debug_flow_stream(self, user: str, agent_id: str, debug: view_models.DebugFlowRequest):
         """Stream debug flow events as SSE using FastAPI StreamingResponse."""
-        bot = await self.db_ops.query_bot(user, bot_id)
-        if not bot:
-            raise ResourceNotFoundException("Bot", bot_id)
+        agent = await self.db_ops.query_agent(user, agent_id)
+        if not agent:
+            raise ResourceNotFoundException("Agent", agent_id)
 
-        bot_config = json.loads(bot.config)
-        flow_config = bot_config.get("flow")
+        agent_config = json.loads(agent.config)
+        flow_config = agent_config.get("flow")
         if not flow_config:
-            raise ValueError("Bot flow config not found")
+            raise ValueError("Agent flow config not found")
 
         flow = nodeflowParser.parse(flow_config)
         engine = NodeflowEngine()
@@ -138,44 +138,33 @@ class FlowService:
             media_type="text/event-stream",
         )
 
-    async def get_flow(self, user: str, bot_id: str) -> dict:
-        """Get flow config for a bot"""
-        bot = await self.db_ops.query_bot(user, bot_id)
-        if not bot:
-            raise ResourceNotFoundException("Bot", bot_id)
+    async def get_flow(self, user: str, agent_id: str) -> dict:
+        """Get flow config for an agent (deprecated, flow is removed)."""
+        agent = await self.db_ops.query_agent(user, agent_id)
+        if not agent:
+            raise ResourceNotFoundException("Agent", agent_id)
 
-        config = json.loads(bot.config or "{}")
-        flow = config.get("flow")
+        return {}
 
-        # If no flow config exists, return an empty dict
-        if not flow:
-            return {}
+    async def update_flow(self, user: str, agent_id: str, data: view_models.WorkflowDefinition) -> dict:
+        """Update flow config for an agent (deprecated, flow is removed)."""
+        agent = await self.db_ops.query_agent(user, agent_id)
+        if not agent:
+            raise ResourceNotFoundException("Agent", agent_id)
 
-        return flow
+        config = json.loads(agent.config or "{}")
+        config.pop("flow", None)
 
-    async def update_flow(self, user: str, bot_id: str, data: view_models.WorkflowDefinition) -> dict:
-        """Update flow config for a bot"""
-        # First check if bot exists
-        bot = await self.db_ops.query_bot(user, bot_id)
-        if not bot:
-            raise ResourceNotFoundException("Bot", bot_id)
-
-        # Direct operation without nested transaction
-        config = json.loads(bot.config or "{}")
-        flow = data.model_dump(exclude_unset=True, by_alias=True)
-        config["flow"] = flow
-
-        # Update only bot config to avoid overwriting concurrently updated metadata
-        updated_bot = await self.db_ops.update_bot_config_by_id(
+        updated_agent = await self.db_ops.update_agent_config_by_id(
             user=user,
-            bot_id=bot_id,
+            agent_id=agent_id,
             config=json.dumps(config, ensure_ascii=False),
         )
 
-        if not updated_bot:
-            raise ResourceNotFoundException("Bot", bot_id)
+        if not updated_agent:
+            raise ResourceNotFoundException("Agent", agent_id)
 
-        return flow
+        return {}
 
 
 # Create a global service instance for easy access

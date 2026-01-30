@@ -369,25 +369,25 @@ class ChatMessageTable(Base):
             "gmt_deleted": self.gmt_deleted,
         }
 
-class BotStatus(str, Enum):
+class AgentStatus(str, Enum):
     ACTIVE = "ACTIVE"
     DELETED = "DELETED"
 
 
-class BotType(str, Enum):
+class AgentType(str, Enum):
     KNOWLEDGE = "knowledge"
     COMMON = "common"
     AGENT = "agent"
 
-class Bot(Base):
-    __tablename__ = "bot"
+class Agent(Base):
+    __tablename__ = "agent"
 
     id = Column(String(24), primary_key=True, default=lambda: "bot" + random_id())
     user = Column(String(256), nullable=False, index=True)  # Add index for user queries
     title = Column(String(256), nullable=True)
-    type = Column(EnumColumn(BotType), nullable=False, default=BotType.KNOWLEDGE)
+    type = Column(EnumColumn(AgentType), nullable=False, default=AgentType.KNOWLEDGE)
     description = Column(Text, nullable=True)
-    status = Column(EnumColumn(BotStatus), nullable=False, index=True)  # Add index for status queries
+    status = Column(EnumColumn(AgentStatus), nullable=False, index=True)  # Add index for status queries
     config = Column(Text, nullable=False)
     gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
@@ -504,7 +504,7 @@ class ChatPeerType(str, Enum):
 class Chat(Base):
     __tablename__ = "chat"
     __table_args__ = (
-        UniqueConstraint("bot_id", "peer_type", "peer_id", "gmt_deleted", name="uq_chat_bot_peer_deleted"),
+        UniqueConstraint("agent_id", "peer_type", "peer_id", "gmt_deleted", name="uq_chat_agent_peer_deleted"),
     )
 
     id = Column(String(24), primary_key=True, default=lambda: "chat" + random_id())
@@ -512,22 +512,22 @@ class Chat(Base):
     peer_type = Column(EnumColumn(ChatPeerType), nullable=False, default=ChatPeerType.SYSTEM)
     peer_id = Column(String(256), nullable=True)
     status = Column(EnumColumn(ChatStatus), nullable=False, index=True)  # Add index for status queries
-    bot_id = Column(String(24), nullable=False, index=True)  # Add index for bot queries
+    agent_id = Column(String(24), nullable=False, index=True)  # Add index for agent queries
     title = Column(String(256), nullable=True)
     gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_deleted = Column(DateTime(timezone=True), nullable=True, index=True)  # Add index for soft delete queries
 
-    async def get_bot(self, session):
-        """Get the associated bot object"""
-        return await session.get(Bot, self.bot_id)
+    async def get_agent(self, session):
+        """Get the associated agent object"""
+        return await session.get(Agent, self.agent_id)
 
-    async def set_bot(self, bot):
-        """Set the bot_id by Bot object or id"""
-        if hasattr(bot, "id"):
-            self.bot_id = bot.id
-        elif isinstance(bot, str):
-            self.bot_id = bot
+    async def set_agent(self, agent):
+        """Set the agent_id by Agent object or id"""
+        if hasattr(agent, "id"):
+            self.agent_id = agent.id
+        elif isinstance(agent, str):
+            self.agent_id = agent
 
 class MessageFeedbackStatus(str, Enum):
     PENDING = "PENDING"

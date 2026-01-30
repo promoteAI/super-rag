@@ -159,12 +159,12 @@ class AgentChatService:
             return None, error_response
 
     @handle_agent_error("websocket_agent_chat", reraise=False)
-    async def handle_websocket_agent_chat(self, websocket: WebSocket, user: str, bot_id: str, chat_id: str):
+    async def handle_websocket_agent_chat(self, websocket: WebSocket, user: str, agent_id: str, chat_id: str):
         """Handle WebSocket connections for agent-type bot chats with message queue architecture"""
         # Get bot configuration once at the beginning for performance
-        bot = await self.db_ops.query_bot(user, bot_id)
-        if not bot:
-            error_response = format_processing_error("Bot not found", "en-US")
+        agent = await self.db_ops.query_agent(user, agent_id)
+        if not agent:
+            error_response = format_processing_error("Agent not found", "en-US")
             await websocket.send_text(json.dumps(error_response))
             return
 
@@ -174,13 +174,13 @@ class AgentChatService:
         custom_system_prompt = None
         custom_query_prompt = None
 
-        if bot.config:
+        if agent.config:
             try:
-                config_dict = json.loads(bot.config)
+                config_dict = json.loads(agent.config)
                 if config_dict:
                     from super_rag.schema.utils import normalize_schema_fields
                     config_dict = normalize_schema_fields(config_dict)
-                    bot_config = view_models.BotConfig(**config_dict)
+                    bot_config = view_models.AgentConfig(**config_dict)
             except (json.JSONDecodeError, ValueError):
                 bot_config = None
 

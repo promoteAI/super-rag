@@ -57,19 +57,19 @@ def format_agent_execution_error(error: str, language: str = "en-US") -> AgentEr
     return format_i18n_error("agent_execution_error", language, error=error)
 
 
-def format_bot_id_required_error(language: str = "en-US") -> AgentErrorResponse:
-    """Format bot ID required error with i18n support."""
-    return format_i18n_error("bot_id_required", language)
+def format_agent_id_required_error(language: str = "en-US") -> AgentErrorResponse:
+    """Format agent ID required error with i18n support."""
+    return format_i18n_error("agent_id_required", language)
 
 
-def format_bot_not_found_error(language: str = "en-US") -> AgentErrorResponse:
-    """Format bot not found error with i18n support."""
-    return format_i18n_error("bot_not_found", language)
+def format_agent_not_found_error(language: str = "en-US") -> AgentErrorResponse:
+    """Format agent not found error with i18n support."""
+    return format_i18n_error("agent_not_found", language)
 
 
-def format_bot_flow_config_not_found_error(language: str = "en-US") -> AgentErrorResponse:
-    """Format bot flow config not found error with i18n support."""
-    return format_i18n_error("bot_flow_config_not_found", language)
+def format_agent_flow_config_not_found_error(language: str = "en-US") -> AgentErrorResponse:
+    """Format agent flow config not found error with i18n support."""
+    return format_i18n_error("agent_flow_config_not_found", language)
 
 
 def format_no_output_node_error(language: str = "en-US") -> AgentErrorResponse:

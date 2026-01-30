@@ -619,19 +619,20 @@ class Agent(BaseModel):
     collections: Optional[list[Collection]] = None
 
 
-class BotConfig(BaseModel):
+class AgentConfig(BaseModel):
+    model_config = ConfigDict(extra='ignore')
+
     agent: Optional[Agent] = None
-    flow: Optional[WorkflowDefinition] = None
 
 
-class Bot(BaseModel):
+class AgentRecord(BaseModel):
     id: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
     type: Optional[Literal['knowledge', 'common', 'agent']] = Field(
-        None, description='The type of bot', examples=['knowledge']
+        None, description='The type of agent', examples=['agent']
     )
-    config: Optional[BotConfig] = None
+    config: Optional[AgentConfig] = None
     created: Optional[datetime] = None
     updated: Optional[datetime] = None
 
@@ -646,12 +647,8 @@ class PageResult(BaseModel):
     count: Optional[int] = Field(None, description='The total count of items')
 
 
-class BotList(BaseModel):
-    """
-    A list of bots
-    """
-
-    items: Optional[list[Bot]] = None
+class AgentList(BaseModel):
+    items: Optional[list[AgentRecord]] = None
     pageResult: Optional[PageResult] = None
 
 
@@ -662,23 +659,23 @@ class FailResponse(BaseModel):
     )
 
 
-class BotCreate(BaseModel):
+class AgentCreate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     type: Optional[Literal['knowledge', 'common', 'agent']] = Field(
-        None, description='The type of bot', examples=['knowledge']
+        None, description='The type of agent', examples=['agent']
     )
-    config: Optional[BotConfig] = None
+    config: Optional[AgentConfig] = None
 
 
-class BotUpdate(BaseModel):
+class AgentUpdate(BaseModel):
     id: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None
     type: Optional[Literal['knowledge', 'common', 'agent']] = Field(
-        None, description='The type of bot', examples=['knowledge']
+        None, description='The type of agent', examples=['agent']
     )
-    config: Optional[BotConfig] = None
+    config: Optional[AgentConfig] = None
 
 
 class DebugFlowRequest(BaseModel):
@@ -688,7 +685,7 @@ class DebugFlowRequest(BaseModel):
 class Chat(BaseModel):
     id: Optional[str] = None
     title: Optional[str] = None
-    bot_id: Optional[str] = None
+    agent_id: Optional[str] = None
     peer_id: Optional[str] = None
     peer_type: Optional[
         Literal['system', 'feishu', 'weixin', 'weixin_official', 'web', 'dingtalk']
@@ -776,7 +773,7 @@ class ChatMessage(BaseModel):
 class ChatDetails(BaseModel):
     id: Optional[str] = None
     title: Optional[str] = None
-    bot_id: Optional[str] = None
+    agent_id: Optional[str] = None
     peer_id: Optional[str] = None
     peer_type: Optional[
         Literal['system', 'feishu', 'weixin', 'weixin_official', 'web', 'dingtalk']

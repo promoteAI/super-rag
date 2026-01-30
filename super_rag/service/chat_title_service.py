@@ -20,7 +20,7 @@ class ChatTitleService:
     async def generate_title(
         self,
         user_id: str,
-        bot_id: str,
+        agent_id: str,
         chat_id: str,
         *,
         max_length: int = 20,
@@ -31,12 +31,11 @@ class ChatTitleService:
         max_length = max(6, min(max_length, 50))
         turns = max(1, turns)
 
-        # Verify bot and chat ownership
-        bot = await self.db_ops.query_bot(user_id, bot_id)
-        if not bot:
-            raise BusinessException(ErrorCode.BOT_NOT_FOUND, "Bot not found")
+        agent = await self.db_ops.query_agent(user_id, agent_id)
+        if not agent:
+            raise BusinessException(ErrorCode.BOT_NOT_FOUND, "Agent not found")
 
-        chat = await self.db_ops.query_chat(user_id, bot_id, chat_id)
+        chat = await self.db_ops.query_chat(user_id, agent_id, chat_id)
         if not chat:
             raise BusinessException(ErrorCode.CHAT_NOT_FOUND, "Chat not found")
 

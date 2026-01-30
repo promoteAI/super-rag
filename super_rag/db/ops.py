@@ -17,8 +17,8 @@ from super_rag.db.repositories.chat_message import(
     AsyncChatMessageRepositoryMixin,
     ChatMessageRepositoryMixin,
 )
-from super_rag.db.repositories.bot import(
-    AsyncBotRepositoryMixin,
+from super_rag.db.repositories.agent import (
+    AsyncAgentRepositoryMixin,
 )
 from super_rag.db.repositories.chat import (
     AsyncChatRepositoryMixin,
@@ -51,7 +51,7 @@ class AsyncDatabaseOps(
     AsyncCollectionRepositoryMixin,
     AsyncLlmProviderRepositoryMixin,
     AsyncChatMessageRepositoryMixin,
-    AsyncBotRepositoryMixin,
+    AsyncAgentRepositoryMixin,
     AsyncChatRepositoryMixin,
     AsyncDocumentIndexRepositoryMixin,
     AsyncUserRepositoryMixin,
