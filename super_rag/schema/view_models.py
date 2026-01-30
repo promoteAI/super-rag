@@ -457,6 +457,87 @@ class WorkflowRunResponse(BaseModel):
     )
 
 
+class WorkflowCreate(BaseModel):
+    """
+    创建一个可持久化的 workflow
+    """
+
+    name: str = Field(..., description='工作流名称（机器可读）')
+    title: Optional[str] = Field(None, description='展示标题')
+    description: Optional[str] = Field(None, description='工作流描述')
+    tags: Optional[list[str]] = Field(None, description='标签')
+    status: Optional[Literal['DRAFT', 'PUBLISHED', 'ARCHIVED']] = Field(
+        'DRAFT', description='工作流状态'
+    )
+    graph: WorkflowGraph = Field(..., description='图结构（nodes + edges）')
+    input_schema: Optional[dict[str, Any]] = Field(None, description='工作流入参 JSON Schema')
+    output_schema: Optional[dict[str, Any]] = Field(None, description='工作流出参 JSON Schema')
+
+
+class WorkflowUpdate(BaseModel):
+    """
+    更新一个 workflow（部分字段）
+    """
+
+    name: Optional[str] = Field(None, description='工作流名称（机器可读）')
+    title: Optional[str] = Field(None, description='展示标题')
+    description: Optional[str] = Field(None, description='工作流描述')
+    tags: Optional[list[str]] = Field(None, description='标签')
+    status: Optional[Literal['DRAFT', 'PUBLISHED', 'ARCHIVED']] = Field(None, description='工作流状态')
+    graph: Optional[WorkflowGraph] = Field(None, description='图结构（nodes + edges）')
+    input_schema: Optional[dict[str, Any]] = Field(None, description='工作流入参 JSON Schema')
+    output_schema: Optional[dict[str, Any]] = Field(None, description='工作流出参 JSON Schema')
+
+
+class WorkflowRecord(BaseModel):
+    """
+    workflow 持久化记录
+    """
+
+    id: str
+    name: str
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[list[str]] = None
+    status: Optional[str] = None
+    graph: WorkflowGraph
+    input_schema: Optional[dict[str, Any]] = None
+    output_schema: Optional[dict[str, Any]] = None
+    created: Optional[str] = None
+    updated: Optional[str] = None
+
+
+class WorkflowList(BaseModel):
+    items: list[WorkflowRecord] = Field(default_factory=list)
+
+
+class WorkflowVersionCreate(BaseModel):
+    name: Optional[str] = Field(None, description='版本名称')
+    title: Optional[str] = Field(None, description='展示标题')
+    description: Optional[str] = Field(None, description='版本描述')
+    save_type: Optional[Literal['manual', 'autosave']] = Field('manual', description='保存类型')
+    autosave_metadata: Optional[dict[str, Any]] = Field(None, description='自动保存元数据')
+
+
+class WorkflowVersionRecord(BaseModel):
+    id: str
+    workflow_id: str
+    version: int
+    name: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    graph: WorkflowGraph
+    input_schema: Optional[dict[str, Any]] = None
+    output_schema: Optional[dict[str, Any]] = None
+    save_type: Optional[str] = None
+    autosave_metadata: Optional[dict[str, Any]] = None
+    created: Optional[str] = None
+
+
+class WorkflowVersionList(BaseModel):
+    items: list[WorkflowVersionRecord] = Field(default_factory=list)
+
+
 class Agent(BaseModel):
     completion: Optional[ModelSpec] = None
     system_prompt_template: Optional[str] = None

@@ -26,6 +26,9 @@ from super_rag.db.repositories.chat import (
 from super_rag.db.repositories.document_index import(
     AsyncDocumentIndexRepositoryMixin,
 )
+from super_rag.db.repositories.workflow import (
+    AsyncWorkflowRepositoryMixin,
+)
 from super_rag.db.repositories.user import( 
     AsyncUserRepositoryMixin,
 )
@@ -51,7 +54,8 @@ class AsyncDatabaseOps(
     AsyncBotRepositoryMixin,
     AsyncChatRepositoryMixin,
     AsyncDocumentIndexRepositoryMixin,
-    AsyncUserRepositoryMixin
+    AsyncUserRepositoryMixin,
+    AsyncWorkflowRepositoryMixin,
 ):
     pass
 

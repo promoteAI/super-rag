@@ -394,6 +394,51 @@ class Bot(Base):
     gmt_deleted = Column(DateTime(timezone=True), nullable=True, index=True)  # Add index for soft delete queries
 
 
+class WorkflowStatus(str, Enum):
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    ARCHIVED = "ARCHIVED"
+    DELETED = "DELETED"
+
+
+class WorkflowTable(Base):
+    __tablename__ = "workflow"
+
+    id = Column(String(24), primary_key=True, default=lambda: "wf" + random_id())
+    user = Column(String(256), nullable=False, index=True)
+    name = Column(String(256), nullable=False)
+    title = Column(String(256), nullable=True)
+    description = Column(Text, nullable=True)
+    tags = Column(JSON, nullable=True, default=list)
+    status = Column(EnumColumn(WorkflowStatus), nullable=False, default=WorkflowStatus.DRAFT, index=True)
+    graph = Column(JSON, nullable=False, default=dict)
+    input_schema = Column(JSON, nullable=True)
+    output_schema = Column(JSON, nullable=True)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_deleted = Column(DateTime(timezone=True), nullable=True, index=True)
+
+
+class WorkflowVersionTable(Base):
+    __tablename__ = "workflow_version"
+    __table_args__ = (UniqueConstraint("workflow_id", "version", name="uq_workflow_version"),)
+
+    id = Column(String(24), primary_key=True, default=lambda: "wfv" + random_id())
+    workflow_id = Column(String(24), ForeignKey("workflow.id"), nullable=False, index=True)
+    user = Column(String(256), nullable=False, index=True)
+    version = Column(Integer, nullable=False)
+    name = Column(String(256), nullable=True)
+    title = Column(String(256), nullable=True)
+    description = Column(Text, nullable=True)
+    graph = Column(JSON, nullable=False, default=dict)
+    input_schema = Column(JSON, nullable=True)
+    output_schema = Column(JSON, nullable=True)
+    save_type = Column(String(64), nullable=False, default="manual")
+    autosave_metadata = Column(JSON, nullable=True, default=dict)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
 class ChatStatus(str, Enum):
     ACTIVE = "ACTIVE"
     DELETED = "DELETED"

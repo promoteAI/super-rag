@@ -5,6 +5,7 @@ from super_rag.api.collections import router as collections_router
 from super_rag.api.llm import router as llm_router
 from super_rag.api.bot import router as bot_router
 from super_rag.api.chat import router as chat_router
+from super_rag.api.workflow import router as workflow_router
 from super_rag.api.web import router as web_router
 from super_rag.api.auth import router as auth_router
 
@@ -27,6 +28,7 @@ app.include_router(collections_router, prefix="/api/v1")  # Add collections rout
 app.include_router(llm_router, prefix="/api/v1")  # Add llm router
 app.include_router(bot_router, prefix="/api/v1")
 app.include_router(chat_router, prefix="/api/v1")
+app.include_router(workflow_router, prefix="/api/v1")
 app.include_router(web_router, prefix="/api/v1")
 
 # Only include test router in dev mode
