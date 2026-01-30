@@ -1,12 +1,17 @@
 """解析工作流配置：仅支持 graph + input_schema 格式（如 rag_flow3.json / new_flow_structure.json）。"""
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Set
 
 import json
 import jsonref
 import yaml
 
-from super_rag.nodeflow.base.models import Edge, NodeflowInstance, NodeInstance
+from super_rag.nodeflow.base.models import (
+    Edge,
+    NODE_RUNNER_REGISTRY,
+    NodeflowInstance,
+    NodeInstance,
+)
 
 from .base.exceptions import ValidationError
 
@@ -109,6 +114,7 @@ class nodeflowParser:
             output_schema=data.get("output_schema"),
         )
         nodeflow.validate()
+        nodeflowParser._validate_edge_types(nodeflow)
         return nodeflow
 
     @staticmethod
@@ -137,6 +143,87 @@ class nodeflowParser:
             edge_id=edge_data.get("id"),
             ui_properties=edge_data.get("ui_properties"),
         )
+
+    @staticmethod
+    def _get_model_field_schema(model, field_name: str) -> Optional[dict[str, Any]]:
+        try:
+            schema = model.model_json_schema()
+        except Exception:
+            return None
+        properties = schema.get("properties") or {}
+        return properties.get(field_name)
+
+    @staticmethod
+    def _extract_schema_types(schema: Optional[dict[str, Any]]) -> Set[str]:
+        if not schema:
+            return set()
+        if "anyOf" in schema:
+            types: Set[str] = set()
+            for item in schema.get("anyOf") or []:
+                types.update(nodeflowParser._extract_schema_types(item))
+            return types
+        if "oneOf" in schema:
+            types = set()
+            for item in schema.get("oneOf") or []:
+                types.update(nodeflowParser._extract_schema_types(item))
+            return types
+        if "allOf" in schema:
+            types = set()
+            for item in schema.get("allOf") or []:
+                types.update(nodeflowParser._extract_schema_types(item))
+            return types
+        typ = schema.get("type")
+        if isinstance(typ, list):
+            return set(typ)
+        if isinstance(typ, str):
+            return {typ}
+        return set()
+
+    @staticmethod
+    def _types_compatible(source_types: Set[str], target_types: Set[str]) -> bool:
+        if not source_types or not target_types:
+            return True
+        if "any" in source_types or "any" in target_types:
+            return True
+        if source_types & target_types:
+            return True
+        if "integer" in source_types and "number" in target_types:
+            return True
+        return False
+
+    @staticmethod
+    def _validate_edge_types(nodeflow: NodeflowInstance) -> None:
+        for edge in nodeflow.edges:
+            source_node = nodeflow.nodes.get(edge.source)
+            target_node = nodeflow.nodes.get(edge.target)
+            if not source_node or not target_node:
+                continue
+            source_runner = NODE_RUNNER_REGISTRY.get(source_node.type)
+            target_runner = NODE_RUNNER_REGISTRY.get(target_node.type)
+            if not source_runner or not target_runner:
+                continue
+
+            source_handle = edge.source_handle
+            target_handle = edge.target_handle
+            if not source_handle or not target_handle:
+                continue
+
+            source_schema = nodeflowParser._get_model_field_schema(
+                source_runner.get("output_model"),
+                source_handle,
+            )
+            target_schema = nodeflowParser._get_model_field_schema(
+                target_runner.get("input_model"),
+                target_handle,
+            )
+
+            source_types = nodeflowParser._extract_schema_types(source_schema)
+            target_types = nodeflowParser._extract_schema_types(target_schema)
+            if not nodeflowParser._types_compatible(source_types, target_types):
+                raise ValidationError(
+                    f"Edge type mismatch: {edge.source}.{source_handle} ({sorted(source_types)}) "
+                    f"-> {edge.target}.{target_handle} ({sorted(target_types)})"
+                )
 
     @staticmethod
     def load_from_file(file_path: str) -> NodeflowInstance:
