@@ -439,6 +439,55 @@ class WorkflowVersionTable(Base):
     gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
+class WorkflowRunStatus(str, Enum):
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class NodeRunStatus(str, Enum):
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
+
+class WorkflowRunTable(Base):
+    __tablename__ = "workflow_run"
+
+    id = Column(String(24), primary_key=True, default=lambda: "wfr" + random_id())
+    workflow_id = Column(String(24), ForeignKey("workflow.id"), nullable=True, index=True)
+    workflow_version = Column(Integer, nullable=True)
+    user = Column(String(256), nullable=False, index=True)
+    execution_id = Column(String(64), nullable=True, index=True)
+    status = Column(EnumColumn(WorkflowRunStatus), nullable=False, default=WorkflowRunStatus.RUNNING, index=True)
+    input = Column(JSON, nullable=True)
+    output = Column(JSON, nullable=True)
+    error = Column(Text, nullable=True)
+    started_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class NodeRunTable(Base):
+    __tablename__ = "node_run"
+
+    id = Column(String(24), primary_key=True, default=lambda: "nr" + random_id())
+    run_id = Column(String(24), ForeignKey("workflow_run.id"), nullable=False, index=True)
+    node_id = Column(String(128), nullable=False, index=True)
+    node_type = Column(String(128), nullable=True)
+    status = Column(EnumColumn(NodeRunStatus), nullable=False, default=NodeRunStatus.RUNNING, index=True)
+    input_snapshot = Column(JSON, nullable=True)
+    output_snapshot = Column(JSON, nullable=True)
+    error = Column(Text, nullable=True)
+    duration_ms = Column(Integer, nullable=True)
+    started_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
 class ChatStatus(str, Enum):
     ACTIVE = "ACTIVE"
     DELETED = "DELETED"

@@ -14,6 +14,7 @@ from super_rag.exceptions import ResourceNotFoundException
 from super_rag.nodeflow.engine import NodeflowEngine
 from super_rag.nodeflow.parser import nodeflowParser
 from super_rag.schema import view_models
+from super_rag.service.workflow_run_recorder import WorkflowRunRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,16 @@ class FlowService:
         workflow_dict = data.workflow.model_dump(by_alias=True, exclude_none=True)
         flow = nodeflowParser.parse(workflow_dict)
 
-        engine = NodeflowEngine()
+        recorder = None
+        if data.persist:
+            recorder = WorkflowRunRecorder(
+                db_ops=self.db_ops,
+                user=user,
+                workflow_id=data.workflow_id,
+                workflow_version=data.workflow_version,
+                input_payload=data.input,
+            )
+        engine = NodeflowEngine(recorder=recorder)
 
         # initial_data 里至少带上 user，方便节点侧取用
         initial_data = {"user": user}

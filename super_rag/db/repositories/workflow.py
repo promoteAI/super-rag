@@ -2,7 +2,15 @@ from typing import Any, Optional
 
 from sqlalchemy import desc, func, select
 
-from super_rag.db.models import WorkflowStatus, WorkflowTable, WorkflowVersionTable
+from super_rag.db.models import (
+    NodeRunStatus,
+    NodeRunTable,
+    WorkflowRunStatus,
+    WorkflowRunTable,
+    WorkflowStatus,
+    WorkflowTable,
+    WorkflowVersionTable,
+)
 from super_rag.db.repositories.base import AsyncRepositoryProtocol
 from super_rag.utils.utils import utc_now
 
@@ -186,3 +194,105 @@ class AsyncWorkflowRepositoryMixin(AsyncRepositoryProtocol):
             return result.scalars().first()
 
         return await self._execute_query(_query)
+
+    async def create_workflow_run(
+        self,
+        user: str,
+        workflow_id: Optional[str],
+        workflow_version: Optional[int],
+        execution_id: Optional[str],
+        input_payload: Optional[dict[str, Any]],
+    ) -> WorkflowRunTable:
+        async def _operation(session):
+            instance = WorkflowRunTable(
+                user=user,
+                workflow_id=workflow_id,
+                workflow_version=workflow_version,
+                execution_id=execution_id,
+                status=WorkflowRunStatus.RUNNING,
+                input=input_payload,
+            )
+            session.add(instance)
+            await session.flush()
+            await session.refresh(instance)
+            return instance
+
+        return await self.execute_with_transaction(_operation)
+
+    async def update_workflow_run(
+        self,
+        run_id: str,
+        status: WorkflowRunStatus,
+        output_payload: Optional[dict[str, Any]],
+        error: Optional[str],
+        finished_at,
+    ) -> Optional[WorkflowRunTable]:
+        async def _operation(session):
+            stmt = select(WorkflowRunTable).where(WorkflowRunTable.id == run_id)
+            result = await session.execute(stmt)
+            instance = result.scalars().first()
+            if not instance:
+                return None
+            instance.status = status
+            instance.output = output_payload
+            instance.error = error
+            instance.finished_at = finished_at
+            instance.gmt_updated = utc_now()
+            session.add(instance)
+            await session.flush()
+            await session.refresh(instance)
+            return instance
+
+        return await self.execute_with_transaction(_operation)
+
+    async def create_node_run(
+        self,
+        run_id: str,
+        node_id: str,
+        node_type: Optional[str],
+        input_snapshot: Optional[dict[str, Any]],
+        started_at,
+    ) -> NodeRunTable:
+        async def _operation(session):
+            instance = NodeRunTable(
+                run_id=run_id,
+                node_id=node_id,
+                node_type=node_type,
+                status=NodeRunStatus.RUNNING,
+                input_snapshot=input_snapshot,
+                started_at=started_at,
+            )
+            session.add(instance)
+            await session.flush()
+            await session.refresh(instance)
+            return instance
+
+        return await self.execute_with_transaction(_operation)
+
+    async def update_node_run(
+        self,
+        node_run_id: str,
+        status: NodeRunStatus,
+        output_snapshot: Optional[dict[str, Any]],
+        error: Optional[str],
+        duration_ms: Optional[int],
+        finished_at,
+    ) -> Optional[NodeRunTable]:
+        async def _operation(session):
+            stmt = select(NodeRunTable).where(NodeRunTable.id == node_run_id)
+            result = await session.execute(stmt)
+            instance = result.scalars().first()
+            if not instance:
+                return None
+            instance.status = status
+            instance.output_snapshot = output_snapshot
+            instance.error = error
+            instance.duration_ms = duration_ms
+            instance.finished_at = finished_at
+            instance.gmt_updated = utc_now()
+            session.add(instance)
+            await session.flush()
+            await session.refresh(instance)
+            return instance
+
+        return await self.execute_with_transaction(_operation)

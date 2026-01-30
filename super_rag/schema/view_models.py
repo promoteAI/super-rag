@@ -437,9 +437,21 @@ class WorkflowRunRequest(BaseModel):
     """
 
     workflow: WorkflowDefinition = Field(..., description='Workflow 定义')
+    workflow_id: Optional[str] = Field(
+        None,
+        description='可选的 workflow_id，用于持久化运行记录',
+    )
+    workflow_version: Optional[int] = Field(
+        None,
+        description='可选的 workflow 版本，用于持久化运行记录',
+    )
     input: Optional[dict[str, Any]] = Field(
         None,
         description='工作流全局输入，会作为 ExecutionContext.global_variables 传入',
+    )
+    persist: Optional[bool] = Field(
+        False,
+        description='是否持久化记录 workflow_run 与 node_run',
     )
 
 

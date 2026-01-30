@@ -2,9 +2,10 @@
 
 import asyncio
 import logging
+import time
 import uuid
 from collections import deque
-from typing import Any, AsyncGenerator, Dict, List, Set
+from typing import Any, AsyncGenerator, Dict, List, Optional, Set
 
 from jinja2 import Environment, StrictUndefined
 
@@ -52,11 +53,12 @@ class nodeflowEventType:
 class NodeflowEngine:
     """Engine for executing nodeflow instances"""
 
-    def __init__(self):
+    def __init__(self, recorder: Optional[Any] = None):
         self.context = ExecutionContext()
         self.execution_id = None
         self._event_queue = asyncio.Queue()
         self.jinja_env = Environment(undefined=StrictUndefined)
+        self.recorder = recorder
 
     async def emit_event(self, event: nodeflowEvent):
         """Emit an event to all consumers"""
@@ -105,6 +107,8 @@ class NodeflowEngine:
                     data={"nodeflow_name": nodeflow.name},
                 )
             )
+            if self.recorder:
+                await self.recorder.on_flow_start(self.execution_id)
 
             # Initialize global variables
             if initial_data:
@@ -128,6 +132,8 @@ class NodeflowEngine:
                     data={"nodeflow_name": nodeflow.name},
                 )
             )
+            if self.recorder:
+                await self.recorder.on_flow_end(self.context.outputs)
 
             logger.info(f"Completed nodeflow execution {self.execution_id}", extra={"execution_id": self.execution_id})
             return self.context.outputs, self.context.system_outputs
@@ -143,6 +149,8 @@ class NodeflowEngine:
                     data={"nodeflow_name": nodeflow.name, "error": str(e)},
                 )
             )
+            if self.recorder:
+                await self.recorder.on_flow_error(str(e))
             raise e
 
     def _topological_sort(self, nodeflow: NodeflowInstance) -> List[str]:
@@ -406,6 +414,7 @@ class NodeflowEngine:
         if not runner_info:
             raise ValidationError(f"Unknown node type: {node.type}")
         runner = runner_info["runner"]
+        start_time = time.perf_counter()
         try:
             user_input, sys_input = self._bind_node_inputs(node, runner_info)
             await self.emit_event(
@@ -417,6 +426,8 @@ class NodeflowEngine:
                     {"node_type": node.type, "inputs": user_input.model_dump()},
                 )
             )
+            if self.recorder:
+                await self.recorder.on_node_start(node.id, node.type, user_input.model_dump())
             outputs = await runner.run(user_input, sys_input)
             if isinstance(outputs, tuple) and len(outputs) == 2:
                 output_data, system_output = outputs
@@ -434,6 +445,9 @@ class NodeflowEngine:
                     {"node_type": node.type, "outputs": output_data},
                 )
             )
+            if self.recorder:
+                duration_ms = int((time.perf_counter() - start_time) * 1000)
+                await self.recorder.on_node_end(node.id, output_data, duration_ms)
         except Exception as e:
             await self.emit_event(
                 nodeflowEvent(
@@ -444,6 +458,9 @@ class NodeflowEngine:
                     {"node_type": node.type, "error": str(e)},
                 )
             )
+            if self.recorder:
+                duration_ms = int((time.perf_counter() - start_time) * 1000)
+                await self.recorder.on_node_error(node.id, str(e), duration_ms)
             raise e
 
     def update_node_input(self, nodeflow: NodeflowInstance, node_id: str, value: Any):
