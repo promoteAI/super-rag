@@ -340,6 +340,24 @@ class WorkflowStyle(BaseModel):
 # ----- 工作流图格式（与 rag_flow3.json / nodeflow parser 对齐） -----
 
 
+class NodeUIProperties(BaseModel):
+    """
+    节点画布展示属性，与 nodetool / 前端格式对齐。
+    """
+
+    model_config = ConfigDict(extra='allow', populate_by_name=True)
+
+    position: Optional[dict[str, float]] = Field(
+        None,
+        description='节点在画布上的坐标 { x, y }',
+    )
+    zIndex: Optional[int] = Field(None, alias='zIndex', description='层级')
+    width: Optional[float] = Field(None, description='宽度（px）')
+    height: Optional[float] = Field(None, description='高度（px）')
+    selectable: Optional[bool] = Field(None, description='是否可选')
+    bypassed: Optional[bool] = Field(None, description='是否旁路')
+
+
 class WorkflowGraphNode(BaseModel):
     """
     工作流图中的节点。id、type、data（扁平配置），可选 ui_properties（画布位置等）。
@@ -355,7 +373,7 @@ class WorkflowGraphNode(BaseModel):
     )
     ui_properties: Optional[dict[str, Any]] = Field(
         None,
-        description='画布展示（position、width、height 等）',
+        description='画布展示，建议结构同 NodeUIProperties：position {x,y}、zIndex、width、height、selectable、bypassed',
     )
 
 
