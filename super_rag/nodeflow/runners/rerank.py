@@ -1,9 +1,9 @@
 
 
 import logging
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from super_rag.db.ops import async_db_ops
 from super_rag.nodeflow.base.models import BaseNodeRunner, SystemInput, register_node_runner
@@ -26,6 +26,24 @@ class RerankInput(BaseModel):
         default=None, description="Custom LLM provider (e.g., 'jina_ai', 'openai')"
     )
     docs: List[DocumentWithScore]
+    # 兼容上游以 "value" 端口传入（如 MergeOutput 整对象或 docs 列表）
+    value: Optional[Any] = Field(default=None, exclude=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def value_to_docs(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        if "docs" in data and data["docs"] is not None:
+            return data
+        val = data.get("value")
+        if val is None:
+            return data
+        if hasattr(val, "docs"):
+            data = {**data, "docs": val.docs}
+        elif isinstance(val, list):
+            data = {**data, "docs": val}
+        return data
 
 
 class RerankOutput(BaseModel):
