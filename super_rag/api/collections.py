@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, Response, UploadFile
+from super_rag.service.marketplace_service import marketplace_service
 from super_rag.db.models import User
 from super_rag.schema import view_models
 from super_rag.service.document_service import document_service
@@ -55,6 +56,66 @@ async def delete_collection_view(
     user: User = Depends(default_user),
 ) -> view_models.Collection:
     return await collection_service.delete_collection(str(user.id), collection_id)
+
+# Collection sharing endpoints
+@router.get("/collections/{collection_id}/sharing", tags=["collections"])
+async def get_collection_sharing_status(
+    collection_id: str,
+    user: User = Depends(default_user),
+) -> view_models.SharingStatusResponse:
+    """Get collection sharing status (owner only)"""
+    from super_rag.exceptions import CollectionNotFoundException, PermissionDeniedError
+
+    try:
+        is_published, published_at = await marketplace_service.get_sharing_status(user.id, collection_id)
+        return view_models.SharingStatusResponse(is_published=is_published, published_at=published_at)
+    except CollectionNotFoundException:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    except PermissionDeniedError:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    except Exception as e:
+        logger.error(f"Error getting collection sharing status {collection_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/collections/{collection_id}/sharing", tags=["collections"])
+async def publish_collection_to_marketplace(
+    collection_id: str,
+    user: User = Depends(default_user),
+):
+    """Publish collection to marketplace (owner only)"""
+    from super_rag.exceptions import CollectionNotFoundException, PermissionDeniedError
+
+    try:
+        await marketplace_service.publish_collection(user.id, collection_id)
+        return Response(status_code=204)
+    except CollectionNotFoundException:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    except PermissionDeniedError:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    except Exception as e:
+        logger.error(f"Error publishing collection {collection_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/collections/{collection_id}/sharing", tags=["collections"])
+async def unpublish_collection_from_marketplace(
+    collection_id: str,
+    user: User = Depends(default_user),
+):
+    """Unpublish collection from marketplace (owner only)"""
+    from super_rag.exceptions import CollectionNotFoundException, PermissionDeniedError
+
+    try:
+        await marketplace_service.unpublish_collection(user.id, collection_id)
+        return Response(status_code=204)
+    except CollectionNotFoundException:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    except PermissionDeniedError:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    except Exception as e:
+        logger.error(f"Error unpublishing collection {collection_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/collections/{collection_id}/documents", tags=["documents"])

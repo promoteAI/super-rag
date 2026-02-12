@@ -76,6 +76,32 @@ class DocumentIndexTask:
                 if not result.success:
                     raise Exception(result.error)
                 result_data = result.data or {"success": True}
+            elif index_type == DocumentIndexType.VISION.value:
+                from super_rag.index.vision_index import vision_indexer
+
+                result = vision_indexer.create_index(
+                    document_id=document_id,
+                    content=parsed_data.content,
+                    doc_parts=parsed_data.doc_parts,
+                    collection=collection,
+                    file_path=parsed_data.file_path,
+                )
+                if not result.success:
+                    raise Exception(result.error)
+                result_data = result.data or {"success": True}
+            elif index_type == DocumentIndexType.SUMMARY.value:
+                from super_rag.index.summary_index import summary_indexer
+
+                result = summary_indexer.create_index(
+                    document_id=document_id,
+                    content=parsed_data.content,
+                    doc_parts=parsed_data.doc_parts,
+                    collection=collection,
+                    file_path=parsed_data.file_path,
+                )
+                if not result.success:
+                    raise Exception(result.error)
+                result_data = result.data or {"success": True}
             else:
                 raise ValueError(f"Unknown index type: {index_type}")
 
@@ -113,6 +139,18 @@ class DocumentIndexTask:
                 from super_rag.index.vector_and_full_text_index import vector_and_full_text_indexer
 
                 result = vector_and_full_text_indexer.delete_index(document_id, collection)
+                if not result.success:
+                    raise Exception(result.error)
+            elif index_type == DocumentIndexType.VISION.value:
+                from super_rag.index.vision_index import vision_indexer
+
+                result = vision_indexer.delete_index(document_id, collection)
+                if not result.success:
+                    raise Exception(result.error)
+            elif index_type == DocumentIndexType.SUMMARY.value:
+                from super_rag.index.summary_index import summary_indexer
+
+                result = summary_indexer.delete_index(document_id, collection)
                 if not result.success:
                     raise Exception(result.error)
             else:
@@ -161,6 +199,32 @@ class DocumentIndexTask:
                     raise Exception(result.error)
                 result_data = result.data or {"success": True}
                 
+            elif index_type == DocumentIndexType.VISION.value:
+                from super_rag.index.vision_index import vision_indexer
+
+                result = vision_indexer.update_index(
+                    document_id=document_id,
+                    content=parsed_data.content,
+                    doc_parts=parsed_data.doc_parts,
+                    collection=collection,
+                    file_path=parsed_data.file_path,
+                )
+                if not result.success:
+                    raise Exception(result.error)
+                result_data = result.data or {"success": True}
+            elif index_type == DocumentIndexType.SUMMARY.value:
+                from super_rag.index.summary_index import summary_indexer
+
+                result = summary_indexer.update_index(
+                    document_id=document_id,
+                    content=parsed_data.content,
+                    doc_parts=parsed_data.doc_parts,
+                    collection=collection,
+                    file_path=parsed_data.file_path,
+                )
+                if not result.success:
+                    raise Exception(result.error)
+                result_data = result.data or {"success": True}
             else:
                 raise ValueError(f"Unknown index type: {index_type}")
 
