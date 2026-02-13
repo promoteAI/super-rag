@@ -62,3 +62,6 @@ packages = ["super_rag","config"]
 [[tool.uv.index]]
 url = "https://repo.huaweicloud.com/repository/pypi/simple"
 default = true
+
+[tool.uv.workspace]
+members = []
