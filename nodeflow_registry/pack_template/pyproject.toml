@@ -1,0 +1,14 @@
+[project]
+name = "super-rag-nodes-example"
+version = "0.1.0"
+description = "示例 Nodeflow 节点包，可发布到 Git 并注册到 nodeflow_registry"
+requires-python = ">=3.11"
+dependencies = [
+    "super-rag>=0.1.0",
+]
+
+[project.entry-points."super_rag.nodeflow.packs"]
+example = "super_rag_nodes_example:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

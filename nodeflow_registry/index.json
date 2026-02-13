@@ -1,0 +1,11 @@
+{
+  "packages": [
+    {
+      "name": "Super-RAG 内置节点",
+      "description": "内置 RAG 工作流节点：开始、向量/图检索、重排、合并、大模型。",
+      "repo_id": "super-rag/super-rag",
+      "builtin": true,
+      "node_types": ["start", "vector_search", "graph_search", "rerank", "merge", "llm"]
+    }
+  ]
+}
