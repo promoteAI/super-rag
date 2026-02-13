@@ -79,8 +79,6 @@ async def websocket_chat_endpoint(
     对协议头部和握手进行优化，提高兼容性和调试体验。
     """
     logger.info(f"WebSocket chat endpoint called with agent_id: {agent_id}, chat_id: {chat_id}, user: {user}")
-
-    # 自定义协议升级响应头部(兼容调试、扩展)
     await websocket.accept(
         headers=[
             (b"Sec-WebSocket-Extensions", b"permessage-deflate"),
@@ -88,8 +86,6 @@ async def websocket_chat_endpoint(
         ]
     )
     logger.debug("WebSocket handshake: 协议升级和扩展头部已设置。")
-
-    # 继续进入业务处理
     await chat_service_global.handle_websocket_chat(
         websocket,
         str(user.id),
