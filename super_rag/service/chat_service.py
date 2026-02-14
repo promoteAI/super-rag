@@ -467,12 +467,17 @@ class ChatService:
         agent_id: str,
         chat_id: str,
     ):
-        """Handle WebSocket chat connections and message streaming"""
-
+        """Handle WebSocket chat connections and message streaming.
+        在返回或出错时显式发送关闭帧，避免客户端收到 1006 异常关闭。
+        """
         try:
             agent = await self.db_ops.query_agent(user, agent_id)
             if not agent:
                 await websocket.send_text(fail_response("error", "Agent not found"))
+                try:
+                    await websocket.close(code=1008, reason="Agent not found")
+                except Exception:
+                    pass
                 return
 
             from super_rag.service.agent_chat_service import AgentChatService
@@ -485,8 +490,12 @@ class ChatService:
             logger.exception(f"WebSocket error: {e}")
             try:
                 await websocket.send_text(fail_response("error", str(e)))
-            except Exception as e:
-                logger.exception(f"Error sending fail response: {e}")
+            except Exception as send_err:
+                logger.exception(f"Error sending fail response: {send_err}")
+            try:
+                await websocket.close(code=1011, reason="Internal error")
+            except Exception:
+                pass
 
 
 # Create a global service instance for easy access

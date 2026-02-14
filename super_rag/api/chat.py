@@ -77,21 +77,30 @@ async def websocket_chat_endpoint(
     """
     WebSocket 端点，用于与机器人进行实时聊天。
     对协议头部和握手进行优化，提高兼容性和调试体验。
+    先 accept 再处理业务，异常时显式关闭连接，避免客户端收到 1006。
     """
     logger.info(f"WebSocket chat endpoint called with agent_id: {agent_id}, chat_id: {chat_id}, user: {user}")
-    await websocket.accept(
-        headers=[
-            (b"Sec-WebSocket-Extensions", b"permessage-deflate"),
-            (b"Server", b"uvicorn"),
-        ]
-    )
-    logger.debug("WebSocket handshake: 协议升级和扩展头部已设置。")
-    await chat_service_global.handle_websocket_chat(
-        websocket,
-        str(user.id),
-        agent_id,
-        chat_id
-    )
+    try:
+        # 不传自定义 headers，避免 permessage-deflate 等扩展导致握手后立即 1006 断开
+        await websocket.accept()
+    except Exception as e:
+        logger.exception(f"WebSocket accept failed: {e}")
+        raise
+    logger.debug("WebSocket handshake: 协议升级完成。")
+    try:
+        await chat_service_global.handle_websocket_chat(
+            websocket,
+            str(user.id),
+            agent_id,
+            chat_id
+        )
+    except Exception as e:
+        logger.exception(f"WebSocket handler error: {e}")
+        try:
+            await websocket.close(code=1011, reason="Internal error")
+        except Exception:
+            pass
+        raise
 
 
 @router.post("/agents/{agent_id}/chats/{chat_id}/title")
