@@ -98,6 +98,10 @@ class Config(BaseSettings):
     jwt_secret: str = Field("your-super-secret-key-change-in-production", alias="JWT_SECRET")
     jwt_lifetime_seconds: int = Field(86400, alias="JWT_LIFETIME_SECONDS")  # 24 hours
 
+    # Super Rag
+    super_rag_api_key: str = Field("1234567890", alias="SUPER_RAG_API_KEY")
+    super_rag_mcp_url: str = Field("http://localhost:8000/mcp/", alias="SUPER_RAG_MCP_URL")
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

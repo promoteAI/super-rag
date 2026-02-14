@@ -75,10 +75,13 @@ class ChatSession:
 
             logger.info(f"Chat session {self.config.get_session_key()} ready")
 
+        except AgentConfigurationError:
+            await self._cleanup()
+            raise
         except Exception as e:
             logger.error(f"Failed to initialize session {self.config.get_session_key()}: {e}")
             await self._cleanup()
-            raise AgentConfigurationError(f"Session init failed: {e}")
+            raise AgentConfigurationError("session_init", str(e))
 
     async def get_llm(self, model: str) -> OpenAIAugmentedLLM:
         """Get cached LLM instance for this chat session."""
