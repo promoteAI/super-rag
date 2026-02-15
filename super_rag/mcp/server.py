@@ -32,10 +32,9 @@ async def list_collections() -> Dict[str, Any]:
         sensitive and unnecessary information.
     """
     try:
-        api_key = get_api_key()
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
-                f"{API_BASE_URL}/api/v1/collections", headers={"Authorization": f"Bearer {api_key}"}
+                f"{API_BASE_URL}/api/v1/collections"
             )
             if response.status_code == 200:
                 try:
@@ -142,8 +141,6 @@ async def search_collection(
         The `asset_url` uses a special `asset://` scheme instead of `http/https`. This helps the front-end parse and handle it. It uses `asset_id` as the path and passes `document_id`, `collection_id`, and `mimetype` as query parameters. Note that `asset_id`, `document_id`, and `collection_id` are required to display the image and must not be omitted.
     """
     try:
-        api_key = get_api_key()
-
         # Build search request based on enabled search types
         search_data = {"query": query, "rerank": rerank}
 
@@ -171,7 +168,6 @@ async def search_collection(
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/collections/{collection_id}/searches",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json=search_data,
             )
             if response.status_code == 200 or response.status_code == 201:
@@ -250,7 +246,6 @@ async def search_chat_files(
         - Use asset:// URLs for displaying images in markdown
     """
     try:
-        api_key = get_api_key()
 
         # Build search request based on enabled search types
         search_data = {"query": query, "rerank": rerank}
@@ -270,7 +265,6 @@ async def search_chat_files(
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/chats/{chat_id}/search",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json=search_data,
             )
             if response.status_code == 200 or response.status_code == 201:
@@ -327,8 +321,6 @@ async def web_search(
         Results are automatically merged and ranked.
     """
     try:
-        api_key = get_api_key()
-
         # Build search request
         search_data = {
             "max_results": max_results,
@@ -350,7 +342,6 @@ async def web_search(
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/web/search",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json=search_data,
             )
             if response.status_code == 200:
@@ -389,8 +380,6 @@ async def web_read(
         Uses WebReadResponse view model for type-safe response parsing
     """
     try:
-        api_key = get_api_key()
-
         # Validate url_list parameter
         if not url_list or len(url_list) == 0:
             return {"error": "url_list parameter is required and must contain at least one URL"}
@@ -407,7 +396,6 @@ async def web_read(
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/web/read",
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
                 json=read_data,
             )
             if response.status_code == 200:
@@ -653,60 +641,8 @@ I can help you search your knowledge base effectively using ApeRAG.
 - **Adjust topk values** based on your needs (number of results per search type)
 - Enable **all search types** for comprehensive results, or **specific types** for focused searches
 
-## Authentication:
-API authentication is handled automatically through:
-1. **HTTP Authorization header**: `Authorization: Bearer your-api-key` (preferred for HTTP transport)
-2. **Environment variable**: `APERAG_API_KEY=your-api-key` (fallback method)
-
-Make sure at least one authentication method is properly configured in your MCP client.
-
 Ready to help you find the information you need!
 """
-
-
-def get_api_key() -> str:
-    """Get API key from HTTP headers or environment variable.
-
-    Priority order:
-    1. Authorization header from HTTP request (using FastMCP dependency)
-    2. APERAG_API_KEY environment variable
-
-    Returns:
-        API key string
-
-    Raises:
-        ValueError: If API key is not found
-    """
-    # Try to get API key from HTTP headers first
-    try:
-        # Use FastMCP's dependency function to get HTTP headers
-        headers = get_http_headers()
-
-        if headers:
-            # Try to extract Authorization header
-            auth_header = headers.get("Authorization") or headers.get("authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                api_key = auth_header[7:]  # Remove 'Bearer ' prefix
-                logger.info(f"API key found in Authorization header, length: {len(api_key)}")
-                return api_key
-
-    except Exception as e:
-        # get_http_headers() might fail if not in HTTP request context
-        logger.debug(f"Could not extract API key from headers: {e}")
-
-    # Fallback to environment variable
-    api_key = settings.super_rag_api_key
-
-    if api_key:
-        logger.info(f"API key found in environment variable, length: {len(api_key)}")
-        return api_key
-
-    raise ValueError(
-        "API key not found. Please provide API key via:\n"
-        "1. Authorization: Bearer <token> HTTP header, or\n"
-        "2. APERAG_API_KEY environment variable"
-    )
-
 
 # Export the server instance
 __all__ = ["mcp_server"]

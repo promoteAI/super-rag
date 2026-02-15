@@ -100,7 +100,7 @@ class Config(BaseSettings):
 
     # Super Rag
     super_rag_api_key: str = Field("1234567890", alias="SUPER_RAG_API_KEY")
-    super_rag_mcp_url: str = Field("http://localhost:8000/mcp/", alias="SUPER_RAG_MCP_URL")
+    super_rag_mcp_url: str = Field("http://localhost:8000", alias="SUPER_RAG_MCP_URL")
 
 
     def __init__(self, **kwargs):
