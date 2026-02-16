@@ -26,10 +26,12 @@ from super_rag.agent import (
     format_query_required_error,
     format_stream_content,
     format_stream_end,
-    format_stream_start,
+    format_stream_start, 
+    format_tool_call_result,
 )
 from super_rag.agent.agent_config import AgentConfig
 from super_rag.agent.agent_event_listener import agent_event_listener
+from super_rag.agent.tool_call_context import clear_tool_call_context, set_tool_call_context
 from super_rag.agent.exceptions import (
     AgentConfigurationError,
     JSONParsingError,
@@ -531,15 +533,21 @@ class AgentChatService:
                 temperature=0.7,
                 user=user,
             )
-            response = await llm.generate_str(comprehensive_prompt, request_params)
+
+            set_tool_call_context(message_id, message_queue)
+            try:
+                response = await llm.generate_str(comprehensive_prompt, request_params)
+            finally:
+                clear_tool_call_context()
             full_content = response if response else "No response generated"
 
             await asyncio.sleep(0.1)  # Allow time for the message to be processed in listener
 
-            await message_queue.put(format_stream_content(message_id, full_content))
-
             tool_references = extract_tool_call_references(llm.history)
             urls = []
+            # MCP 工具调用结果在生成最终分析之前发送给前端
+            await message_queue.put(format_tool_call_result(message_id, json.dumps(tool_references), "tool_call_result", None))
+            await message_queue.put(format_stream_content(message_id, full_content))
 
             await message_queue.put(format_stream_end(message_id, references=tool_references, urls=urls))
 

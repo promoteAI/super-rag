@@ -8,9 +8,9 @@ import time
 from typing import Dict, Optional
 
 from mcp_agent.agents.agent import Agent
-from mcp_agent.workflows.llm.augmented_llm_openai import OpenAIAugmentedLLM
 
 from super_rag.agent.agent_config import AgentConfig
+from super_rag.agent.openai_llm_tool_events import SuperRagOpenAIAugmentedLLM
 from super_rag.agent.exceptions import AgentConfigurationError
 from super_rag.agent.mcp_app_factory import MCPAppFactory
 
@@ -66,8 +66,8 @@ class ChatSession:
 
             await self.agent.__aenter__()
 
-            # Create and cache LLM instance for this chat session
-            self.llm = await self.agent.attach_llm(OpenAIAugmentedLLM)
+            # Create and cache LLM instance for this chat session (explicit MCP tool call events to frontend)
+            self.llm = await self.agent.attach_llm(SuperRagOpenAIAugmentedLLM)
             from mcp_agent.logging.logger import get_logger
 
             self.llm.logger = get_logger(self.llm.name, session_id=self.llm.context.session_id)
@@ -83,7 +83,7 @@ class ChatSession:
             await self._cleanup()
             raise AgentConfigurationError("session_init", str(e))
 
-    async def get_llm(self, model: str) -> OpenAIAugmentedLLM:
+    async def get_llm(self, model: str) -> SuperRagOpenAIAugmentedLLM:
         """Get cached LLM instance for this chat session."""
         if not self._ready:
             raise AgentConfigurationError("Session not ready")

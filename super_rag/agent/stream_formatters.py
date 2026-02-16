@@ -13,6 +13,7 @@ from .response_types import (
     AgentStopResponse,
     AgentThinkingResponse,
     AgentToolCallResultResponse,
+    AgentToolCallStartResponse,
 )
 
 
@@ -89,13 +90,30 @@ def format_thinking(msg_id: str, content: str) -> AgentThinkingResponse:
     )
 
 
-def format_tool_call_result(msg_id: str, data: str, tool_name: str, result: Any) -> AgentMessageResponse:
+def format_tool_call_start(
+    msg_id: str, tool_call_id: str, tool_name: str, arguments_str: str
+) -> AgentToolCallStartResponse:
+    """Format tool call start event (explicit MCP tool invocation) for frontend."""
+    return AgentToolCallStartResponse(
+        type="tool_call_start",
+        id=msg_id,
+        tool_call_id=tool_call_id,
+        tool_name=tool_name,
+        data=arguments_str,
+        timestamp=int(time.time()),
+    )
+
+
+def format_tool_call_result(
+    msg_id: str, data: str, tool_name: str, result: Any, tool_call_id: str | None = None
+) -> AgentToolCallResultResponse:
     return AgentToolCallResultResponse(
         type="tool_call_result",
         id=msg_id,
         data=data,
         tool_name=tool_name,
         result=result,
+        tool_call_id=tool_call_id,
         timestamp=int(time.time()),
     )
 

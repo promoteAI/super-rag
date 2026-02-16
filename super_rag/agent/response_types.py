@@ -2,7 +2,7 @@
 
 """Unified response type definitions for agent chat."""
 
-from typing import Any, Dict, List, Literal, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
 
 class BaseAgentResponse(TypedDict):
@@ -47,6 +47,15 @@ class AgentThinkingResponse(BaseAgentResponse):
     data: str
 
 
+class AgentToolCallStartResponse(BaseAgentResponse):
+    """Tool call start - explicit MCP tool invocation (name + args) sent before execution."""
+
+    type: Literal["tool_call_start"]
+    tool_call_id: str
+    tool_name: str
+    data: str  # arguments as JSON or display string
+
+
 class AgentToolCallResultResponse(BaseAgentResponse):
     """Tool call end response."""
 
@@ -54,6 +63,7 @@ class AgentToolCallResultResponse(BaseAgentResponse):
     data: str  # Display text
     tool_name: str
     result: Any
+    tool_call_id: Optional[str]  # optional for backward compat
 
 
 # Union type for all possible agent responses
@@ -63,6 +73,7 @@ AgentResponse = Union[
     AgentStopResponse,
     AgentErrorResponse,
     AgentThinkingResponse,
+    AgentToolCallStartResponse,
     AgentToolCallResultResponse,
 ]
 

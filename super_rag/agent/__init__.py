@@ -64,6 +64,8 @@ from .stream_formatters import (
     format_stream_end,
     format_stream_start,
     format_thinking,
+    format_tool_call_result, 
+    format_activity_snapshot,
 )
 from .tool_reference_extractor import extract_tool_call_references
 
@@ -89,6 +91,8 @@ __all__ = [
     "format_stream_start",
     "format_thinking",
     # Tool formatters
+    "format_tool_call_result",
+    "format_activity_snapshot",
     # Tool reference extractor
     "extract_tool_call_references",
     # Exception classes

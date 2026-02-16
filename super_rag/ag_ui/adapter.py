@@ -79,6 +79,7 @@ async def stream_ag_ui_events(
         return raw.encode("utf-8") if isinstance(raw, str) else raw
 
     tool_call_index = 0
+    tool_call_starts_sent = set()  # tool_call_ids for which we already emitted ToolCallStartEvent
 
     try:
         while True:
@@ -92,7 +93,20 @@ async def stream_ag_ui_events(
             msg_type = message.get("type")
             msg_id = message.get("id") or message_id
 
-            if msg_type == "start":
+            if msg_type == "tool_call_start":
+                tool_call_id = message.get("tool_call_id") or f"tool_{msg_id}_{tool_call_index}"
+                tool_call_index += 1
+                tool_name = message.get("tool_name") or "tool"
+                tool_call_starts_sent.add(tool_call_id)
+                start_ev = ToolCallStartEvent(
+                    type=EventType.TOOL_CALL_START,
+                    tool_call_id=tool_call_id,
+                    tool_call_name=tool_name,
+                    parent_message_id=msg_id,
+                )
+                yield _enc(start_ev)
+
+            elif msg_type == "start":
                 event = RunStartedEvent(
                     type=EventType.RUN_STARTED,
                     thread_id=thread_id,
@@ -126,19 +140,21 @@ async def stream_ag_ui_events(
                 yield _enc(event_end)
 
             elif msg_type == "tool_call_result":
-                tool_call_index += 1
                 tool_call_id = message.get("tool_call_id") or f"tool_{msg_id}_{tool_call_index}"
-                tool_name = message.get("tool_name") or "tool"
+                if tool_call_id not in tool_call_starts_sent:
+                    tool_call_index += 1
+                    tool_call_starts_sent.add(tool_call_id)
+                    tool_name = message.get("tool_name") or "tool"
+                    start_ev = ToolCallStartEvent(
+                        type=EventType.TOOL_CALL_START,
+                        tool_call_id=tool_call_id,
+                        tool_call_name=tool_name,
+                        parent_message_id=msg_id,
+                    )
+                    yield _enc(start_ev)
                 content = message.get("data") or ""
                 if not isinstance(content, str):
                     content = str(content)
-                start_ev = ToolCallStartEvent(
-                    type=EventType.TOOL_CALL_START,
-                    tool_call_id=tool_call_id,
-                    tool_call_name=tool_name,
-                    parent_message_id=msg_id,
-                )
-                yield _enc(start_ev)
                 end_ev = ToolCallEndEvent(
                     type=EventType.TOOL_CALL_END,
                     tool_call_id=tool_call_id,
