@@ -51,9 +51,11 @@ async def stream_ag_ui_events(
     message_id: str,
     accept_header: Optional[str] = None,
     chunk_size: int = 32,
+    tool_call_results: Optional[list] = None,
 ) -> AsyncGenerator[bytes, None]:
     """
     Consume messages from queue, convert to AG-UI events, encode as SSE, and yield bytes.
+    If tool_call_results is provided, append each tool_call_result message dict to it for history saving.
     """
     try:
         encoder, EventType, events = _get_encoder(accept_header)
@@ -140,6 +142,8 @@ async def stream_ag_ui_events(
                 yield _enc(event_end)
 
             elif msg_type == "tool_call_result":
+                if tool_call_results is not None:
+                    tool_call_results.append(message)
                 tool_call_id = message.get("tool_call_id") or f"tool_{msg_id}_{tool_call_index}"
                 if tool_call_id not in tool_call_starts_sent:
                     tool_call_index += 1

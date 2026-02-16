@@ -212,6 +212,8 @@ async def ag_ui_run_endpoint(
         )
     )
 
+    tool_use_list = []
+
     async def stream_with_cleanup():
         try:
             accept = request.headers.get("accept") or ""
@@ -221,10 +223,27 @@ async def ag_ui_run_endpoint(
                 run_id=message_id,
                 message_id=message_id,
                 accept_header=accept,
+                tool_call_results=tool_use_list,
             ):
                 yield chunk
         finally:
             await on_done()
+            # Save conversation history after stream ends (same as WebSocket flow)
+            try:
+                process_result = await process_task
+                if isinstance(process_result, dict):
+                    await agent_service._save_conversation_history(
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        trace_id=trace_id or "",
+                        query=process_result.get("query", ""),
+                        ai_response=process_result.get("content", ""),
+                        files=[],
+                        tool_use_list=tool_use_list,
+                        tool_references=process_result.get("references") or [],
+                    )
+            except Exception as e:
+                logger.exception("AG-UI: failed to save conversation history: %s", e)
 
     media_type = get_ag_ui_sse_media_type(request.headers.get("accept"))
     return StreamingResponse(stream_with_cleanup(), media_type=media_type)
