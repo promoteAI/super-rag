@@ -10,7 +10,7 @@ from mcp_agent.logging.listeners import EventListener
 
 from .agent_message_queue import AgentMessageQueue
 from .exceptions import EventListenerError, handle_agent_error
-from .stream_formatters import format_tool_call_result
+from .stream_formatters import format_tool_call_result, format_activity_snapshot
 from .tool_use_message_formatters import (
     ToolResultFormatter,
 )
@@ -80,6 +80,21 @@ class AgentEventProcessor(EventListener):
 
         formatted_message = format_tool_call_result(self.message_id, display_text + "\n\n", interface_type, None)
         await self.message_queue.put(formatted_message)
+
+        if interface_type in ("search_collection", "search_chat_files") and typed_result is not None:
+            try:
+                from super_rag.schema.view_models import SearchResult
+                result = typed_result
+                if isinstance(result, SearchResult) and (result.items or result.query):
+                    content = result.model_dump(mode="json") if hasattr(result, "model_dump") else {"query": getattr(result, "query", None), "items": getattr(result, "items", [])}
+                    activity_msg = format_activity_snapshot(
+                        self.message_id,
+                        "SEARCH_RESULTS",
+                        content,
+                    )
+                    await self.message_queue.put(activity_msg)
+            except Exception as e:
+                logger.debug("Skip activity_snapshot for generative UI: %s", e)
 
         logger.debug(
             f"Tool response captured for message {self.message_id}: {interface_type} (typed: {typed_result is not None})"

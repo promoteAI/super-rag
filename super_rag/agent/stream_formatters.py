@@ -139,3 +139,14 @@ def format_agent_message(trace_id: str, content: str) -> Dict[str, Any]:
         "data": content,
         "timestamp": int(time.time()),
     }
+
+
+def format_activity_snapshot(msg_id: str, activity_type: str, content: Dict[str, Any]) -> Dict[str, Any]:
+    """Format activity snapshot for AG-UI generative UI (e.g. SEARCH_RESULTS)."""
+    return {
+        "type": "activity_snapshot",
+        "id": msg_id,
+        "activity_type": activity_type,
+        "content": content,
+        "timestamp": int(time.time()),
+    }

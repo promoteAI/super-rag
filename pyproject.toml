@@ -55,6 +55,7 @@ dependencies = [
     "webscout>=1.0.0",
     "ddgs>=9.10.0",
     "fastmcp>=2.14.5",
+    "ag-ui-protocol>=0.1.11",
 ]
 
 [tool.setuptools]

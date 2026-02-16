@@ -1,8 +1,9 @@
-
+import asyncio
 import json
 import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, WebSocket, status
+from fastapi.responses import StreamingResponse
 
 from super_rag.db.models import User
 from super_rag.exceptions import BusinessException
@@ -13,6 +14,10 @@ from super_rag.service.chat_service import chat_service_global
 from super_rag.service.chat_title_service import chat_title_service
 from super_rag.service.collection_service import collection_service
 from super_rag.api.user import default_user
+from super_rag.ag_ui import stream_ag_ui_events, get_ag_ui_sse_media_type, AGUIRunRequest
+from super_rag.agent import AgentMessageQueue
+from super_rag.service.agent_chat_service import AgentChatService
+from super_rag.agent.agent_event_listener import agent_event_listener
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +106,128 @@ async def websocket_chat_endpoint(
         except Exception:
             pass
         raise
+
+
+def _build_agent_message_from_ag_ui(
+    request: AGUIRunRequest,
+    bot_config,
+    default_collections: list,
+) -> view_models.AgentMessage:
+    """Build AgentMessage from AGUIRunRequest and optional bot_config/default_collections."""
+    query = request.get_query_from_messages()
+    fp = request.forwarded_props or {}
+
+    collections = default_collections or []
+    if fp.get("collections") and isinstance(fp["collections"], list):
+        collections = [
+            view_models.Collection(id=c.get("id"), title=c.get("title"), description=c.get("description"), type=c.get("type"), status=c.get("status"), config=c.get("config"), created=c.get("created"), updated=c.get("updated"))
+            for c in fp["collections"]
+            if isinstance(c, dict)
+        ]
+
+    completion = None
+    if bot_config and getattr(bot_config, "agent", None) and getattr(bot_config.agent, "completion", None):
+        completion = bot_config.agent.completion
+    if fp.get("completion") and isinstance(fp["completion"], dict):
+        completion = view_models.ModelSpec(**{k: v for k, v in fp["completion"].items() if k in view_models.ModelSpec.model_fields})
+
+    language = (fp.get("language") or "en-US") if isinstance(fp.get("language"), str) else "en-US"
+    files = fp.get("files") or []
+    if isinstance(files, list):
+        files = [view_models.File(id=f.get("id"), name=f.get("name")) for f in files if isinstance(f, dict)]
+    web_search_enabled = bool(fp.get("web_search_enabled", False))
+
+    return view_models.AgentMessage(
+        query=query or "",
+        collections=collections,
+        completion=completion,
+        web_search_enabled=web_search_enabled,
+        language=language,
+        files=files or None,
+    )
+
+
+@router.post("/agents/{agent_id}/chats/{chat_id}/ag-ui")
+async def ag_ui_run_endpoint(
+    request: Request,
+    agent_id: str,
+    chat_id: str,
+    body: AGUIRunRequest,
+    user: User = Depends(default_user),
+):
+    """
+    AG-UI protocol SSE endpoint. Accepts RunAgentInput-like body, runs agent, streams AG-UI events.
+    """
+    agent_service = AgentChatService()
+    agent = await agent_service.db_ops.query_agent(str(user.id), agent_id)
+    if not agent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
+
+    bot_config = None
+    default_collections = []
+    custom_system_prompt = None
+    custom_query_prompt = None
+    if agent.config:
+        try:
+            from super_rag.schema.utils import normalize_schema_fields
+            config_dict = json.loads(agent.config)
+            if config_dict:
+                config_dict = normalize_schema_fields(config_dict)
+                bot_config = view_models.AgentConfig(**config_dict)
+        except (json.JSONDecodeError, ValueError):
+            bot_config = None
+    if bot_config and getattr(bot_config, "agent", None):
+        custom_system_prompt = getattr(bot_config.agent, "system_prompt_template", None)
+        custom_query_prompt = getattr(bot_config.agent, "query_prompt_template", None)
+        if getattr(bot_config.agent, "collections", None):
+            collection_ids = [c.id for c in bot_config.agent.collections]
+            db_collections = await agent_service.db_ops.query_collections_by_ids(str(user.id), collection_ids)
+            default_collections = await agent_service._convert_db_collections_to_pydantic(db_collections)
+
+    agent_message = _build_agent_message_from_ag_ui(body, bot_config, default_collections)
+    query = agent_message.query
+    if not (query and query.strip()):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing query (no user message in body)")
+
+    message_id = body.run_id
+    message_queue = AgentMessageQueue()
+    trace_id = await agent_service.register_message_queue(agent_message.language or "en-US", chat_id, message_id, message_queue)
+
+    async def on_done():
+        if trace_id:
+            await agent_event_listener.unregister_listener(str(trace_id))
+
+    process_task = asyncio.create_task(
+        agent_service.process_agent_message(
+            agent_message,
+            str(user.id),
+            agent_id,
+            chat_id,
+            message_id,
+            message_queue,
+            bot_config=bot_config,
+            default_collections=default_collections,
+            custom_system_prompt=custom_system_prompt,
+            custom_query_prompt=custom_query_prompt,
+        )
+    )
+
+    async def stream_with_cleanup():
+        try:
+            accept = request.headers.get("accept") or ""
+            async for chunk in stream_ag_ui_events(
+                message_queue,
+                thread_id=chat_id,
+                run_id=message_id,
+                message_id=message_id,
+                accept_header=accept,
+            ):
+                yield chunk
+        finally:
+            await on_done()
+
+    media_type = get_ag_ui_sse_media_type(request.headers.get("accept"))
+    return StreamingResponse(stream_with_cleanup(), media_type=media_type)
 
 
 @router.post("/agents/{agent_id}/chats/{chat_id}/title")
