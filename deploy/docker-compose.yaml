@@ -46,7 +46,27 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://localhost:${NEO4J_PORT:-7474} || exit 1",
+        ]
+      interval: 1s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
+    ports:
+      - "7474:7474" # HTTP
+      - "${NEO4J_PORT:-7687}:${NEO4J_PORT:-7687}" # Bolt
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/neo4j_data:/data
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password}
 networks:
   default:
     name: super_rag
