@@ -102,6 +102,26 @@ class DocumentIndexTask:
                 if not result.success:
                     raise Exception(result.error)
                 result_data = result.data or {"success": True}
+
+            elif index_type == DocumentIndexType.GRAPH.value:
+                from super_rag.index.graph_index import graph_indexer
+
+                if not graph_indexer.is_enabled(collection):
+                    logger.info(f"Graph indexing disabled for document {document_id}")
+                    result_data = {"success": True, "message": "Graph indexing disabled"}
+                else:
+                    from super_rag.graphiti.graphiti_manager import process_document_for_ray
+
+                    result = process_document_for_ray(
+                        collection=collection,
+                        content=parsed_data.content,
+                        doc_id=document_id,
+                        file_path=parsed_data.file_path,
+                    )
+                    if result.get("status") != "success":
+                        error_msg = result.get("message", "Unknown error")
+                        raise Exception(f"Graph indexing failed: {error_msg}")
+                    result_data = result
             else:
                 raise ValueError(f"Unknown index type: {index_type}")
 
@@ -153,6 +173,16 @@ class DocumentIndexTask:
                 result = summary_indexer.delete_index(document_id, collection)
                 if not result.success:
                     raise Exception(result.error)
+            elif index_type == DocumentIndexType.GRAPH.value:
+                from super_rag.index.graph_index import graph_indexer
+
+                if graph_indexer.is_enabled(collection):
+                    from super_rag.graphiti.graphiti_manager import delete_document_for_ray
+
+                    result = delete_document_for_ray(collection=collection, doc_id=document_id)
+                    if result.get("status") != "success":
+                        error_msg = result.get("message", "Unknown error")
+                        raise Exception(f"Graph index deletion failed: {error_msg}")
             else:
                 raise ValueError(f"Unknown index type: {index_type}")
 
@@ -225,6 +255,27 @@ class DocumentIndexTask:
                 if not result.success:
                     raise Exception(result.error)
                 result_data = result.data or {"success": True}
+
+            elif index_type == DocumentIndexType.GRAPH.value:
+                from super_rag.index.graph_index import graph_indexer
+
+                if not graph_indexer.is_enabled(collection):
+                    logger.info(f"Graph indexing disabled for document {document_id}")
+                    result_data = {"success": True, "message": "Graph indexing disabled"}
+                else:
+                    from super_rag.graphiti.graphiti_manager import process_document_for_ray
+
+                    result = process_document_for_ray(
+                        collection=collection,
+                        content=parsed_data.content,
+                        doc_id=document_id,
+                        file_path=parsed_data.file_path,
+                    )
+                    if result.get("status") != "success":
+                        error_msg = result.get("message", "Unknown error")
+                        raise Exception(f"Graph indexing failed: {error_msg}")
+                    result_data = result
+
             else:
                 raise ValueError(f"Unknown index type: {index_type}")
 

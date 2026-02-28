@@ -102,6 +102,11 @@ class Config(BaseSettings):
     super_rag_api_key: str = Field("1234567890", alias="SUPER_RAG_API_KEY")
     super_rag_mcp_url: str = Field("http://localhost:8000", alias="SUPER_RAG_MCP_URL")
 
+    # Graphiti
+    neo4j_uri: str = Field("bolt://localhost:7687", alias="NEO4J_URI")
+    neo4j_user: str = Field("neo4j", alias="NEO4J_USER")
+    neo4j_password: str = Field("password", alias="NEO4J_PASSWORD")
+
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
