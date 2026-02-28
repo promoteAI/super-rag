@@ -412,10 +412,10 @@ def _run_in_new_loop(coro: Awaitable) -> Any:
 
 if __name__ == "__main__":
     from super_rag.tasks.utils import get_document_and_collection
-    from super_rag.tasks.document import document_index_task
-    parsed_data = document_index_task.parse_document(
-        document_id="doce4941010ffb0ffbc"
-    )
+    # from super_rag.tasks.document import document_index_task
+    # parsed_data = document_index_task.parse_document(
+    #     document_id="doce4941010ffb0ffbc"
+    # )
     _, collection = get_document_and_collection("doce4941010ffb0ffbc")
     
-    process_document_for_ray(collection, parsed_data.content, parsed_data.document_id, parsed_data.file_path)
+    process_document_for_ray(collection, "北京是中国的首都", "doc8266f81fe433b103", "test.pdf")
