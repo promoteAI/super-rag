@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import os
+from uuid import uuid4
 from datetime import datetime
 from typing import Any, Awaitable, Dict
 
@@ -318,7 +319,7 @@ async def _process_document_async(
         reference_time: datetime = utc_now()
 
         result = await graphiti.add_episode(
-            name=str(doc_id),
+            name=uuid4().hex,
             episode_body=content,
             source_description=file_path,
             reference_time=reference_time,
