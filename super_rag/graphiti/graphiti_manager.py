@@ -30,7 +30,11 @@ from super_rag.graphiti.graphiti_core.llm_client.config import (
 from super_rag.graphiti.graphiti_core.llm_client.llm_client import SuperRagLLMClient
 from super_rag.graphiti.graphiti_core.nodes import EpisodeType
 from super_rag.graphiti.graphiti_core.utils.datetime_utils import utc_now
+from super_rag.graphiti.graphiti_core.driver.driver import GraphProvider
 from super_rag.graphiti.graphiti_core.driver.neo4j_driver import Neo4jDriver
+from super_rag.graphiti.graphiti_core.driver.record_parsers import entity_edge_from_record, entity_node_from_record
+from super_rag.graphiti.graphiti_core.models.edges.edge_db_queries import get_entity_edge_return_query
+from super_rag.graphiti.graphiti_core.models.nodes.node_db_queries import get_entity_node_return_query
 from super_rag.config import settings
 
 logger = logging.getLogger(__name__)
@@ -389,6 +393,198 @@ async def _delete_document_async(collection: Collection, doc_id: str) -> Dict[st
             logger.warning(f"Failed to close Graphiti driver during delete: {e}")
 
 
+async def get_graph_labels_for_collection(collection: Collection) -> list[str]:
+    """
+    获取知识图中实体节点的所有标签（用于前端筛选）。
+    仅支持 Neo4j；其他 driver 返回空列表。
+    """
+    graphiti = _create_graphiti_instance(collection)
+    try:
+        if graphiti.driver.provider != GraphProvider.NEO4J:
+            logger.warning("get_graph_labels_for_collection only supports Neo4j")
+            return []
+        group_id = collection.id
+        records, _, _ = await graphiti.driver.execute_query(
+            """
+            MATCH (n)
+            WHERE n.group_id = $group_id
+            RETURN DISTINCT labels(n) AS labels
+            """,
+            params={"group_id": group_id},
+            routing_="r",
+        )
+        seen: set[str] = set()
+        for r in records:
+            for label in r.get("labels") or []:
+                seen.add(label)
+        return sorted(seen)
+    finally:
+        try:
+            await graphiti.close()
+        except Exception as e:  # pragma: no cover
+            logger.warning(f"Failed to close Graphiti driver: {e}")
+
+
+def _optimize_graph_for_visualization(nodes: list, edges: list, max_nodes: int) -> tuple[list, list]:
+    """按节点度数选取连通性好的节点，使可视化节点数不超过 max_nodes。"""
+    if len(nodes) <= max_nodes:
+        return nodes, edges
+    degree_map = {getattr(n, "uuid", n.get("id")): 0 for n in nodes}
+    for edge in edges:
+        src = getattr(edge, "source_node_uuid", None) or (edge.get("source") if isinstance(edge, dict) else None)
+        tgt = getattr(edge, "target_node_uuid", None) or (edge.get("target") if isinstance(edge, dict) else None)
+        if src in degree_map:
+            degree_map[src] += 1
+        if tgt in degree_map:
+            degree_map[tgt] += 1
+    node_id_key = "uuid" if nodes and hasattr(nodes[0], "uuid") else "id"
+    sorted_nodes = sorted(nodes, key=lambda n: (-degree_map.get(getattr(n, node_id_key, n.get("id")), 0), getattr(n, node_id_key, n.get("id"))))
+    selected = sorted_nodes[:max_nodes]
+    selected_ids = {getattr(n, "uuid", n.get("id")) for n in selected}
+    filtered_edges = [
+        e for e in edges
+        if (getattr(e, "source_node_uuid", None) or (e.get("source") if isinstance(e, dict) else None)) in selected_ids
+        and (getattr(e, "target_node_uuid", None) or (e.get("target") if isinstance(e, dict) else None)) in selected_ids
+    ]
+    return selected, filtered_edges
+
+
+def _graph_to_dict(nodes: list, edges: list, is_truncated: bool = False) -> Dict[str, Any]:
+    """将 Graphiti 的 Entity 节点/边转为前端需要的 { nodes, edges, is_truncated } 结构。"""
+    def node_props(obj) -> dict:
+        if hasattr(obj, "attributes") and obj.attributes:
+            return dict(obj.attributes)
+        if isinstance(obj, dict) and obj.get("properties"):
+            return dict(obj["properties"])
+        out = {}
+        for key in ("name", "summary", "group_id"):
+            if hasattr(obj, key):
+                out[key] = getattr(obj, key, None)
+            elif isinstance(obj, dict) and key in obj:
+                out[key] = obj[key]
+        return out
+
+    def edge_props(obj) -> dict:
+        if hasattr(obj, "attributes") and obj.attributes:
+            return dict(obj.attributes)
+        if isinstance(obj, dict) and obj.get("properties"):
+            return dict(obj["properties"])
+        out = {}
+        for key in ("fact", "name", "group_id"):
+            if hasattr(obj, key):
+                out[key] = getattr(obj, key, None)
+            elif isinstance(obj, dict) and key in obj:
+                out[key] = obj[key]
+        return out
+
+    node_return = []
+    for node in nodes:
+        nid = getattr(node, "uuid", None) or (node.get("id") if isinstance(node, dict) else None)
+        labels = getattr(node, "labels", None) or (node.get("labels") if isinstance(node, dict) else [])
+        if not labels and nid:
+            labels = [nid]
+        node_return.append({
+            "id": nid,
+            "labels": list(labels) if labels else [],
+            "properties": node_props(node),
+        })
+    edge_return = []
+    for edge in edges:
+        eid = getattr(edge, "uuid", None) or (edge.get("id") if isinstance(edge, dict) else None)
+        src = getattr(edge, "source_node_uuid", None) or (edge.get("source") if isinstance(edge, dict) else None)
+        tgt = getattr(edge, "target_node_uuid", None) or (edge.get("target") if isinstance(edge, dict) else None)
+        edge_return.append({
+            "id": eid,
+            "type": "DIRECTED",
+            "source": src,
+            "target": tgt,
+            "properties": edge_props(edge),
+        })
+    return {
+        "nodes": node_return,
+        "edges": edge_return,
+        "is_truncated": is_truncated,
+    }
+
+
+async def get_knowledge_graph_for_collection(
+    collection: Collection,
+    label: str | None = None,
+    max_depth: int = 3,
+    max_nodes: int = 1000,
+) -> Dict[str, Any]:
+    """
+    获取知识图：概览（label 为空或 '*'）或从某标签出发的子图。
+    返回 { nodes, edges, is_truncated }，与 ApeRAG 的 graph 接口格式一致。
+    仅支持 Neo4j。
+    """
+    graphiti = _create_graphiti_instance(collection)
+    try:
+        if graphiti.driver.provider != GraphProvider.NEO4J:
+            logger.warning("get_knowledge_graph_for_collection only supports Neo4j")
+            return _graph_to_dict([], [], is_truncated=False)
+        group_id = collection.id
+        node_return = get_entity_node_return_query(GraphProvider.NEO4J)
+        edge_return = get_entity_edge_return_query(GraphProvider.NEO4J)
+        overview = not label or label == "*"
+        query_max_nodes = max_nodes * 2 if overview else max_nodes
+        is_truncated = False
+
+        if overview:
+            records, _, _ = await graphiti.driver.execute_query(
+                f"""
+                MATCH (n:Entity)
+                WHERE n.group_id = $group_id
+                RETURN {node_return}
+                LIMIT $limit
+                """,
+                params={"group_id": group_id, "limit": query_max_nodes},
+                routing_="r",
+            )
+        else:
+            depth = min(max(1, max_depth), 10)
+            records, _, _ = await graphiti.driver.execute_query(
+                f"""
+                MATCH (start:Entity)
+                WHERE start.group_id = $group_id AND $label IN labels(start)
+                WITH start LIMIT 2000
+                MATCH path = (start)-[:RELATES_TO*1..{depth}]-(n:Entity)
+                WHERE n.group_id = $group_id
+                WITH DISTINCT n
+                LIMIT $limit
+                RETURN {node_return}
+                """,
+                params={"group_id": group_id, "label": label, "limit": query_max_nodes},
+                routing_="r",
+            )
+        nodes = [entity_node_from_record(r) for r in records]
+        if not nodes:
+            return _graph_to_dict([], [], is_truncated=False)
+        node_uuids = [n.uuid for n in nodes]
+        if len(records) >= query_max_nodes:
+            is_truncated = True
+        edge_records, _, _ = await graphiti.driver.execute_query(
+            f"""
+            MATCH (n:Entity)-[e:RELATES_TO]->(m:Entity)
+            WHERE n.group_id = $group_id AND m.group_id = $group_id
+            AND n.uuid IN $node_uuids AND m.uuid IN $node_uuids
+            RETURN {edge_return}
+            """,
+            params={"group_id": group_id, "node_uuids": node_uuids},
+            routing_="r",
+        )
+        edges = [entity_edge_from_record(r) for r in edge_records]
+        if overview and len(nodes) > max_nodes:
+            nodes, edges = _optimize_graph_for_visualization(nodes, edges, max_nodes)
+            is_truncated = True
+        return _graph_to_dict(nodes, edges, is_truncated=is_truncated)
+    finally:
+        try:
+            await graphiti.close()
+        except Exception as e:  # pragma: no cover
+            logger.warning(f"Failed to close Graphiti driver: {e}")
+
+
 def _run_in_new_loop(coro: Awaitable) -> Any:
     """在新的事件循环中运行协程（用于 Ray 等同步环境）"""
     loop = asyncio.new_event_loop()
@@ -410,10 +606,13 @@ def _run_in_new_loop(coro: Awaitable) -> Any:
 
 if __name__ == "__main__":
     from super_rag.tasks.utils import get_document_and_collection
+    import asyncio
     # from super_rag.tasks.document import document_index_task
     # parsed_data = document_index_task.parse_document(
     #     document_id="doce4941010ffb0ffbc"
     # )
     _, collection = get_document_and_collection("doce4941010ffb0ffbc")
     
-    process_document_for_ray(collection, "北京是中国的首都", "doc8266f81fe433b103", "test.pdf")
+    #process_document_for_ray(collection, "北京是中国的首都", "doc8266f81fe433b103", "test.pdf")
+    print(asyncio.run(get_graph_labels_for_collection(collection)))
+    print(asyncio.run(get_knowledge_graph_for_collection(collection)))
