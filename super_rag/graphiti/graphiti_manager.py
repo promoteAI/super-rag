@@ -30,6 +30,7 @@ from super_rag.graphiti.graphiti_core.llm_client.config import (
 from super_rag.graphiti.graphiti_core.llm_client.llm_client import SuperRagLLMClient
 from super_rag.graphiti.graphiti_core.nodes import EpisodeType
 from super_rag.graphiti.graphiti_core.utils.datetime_utils import utc_now
+from super_rag.graphiti.graphiti_core.driver.neo4j_driver import Neo4jDriver
 from super_rag.config import settings
 
 logger = logging.getLogger(__name__)
@@ -257,12 +258,10 @@ def _create_graphiti_instance(collection: Collection) -> Graphiti:
     cross_encoder = SuperRagReranker(collection)
 
     graphiti = Graphiti(
-        uri=uri,
-        user=user,
-        password=password,
         llm_client=llm_client,
         embedder=embedder,
         cross_encoder=cross_encoder,
+        graph_driver=Neo4jDriver(uri, user, password),
     )
     return graphiti
 
@@ -324,9 +323,7 @@ async def _process_document_async(
             source_description=file_path,
             reference_time=reference_time,
             source=EpisodeType.text,
-            group_id=None,  # 使用驱动默认 database / group
-            # 注意：如果传入 uuid 且该 episode 不存在，Graphiti 内部会尝试 EpisodicNode.get_by_uuid 并抛出 NodeNotFoundError。
-            # 这里不传 uuid，让 Graphiti 自行生成，避免首次建图时报 "node xxx not found"。
+            group_id=collection.id, # 使用 collection.id 作为 group_id
         )
 
         entities_count = len(result.nodes)
