@@ -2,6 +2,7 @@ import logging
 from typing import List
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, UploadFile
+from super_rag.exceptions import CollectionNotFoundException
 from super_rag.service.marketplace_service import marketplace_service
 from super_rag.db.models import User
 from super_rag.schema import view_models
@@ -276,3 +277,47 @@ async def create_search_view(
     user: User = Depends(default_user),
 ) -> view_models.SearchResult:
     return await collection_service.create_search(str(user.id), collection_id, data)
+
+# Knowledge Graph API endpoints
+@router.get("/collections/{collection_id}/graphs/labels", tags=["graph"])
+async def get_graph_labels_view(
+    request: Request,
+    collection_id: str,
+    user: User = Depends(default_user),
+) -> view_models.GraphLabelsResponse:
+    """Get all available node labels in the collection's knowledge graph"""
+    from super_rag.service.graph_service import graph_service
+
+    try:
+        result = await graph_service.get_graph_labels(str(user.id), collection_id)
+        return view_models.GraphLabelsResponse(labels=result)
+    except CollectionNotFoundException:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/collections/{collection_id}/graphs", tags=["graph"])
+async def get_knowledge_graph_view(
+    request: Request,
+    collection_id: str,
+    label: str = "*",
+    max_nodes: int = 1000,
+    max_depth: int = 3,
+    user: User = Depends(default_user),
+):
+    """Get knowledge graph - overview mode or subgraph mode"""
+    from super_rag.service.graph_service import graph_service
+
+    # Validate parameters
+    if not (1 <= max_nodes <= 10000):
+        raise HTTPException(status_code=400, detail="max_nodes must be between 1 and 10000")
+    if not (1 <= max_depth <= 10):
+        raise HTTPException(status_code=400, detail="max_depth must be between 1 and 10")
+
+    try:
+        result = await graph_service.get_knowledge_graph(str(user.id), collection_id, label, max_depth, max_nodes)
+        return result
+    except CollectionNotFoundException:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

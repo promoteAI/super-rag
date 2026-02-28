@@ -56,3 +56,5 @@ class GraphService:
             max_depth=max_depth,
             max_nodes=max_nodes,
         )
+
+graph_service = GraphService()
