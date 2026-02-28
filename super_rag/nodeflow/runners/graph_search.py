@@ -57,22 +57,28 @@ class GraphSearchService:
             logger.warning(f"Collection {collection.id} does not have knowledge graph enabled")
             return []
 
-        # Import LightRAG and run as in _run_light_rag
-        from super_rag.graph import lightrag_manager
-        from super_rag.graph.lightrag import QueryParam
+        # Use Graphiti for graph search (same backend as graph indexing)
+        from super_rag.graphiti.graphiti_manager import _create_graphiti_instance
+        from super_rag.graphiti.graphiti_core.search.search_config_recipes import COMBINED_HYBRID_SEARCH_RRF
+        from super_rag.graphiti.graphiti_core.search.search_helpers import search_results_to_context_string
 
-        rag = await lightrag_manager.create_lightrag_instance(collection)
-        param: QueryParam = QueryParam(
-            mode="hybrid",
-            only_need_context=True,
-            top_k=top_k,
-        )
-        context = await rag.aquery_context(query=query, param=param)
-        if not context:
-            return []
-
-        # Return documents with graph search metadata
-        return [DocumentWithScore(text=context, metadata={"recall_type": "graph_search"})]
+        graphiti = _create_graphiti_instance(collection)
+        try:
+            search_config = COMBINED_HYBRID_SEARCH_RRF.model_copy(update={"limit": top_k})
+            results = await graphiti.search_(
+                query,
+                config=search_config,
+                group_ids=[collection.id],
+            )
+            context = search_results_to_context_string(results)
+            if not context or not context.strip():
+                return []
+            return [DocumentWithScore(text=context, metadata={"recall_type": "graph_search"})]
+        finally:
+            try:
+                await graphiti.close()
+            except Exception as e:
+                logger.warning(f"Failed to close Graphiti driver after graph search: {e}")
 
 
 @register_node_runner(

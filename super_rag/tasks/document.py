@@ -115,6 +115,7 @@ class DocumentIndexTask:
                     result = process_document_for_ray(
                         collection=collection,
                         content=parsed_data.content,
+                        doc_parts=parsed_data.doc_parts,
                         doc_id=document_id,
                         file_path=parsed_data.file_path,
                     )
@@ -268,6 +269,7 @@ class DocumentIndexTask:
                     result = process_document_for_ray(
                         collection=collection,
                         content=parsed_data.content,
+                        doc_parts=parsed_data.doc_parts,
                         doc_id=document_id,
                         file_path=parsed_data.file_path,
                     )

@@ -4,7 +4,7 @@ import logging
 import os
 from uuid import uuid4
 from datetime import datetime
-from typing import Any, Awaitable, Dict
+from typing import Any, Awaitable, Dict, List
 
 from collections.abc import Iterable
 
@@ -276,13 +276,14 @@ def _create_graphiti_instance(collection: Collection) -> Graphiti:
 def process_document_for_ray(
     collection: Collection,
     content: str,
+    doc_parts: List[Any],
     doc_id: str,
     file_path: str,
 ) -> Dict[str, Any]:
     """
     在同步上下文（Ray worker）中处理单个文档，调用 Graphiti 构建知识图谱。
     """
-    return _run_in_new_loop(_process_document_async(collection, content, doc_id, file_path))
+    return _run_in_new_loop(_process_document_async(collection, content, doc_parts, doc_id, file_path))
 
 
 def delete_document_for_ray(collection: Collection, doc_id: str) -> Dict[str, Any]:
@@ -295,6 +296,7 @@ def delete_document_for_ray(collection: Collection, doc_id: str) -> Dict[str, An
 async def _process_document_async(
     collection: Collection,
     content: str,
+    doc_parts: List[Any],
     doc_id: str,
     file_path: str,
 ) -> Dict[str, Any]:
@@ -320,24 +322,24 @@ async def _process_document_async(
 
     try:
         reference_time: datetime = utc_now()
-
-        result = await graphiti.add_episode(
-            name=uuid4().hex,
-            episode_body=content,
-            source_description=file_path,
-            reference_time=reference_time,
-            source=EpisodeType.text,
-            group_id=collection.id, # 使用 collection.id 作为 group_id
-        )
-
-        entities_count = len(result.nodes)
-        relations_count = len(result.edges)
-
+        entities_count = 0
+        relations_count = 0
+        for doc_part in doc_parts:
+            result = await graphiti.add_episode(
+                name=uuid4().hex,
+                episode_body=doc_part.content,
+                source_description=file_path,
+                reference_time=reference_time,
+                source=EpisodeType.text,
+                group_id=collection.id, # 使用 collection.id 作为 group_id
+            )
+            entities_count += len(result.nodes)
+            relations_count += len(result.edges)
         return {
             "status": "success",
             "doc_id": doc_id,
             # 为兼容旧的 LightRAG 统计字段，这里把 1 个 episode 映射为 1 个 "chunk"
-            "chunks_created": 1,
+            "chunks_created": len(doc_parts),
             "entities_extracted": entities_count,
             "relations_extracted": relations_count,
         }
