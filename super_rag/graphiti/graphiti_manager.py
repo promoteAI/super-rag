@@ -325,13 +325,17 @@ async def _process_document_async(
         entities_count = 0
         relations_count = 0
         for doc_part in doc_parts:
+            episode_body = doc_part.content
+            if not episode_body:
+                logger.warning(f"Skipping doc_part with empty content in document {doc_id}")
+                continue
             result = await graphiti.add_episode(
                 name=uuid4().hex,
-                episode_body=doc_part.content,
+                episode_body=episode_body,
                 source_description=file_path,
                 reference_time=reference_time,
                 source=EpisodeType.text,
-                group_id=collection.id, # 使用 collection.id 作为 group_id
+                group_id=collection.id,
             )
             entities_count += len(result.nodes)
             relations_count += len(result.edges)
@@ -607,6 +611,7 @@ def _run_in_new_loop(coro: Awaitable) -> Any:
             asyncio.set_event_loop(None)
 
 if __name__ == "__main__":
+    from super_rag.fileparser.base import  TextPart
     from super_rag.tasks.utils import get_document_and_collection
     import asyncio
     # from super_rag.tasks.document import document_index_task
@@ -614,7 +619,8 @@ if __name__ == "__main__":
     #     document_id="doce4941010ffb0ffbc"
     # )
     _, collection = get_document_and_collection("doce4941010ffb0ffbc")
-    
-    #process_document_for_ray(collection, "北京是中国的首都", "doc8266f81fe433b103", "test.pdf")
-    print(asyncio.run(get_graph_labels_for_collection(collection)))
-    print(asyncio.run(get_knowledge_graph_for_collection(collection)))
+
+    doc_parts = [TextPart(content="北京是中国的首都")]
+    process_document_for_ray(collection, "北京是中国的首都", doc_parts, "doc8266f81fe433b103", "test.pdf")
+    # print(asyncio.run(get_graph_labels_for_collection(collection)))
+    # print(asyncio.run(get_knowledge_graph_for_collection(collection)))
