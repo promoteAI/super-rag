@@ -11,7 +11,7 @@ handlers:
     stream: ext://sys.stdout
 loggers:
   uvicorn:
-    level: DEBUG
+    level: INFO
     handlers: [console]
     propagate: false
   LiteLLM:
