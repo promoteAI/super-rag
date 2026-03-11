@@ -38,6 +38,9 @@ from super_rag.db.repositories.marketplace import(
 from super_rag.db.repositories.marketplace_collection import( 
     AsyncMarketplaceCollectionRepositoryMixin,
 )
+from super_rag.db.repositories.api_key import(
+    AsyncApiKeyRepositoryMixin,
+)
 logger = logging.getLogger(__name__)
 
 
@@ -64,6 +67,7 @@ class AsyncDatabaseOps(
     AsyncWorkflowRepositoryMixin,
     AsyncMarketplaceRepositoryMixin,
     AsyncMarketplaceCollectionRepositoryMixin,
+    AsyncApiKeyRepositoryMixin,
 ):
     pass
 

@@ -142,6 +142,35 @@ class User(Base):
     def password(self, value):
         self.hashed_password = value
 
+class ApiKeyStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    DELETED = "DELETED"
+
+class ApiKey(Base):
+    __tablename__ = "api_key"
+
+    id = Column(String(24), primary_key=True, default=lambda: "key" + random_id())
+    key = Column(String(64), default=lambda: f"sk-{uuid.uuid4().hex}", nullable=False)
+    user = Column(String(256), nullable=False, index=True)  # Add index for user queries
+    description = Column(String(256), nullable=True)
+    status = Column(EnumColumn(ApiKeyStatus), nullable=False, index=True)  # Add index for status queries
+    is_system = Column(Boolean, default=False, nullable=False, index=True)  # Mark system-generated API keys
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_deleted = Column(DateTime(timezone=True), nullable=True, index=True)  # Add index for soft delete queries
+
+    @staticmethod
+    def generate_key() -> str:
+        """Generate a unique API key"""
+        return f"sk-{uuid.uuid4().hex}"
+
+    async def update_last_used(self, session):
+        """Update the last_used_at timestamp"""
+        self.last_used_at = utc_now()
+        session.add(self)
+        await session.commit()
+
 
 class DocumentIndex(Base):
     """Document index - single status model"""
