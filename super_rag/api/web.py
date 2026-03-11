@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from super_rag.db.models import User
 from super_rag.db.ops import async_db_ops
 from super_rag.schema.view_models import WebReadRequest, WebReadResponse, WebSearchRequest, WebSearchResponse
-from super_rag.api.user import default_user
+from super_rag.api.auth import required_user
 from super_rag.websearch.reader.reader_service import ReaderService
 from super_rag.websearch.search.search_service import SearchService
 
@@ -30,7 +30,7 @@ class WebReadError(Exception):
 
 
 @router.post("/web/search", response_model=WebSearchResponse, tags=["websearch"])
-async def web_search_endpoint(request: WebSearchRequest, user: User = Depends(default_user)) -> WebSearchResponse:
+async def web_search_endpoint(request: WebSearchRequest, user: User = Depends(required_user)) -> WebSearchResponse:
     """
     Perform web search using various search engines with advanced domain targeting.
 
@@ -230,7 +230,7 @@ def _merge_and_rank_results(all_results: List, max_results: int) -> List:
 
 
 @router.post("/web/read", response_model=WebReadResponse, tags=["websearch"])
-async def web_read_endpoint(request: WebReadRequest, user: User = Depends(default_user)) -> WebReadResponse:
+async def web_read_endpoint(request: WebReadRequest, user: User = Depends(required_user)) -> WebReadResponse:
     """
     Read and extract content from web pages.
 

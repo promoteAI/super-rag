@@ -19,7 +19,7 @@ from super_rag.service.llm_provider_service import (
     update_llm_provider,
     update_llm_provider_model,
 )
-from super_rag.api.user import default_user
+from super_rag.api.auth import required_user
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ router = APIRouter()
 async def get_available_models_view(
     request: Request,
     tag_filter_request: Optional[view_models.TagFilterRequest] = Body(None),
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.ModelConfigList:
     """Get available models with optional tag filtering"""
     # If no request body provided, create default request
@@ -43,7 +43,7 @@ async def get_available_models_view(
 
 @router.get("/default_models", tags=["default_models"])
 async def get_default_models_view(
-    request: Request, user: User = Depends(default_user)
+    request: Request, user: User = Depends(required_user)
 ) -> view_models.DefaultModelsResponse:
     """Get default model configurations for different scenarios"""
     return await default_model_service.get_default_models(str(user.id))
@@ -51,7 +51,7 @@ async def get_default_models_view(
 
 @router.put("/default_models", tags=["default_models"])
 async def update_default_models_view(
-    request: Request, update_request: view_models.DefaultModelsUpdateRequest, user: User = Depends(default_user)
+    request: Request, update_request: view_models.DefaultModelsUpdateRequest, user: User = Depends(required_user)
 ) -> view_models.DefaultModelsResponse:
     """Update default model configurations for different scenarios"""
     return await default_model_service.update_default_models(str(user.id), update_request)
@@ -59,7 +59,7 @@ async def update_default_models_view(
 
 # LLM Configuration API endpoints
 @router.get("/llm_configuration", tags=["llm_providers"])
-async def get_llm_configuration_view(request: Request, user: User = Depends(default_user)):
+async def get_llm_configuration_view(request: Request, user: User = Depends(required_user)):
     """Get complete LLM configuration including providers and models"""
     from super_rag.db.models import Role
 
@@ -71,7 +71,7 @@ async def get_llm_configuration_view(request: Request, user: User = Depends(defa
 async def create_llm_provider_view(
     request: Request,
     provider_data: view_models.LlmProviderCreateWithApiKey,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     """Create a new LLM provider with optional API key"""
     from super_rag.db.models import Role
@@ -81,7 +81,7 @@ async def create_llm_provider_view(
 
 
 @router.get("/llm_providers/{provider_name}", tags=["llm_providers"])
-async def get_llm_provider_view(request: Request, provider_name: str, user: User = Depends(default_user)):
+async def get_llm_provider_view(request: Request, provider_name: str, user: User = Depends(required_user)):
     """Get a specific LLM provider"""
     from super_rag.db.models import Role
 
@@ -94,7 +94,7 @@ async def update_llm_provider_view(
     request: Request,
     provider_name: str,
     provider_data: view_models.LlmProviderUpdateWithApiKey,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     """Update an existing LLM provider with optional API key"""
     from super_rag.db.models import Role
@@ -104,7 +104,7 @@ async def update_llm_provider_view(
 
 
 @router.delete("/llm_providers/{provider_name}", tags=["llm_providers"])
-async def delete_llm_provider_view(request: Request, provider_name: str, user: User = Depends(default_user)):
+async def delete_llm_provider_view(request: Request, provider_name: str, user: User = Depends(required_user)):
     """Delete an LLM provider"""
     from super_rag.db.models import Role
 
@@ -114,7 +114,7 @@ async def delete_llm_provider_view(request: Request, provider_name: str, user: U
 
 @router.get("/llm_provider_models", tags=["llm_models"])
 async def list_llm_provider_models_view(
-    request: Request, provider_name: str = None, user: User = Depends(default_user)
+    request: Request, provider_name: str = None, user: User = Depends(required_user)
 ):
     """List LLM provider models, optionally filtered by provider"""
     from super_rag.db.models import Role
@@ -124,7 +124,7 @@ async def list_llm_provider_models_view(
 
 
 @router.get("/llm_providers/{provider_name}/models", tags=["llm_models"])
-async def get_provider_models_view(request: Request, provider_name: str, user: User = Depends(default_user)):
+async def get_provider_models_view(request: Request, provider_name: str, user: User = Depends(required_user)):
     """Get all models for a specific provider"""
     from super_rag.db.models import Role
 
@@ -133,7 +133,7 @@ async def get_provider_models_view(request: Request, provider_name: str, user: U
 
 
 @router.post("/llm_providers/{provider_name}/models", tags=["llm_models"])
-async def create_provider_model_view(request: Request, provider_name: str, user: User = Depends(default_user)):
+async def create_provider_model_view(request: Request, provider_name: str, user: User = Depends(required_user)):
     """Create a new model for a specific provider"""
     import json
 
@@ -151,7 +151,7 @@ async def update_provider_model_view(
     provider_name: str,
     api: str,
     model: str = Path(..., description="Model name (supports names with slashes)"),
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     """Update a specific model"""
     import json
@@ -170,7 +170,7 @@ async def delete_provider_model_view(
     provider_name: str,
     api: str,
     model: str = Path(..., description="Model name (supports names with slashes)"),
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     """Delete a specific model"""
     from super_rag.db.models import Role

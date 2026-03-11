@@ -1,6 +1,4 @@
 import logging
-import secrets
-from datetime import timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket
@@ -11,10 +9,9 @@ from fastapi_users.authentication import (
     JWTStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
-from fastapi_users.router.oauth import get_oauth_router
 
 from super_rag.config import AsyncSessionDep, settings
-from super_rag.db.models import OAuthAccount, Role, User
+from super_rag.db.models import ApiKey, ApiKeyStatus, OAuthAccount, Role, User
 from super_rag.db.ops import async_db_ops
 from super_rag.schema import view_models
 from super_rag.utils.audit_decorator import audit
@@ -201,6 +198,38 @@ async def authenticate_websocket_user(websocket: WebSocket, user_manager: UserMa
         logger.error(f"WebSocket authentication error: {e}")
         return None
 
+# --- API Key Authentication ---
+async def authenticate_api_key(request: Request, session: AsyncSessionDep) -> Optional[User]:
+    """Authenticate using API Key from Authorization header"""
+    from sqlalchemy import select
+
+    authorization: str = request.headers.get("Authorization")
+    if not authorization:
+        return None
+    try:
+        scheme, credentials = authorization.split()
+        if scheme.lower() != "bearer":
+            return None
+    except ValueError:
+        return None
+    result = await session.execute(
+        select(ApiKey).where(
+            ApiKey.key == credentials, ApiKey.status == ApiKeyStatus.ACTIVE, ApiKey.gmt_deleted.is_(None)
+        )
+    )
+    api_key = result.scalars().first()
+    if not api_key:
+        return None  # Don't raise, just return None to allow other auth methods
+    result = await session.execute(
+        select(User).where(User.id == api_key.user, User.is_active.is_(True), User.gmt_deleted.is_(None))
+    )
+    user = result.scalars().first()
+    if user:
+        await api_key.update_last_used(session)
+        user._auth_method = "api_key"
+        user._api_key_id = api_key.id
+    return user
+
 # --- Current User Dependency ---
 async def optional_user(
     request: Request, session: AsyncSessionDep, user: User = Depends(fastapi_users.current_user(optional=True))
@@ -210,6 +239,11 @@ async def optional_user(
         request.state.user_id = user.id
         request.state.username = user.username
         return user
+    api_user = await authenticate_api_key(request, session)
+    if api_user:
+        request.state.user_id = api_user.id
+        request.state.username = api_user.username
+        return api_user
     return None
 
 

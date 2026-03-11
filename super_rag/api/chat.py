@@ -13,7 +13,7 @@ from super_rag.service.chat_document_service import chat_document_service
 from super_rag.service.chat_service import chat_service_global
 from super_rag.service.chat_title_service import chat_title_service
 from super_rag.service.collection_service import collection_service
-from super_rag.api.user import default_user
+from super_rag.api.auth import required_user
 from super_rag.ag_ui import stream_ag_ui_events, get_ag_ui_sse_media_type, AGUIRunRequest
 from super_rag.agent import AgentMessageQueue
 from super_rag.service.agent_chat_service import AgentChatService
@@ -25,7 +25,7 @@ router = APIRouter(tags=["chats"])
 
 
 @router.post("/agents/{agent_id}/chats")
-async def create_chat_view(request: Request, agent_id: str, user: User = Depends(default_user)) -> view_models.Chat:
+async def create_chat_view(request: Request, agent_id: str, user: User = Depends(required_user)) -> view_models.Chat:
     return await chat_service_global.create_chat(str(user.id), agent_id)
 
 
@@ -35,14 +35,14 @@ async def list_chats_view(
     agent_id: str,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.ChatList:
     return await chat_service_global.list_chats(str(user.id), agent_id, page, page_size)
 
 
 @router.get("/agents/{agent_id}/chats/{chat_id}")
 async def get_chat_view(
-    request: Request, agent_id: str, chat_id: str, user: User = Depends(default_user)
+    request: Request, agent_id: str, chat_id: str, user: User = Depends(required_user)
 ) -> view_models.ChatDetails:
     return await chat_service_global.get_chat(str(user.id), agent_id, chat_id)
 
@@ -53,7 +53,7 @@ async def update_chat_view(
     agent_id: str,
     chat_id: str,
     chat_in: view_models.ChatUpdate,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.Chat:
     return await chat_service_global.update_chat(str(user.id), agent_id, chat_id, chat_in)
 
@@ -65,7 +65,7 @@ async def feedback_message_view(
     chat_id: str,
     message_id: str,
     feedback: view_models.Feedback,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     return await chat_service_global.feedback_message(
         str(user.id), chat_id, message_id, feedback.type, feedback.tag, feedback.message
@@ -77,7 +77,7 @@ async def websocket_chat_endpoint(
     websocket: WebSocket,
     agent_id: str,
     chat_id: str,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     """
     WebSocket 端点，用于与机器人进行实时聊天。
@@ -153,7 +153,7 @@ async def ag_ui_run_endpoint(
     agent_id: str,
     chat_id: str,
     body: AGUIRunRequest,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ):
     """
     AG-UI protocol SSE endpoint. Accepts RunAgentInput-like body, runs agent, streams AG-UI events.
@@ -254,7 +254,7 @@ async def generate_chat_title_view(
     agent_id: str,
     chat_id: str,
     request_body: view_models.TitleGenerateRequest = view_models.TitleGenerateRequest(),
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.TitleGenerateResponse:
     try:
         title = await chat_title_service.generate_title(
@@ -271,7 +271,7 @@ async def generate_chat_title_view(
 
 
 @router.post("/chat/completions/frontend", tags=["chats"])
-async def frontend_chat_completions_view(request: Request, user: User = Depends(default_user)):
+async def frontend_chat_completions_view(request: Request, user: User = Depends(required_user)):
     body = await request.body()
 
     # Try to parse JSON first, fallback to text for backward compatibility
@@ -305,7 +305,7 @@ async def search_chat_files_view(
     request: Request,
     chat_id: str,
     data: view_models.SearchRequest,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.SearchResult:
     """Search files within a specific chat using hybrid search capabilities"""
     try:
@@ -353,7 +353,7 @@ async def upload_chat_document_view(
     request: Request,
     chat_id: str,
     file: UploadFile = File(...),
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.Document:
     """Upload a document to a chat session"""
     return await chat_document_service.upload_chat_document(chat_id=chat_id, user_id=str(user.id), file=file)
@@ -364,7 +364,7 @@ async def get_chat_document_view(
     request: Request,
     chat_id: str,
     document_id: str,
-    user: User = Depends(default_user),
+    user: User = Depends(required_user),
 ) -> view_models.Document:
     """Get chat document details"""
     document = await chat_document_service.get_chat_document_by_id(
@@ -378,6 +378,6 @@ async def get_chat_document_view(
 
 
 @router.delete("/agents/{agent_id}/chats/{chat_id}")
-async def delete_chat_view(request: Request, agent_id: str, chat_id: str, user: User = Depends(default_user)):
+async def delete_chat_view(request: Request, agent_id: str, chat_id: str, user: User = Depends(required_user)):
     await chat_service_global.delete_chat(str(user.id), agent_id, chat_id)
     return Response(status_code=204)
