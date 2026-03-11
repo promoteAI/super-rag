@@ -65,10 +65,13 @@ class GraphSearchService:
         graphiti = _create_graphiti_instance(collection)
         try:
             search_config = COMBINED_HYBRID_SEARCH_RRF.model_copy(update={"limit": top_k})
+            # Get all document IDs in this collection
+            documents = await async_db_ops.query_documents([collection.user], collection.id)
+            group_ids = [doc.id for doc in documents]
             results = await graphiti.search_(
                 query,
                 config=search_config,
-                group_ids=[collection.id],
+                group_ids=group_ids,
             )
             context = search_results_to_context_string(results)
             if not context or not context.strip():

@@ -12,8 +12,7 @@ from super_rag.config import get_vector_db_connector
 from super_rag.db import models as db_models
 from super_rag.db.models import CollectionStatus
 from super_rag.db.ops import db_ops
-# from super_rag.graph import lightrag_manager
-# from super_rag.index.fulltext_index import create_index, delete_index
+from super_rag.graphiti.graphiti_manager import _create_graphiti_instance
 from super_rag.llm.embed import get_collection_embedding_service_sync
 from super_rag.objectstore.base import get_object_store
 from super_rag.schema.utils import parseCollectionConfig
@@ -134,9 +133,9 @@ class CollectionTask:
         if not enable_knowledge_graph:
             return deletion_stats
 
-        async def _delete_lightrag():
+        async def _delete_graphiti_data():
             # Create new LightRAG instance
-            rag = await lightrag_manager.create_lightrag_instance(collection)
+            rag = _create_graphiti_instance(collection)
 
             # Get all document IDs in this collection
             documents = db_ops.query_documents([collection.user], collection.id)
@@ -148,7 +147,7 @@ class CollectionTask:
 
                 for document_id in document_ids:
                     try:
-                        await rag.adelete_by_doc_id(str(document_id))
+                        await rag.remove_episode(str(document_id))
                         deleted_count += 1
                         logger.debug(f"Deleted lightrag document for document ID: {document_id}")
                     except Exception as e:
@@ -165,11 +164,11 @@ class CollectionTask:
                 logger.info(f"No documents found for collection {collection.id}")
                 deletion_stats["documents_deleted"] = 0
 
-            # Clean up resources
-            await rag.finalize_storages()
+            # Clean up resources    
+            await rag.close()
 
         # Execute async deletion
-        async_to_sync(_delete_lightrag)()
+        async_to_sync(_delete_graphiti_data)()
 
         return deletion_stats
 

@@ -304,7 +304,7 @@ async def _process_document_async(
     使用 Graphiti 对单个文档进行知识图谱抽取。
 
     目前策略：将整个文档作为一个 EpisodeType.text 的 episode 写入图中，
-    episode 的 uuid 即为文档 ID，方便后续删除。
+    episode 的 group_id 即为文档 ID，方便后续删除。
     """
     logger.info(f"Processing document {doc_id} with Graphiti")
 
@@ -335,7 +335,8 @@ async def _process_document_async(
                 source_description=file_path,
                 reference_time=reference_time,
                 source=EpisodeType.text,
-                group_id=collection.id,
+                group_id=doc_id,
+                # update_communities=True,
             )
             entities_count += len(result.nodes)
             relations_count += len(result.edges)
@@ -365,13 +366,15 @@ async def _delete_document_async(collection: Collection, doc_id: str) -> Dict[st
     """
     根据文档 ID 删除对应的 Graphiti episode。
 
-    约定：索引时 episode.uuid == str(doc_id)，因此这里可以直接按 uuid 删除。
+    约定：索引时 episode.group_id == str(doc_id)，因此这里可以直接按 group_id 删除。
     """
     graphiti = _create_graphiti_instance(collection)
 
     try:
         try:
-            await graphiti.remove_episode(str(doc_id))
+            episodes = await graphiti.retrieve_episodes(reference_time=utc_now(), group_ids=[doc_id])
+            for episode in episodes:
+                await graphiti.remove_episode(episode.uuid)
             logger.info(f"Deleted Graphiti episode for document {doc_id}")
             return {
                 "status": "success",
@@ -409,21 +412,25 @@ async def get_graph_labels_for_collection(collection: Collection) -> list[str]:
         if graphiti.driver.provider != GraphProvider.NEO4J:
             logger.warning("get_graph_labels_for_collection only supports Neo4j")
             return []
-        group_id = collection.id
-        records, _, _ = await graphiti.driver.execute_query(
-            """
-            MATCH (n)
-            WHERE n.group_id = $group_id
-            RETURN DISTINCT labels(n) AS labels
-            """,
-            params={"group_id": group_id},
-            routing_="r",
-        )
-        seen: set[str] = set()
-        for r in records:
-            for label in r.get("labels") or []:
-                seen.add(label)
-        return sorted(seen)
+        # Get all document IDs in this collection
+        documents = db_ops.query_documents([collection.user], collection.id)
+        group_ids = [doc.id for doc in documents]
+        labels = set()
+        for group_id in group_ids:
+            records, _, _ = await graphiti.driver.execute_query(
+                """
+                MATCH (n)
+                WHERE n.group_id = $group_id
+                RETURN DISTINCT labels(n) AS labels
+                """,
+                params={"group_id": group_id},
+                routing_="r",
+            )
+            for r in records:
+                for label in r.get('labels', []):
+                    labels.add(label)
+
+        return sorted(list(labels))
     finally:
         try:
             await graphiti.close()
@@ -529,7 +536,9 @@ async def get_knowledge_graph_for_collection(
         if graphiti.driver.provider != GraphProvider.NEO4J:
             logger.warning("get_knowledge_graph_for_collection only supports Neo4j")
             return _graph_to_dict([], [], is_truncated=False)
-        group_id = collection.id
+        # Get all document IDs in this collection
+        documents = db_ops.query_documents([collection.user], collection.id)
+        group_ids = [doc.id for doc in documents]
         node_return = get_entity_node_return_query(GraphProvider.NEO4J)
         edge_return = get_entity_edge_return_query(GraphProvider.NEO4J)
         overview = not label or label == "*"
@@ -537,6 +546,19 @@ async def get_knowledge_graph_for_collection(
         is_truncated = False
 
         if overview:
+            records = []
+            for group_id in group_ids:
+                records, _, _ = await graphiti.driver.execute_query(
+                    f"""
+                    MATCH (n:Entity)
+                    WHERE n.group_id = $group_id
+                    RETURN {node_return}
+                    LIMIT $limit
+                    """,
+                    params={"group_id": group_id, "limit": query_max_nodes},
+                    routing_="r",
+                )
+                records.extend(records)
             records, _, _ = await graphiti.driver.execute_query(
                 f"""
                 MATCH (n:Entity)
@@ -549,20 +571,23 @@ async def get_knowledge_graph_for_collection(
             )
         else:
             depth = min(max(1, max_depth), 10)
-            records, _, _ = await graphiti.driver.execute_query(
-                f"""
-                MATCH (start:Entity)
-                WHERE start.group_id = $group_id AND $label IN labels(start)
-                WITH start LIMIT 2000
-                MATCH path = (start)-[:RELATES_TO*1..{depth}]-(n:Entity)
-                WHERE n.group_id = $group_id
-                WITH DISTINCT n
-                LIMIT $limit
-                RETURN {node_return}
-                """,
-                params={"group_id": group_id, "label": label, "limit": query_max_nodes},
-                routing_="r",
-            )
+            records = []
+            for group_id in group_ids:
+                records, _, _ = await graphiti.driver.execute_query(
+                    f"""
+                    MATCH (start:Entity)
+                    WHERE start.group_id = $group_id AND $label IN labels(start)
+                    WITH start LIMIT 2000
+                    MATCH path = (start)-[:RELATES_TO*1..{depth}]-(n:Entity)
+                    WHERE n.group_id = $group_id
+                    WITH DISTINCT n
+                    LIMIT $limit
+                    RETURN {node_return}
+                    """,
+                    params={"group_id": group_id, "label": label, "limit": query_max_nodes},
+                    routing_="r",
+                )
+                records.extend(records)
         nodes = [entity_node_from_record(r) for r in records]
         if not nodes:
             return _graph_to_dict([], [], is_truncated=False)
@@ -618,9 +643,10 @@ if __name__ == "__main__":
     # parsed_data = document_index_task.parse_document(
     #     document_id="doce4941010ffb0ffbc"
     # )
-    _, collection = get_document_and_collection("doce4941010ffb0ffbc")
+    _, collection = get_document_and_collection("doc8d6ed1501497021a")
 
     doc_parts = [TextPart(content="北京是中国的首都")]
-    process_document_for_ray(collection, "北京是中国的首都", doc_parts, "doc8266f81fe433b103", "test.pdf")
+    # process_document_for_ray(collection, "北京是中国的首都", doc_parts, "doc201db258fe68946b", "test.txt")
     # print(asyncio.run(get_graph_labels_for_collection(collection)))
     # print(asyncio.run(get_knowledge_graph_for_collection(collection)))
+    delete_document_for_ray(collection, "doc8d6ed1501497021a")
