@@ -96,11 +96,12 @@ class RayTaskScheduler(TaskScheduler):
         from config.ray_tasks import create_document_indexes_workflow
 
         try:
-            # Execute workflow and return AsyncResult ID (not calling .get())
-            workflow_result = ray.get(create_document_indexes_workflow.remote(document_id, index_types, context))  # Use .id instead of .get('workflow_id')
+            # 异步触发 Ray workflow，返回 ObjectRef 的十六进制 ID 作为 task_id
+            obj_ref = create_document_indexes_workflow.remote(document_id, index_types, context)
             logger.debug(
-                f"Scheduled create indexes workflow {workflow_result} for document {document_id} with types {index_types}"
+                f"Scheduled create indexes workflow {obj_ref} for document {document_id} with types {index_types}"
             )
+            return obj_ref.hex()
         except Exception as e:
             logger.error(f"Failed to schedule create indexes workflow for document {document_id}: {str(e)}")
             raise
@@ -110,11 +111,12 @@ class RayTaskScheduler(TaskScheduler):
         from config.ray_tasks import update_document_indexes_workflow
 
         try:
-            # Execute workflow and return AsyncResult ID (not calling .get())
-            workflow_result = ray.get(update_document_indexes_workflow.remote(document_id, index_types, context))
+            # 异步触发 Ray workflow，返回 ObjectRef 的十六进制 ID 作为 task_id
+            obj_ref = update_document_indexes_workflow.remote(document_id, index_types, context)
             logger.debug(
-                f"Scheduled update indexes workflow {workflow_result} for document {document_id} with types {index_types}"
+                f"Scheduled update indexes workflow {obj_ref} for document {document_id} with types {index_types}"
             )
+            return obj_ref.hex()
         except Exception as e:
             logger.error(f"Failed to schedule update indexes workflow for document {document_id}: {str(e)}")
             raise
@@ -124,36 +126,40 @@ class RayTaskScheduler(TaskScheduler):
         from config.ray_tasks import delete_document_indexes_workflow
 
         try:
-            # Execute workflow and return AsyncResult ID
-            workflow_result = ray.get(delete_document_indexes_workflow.remote(document_id, index_types))
+            # 异步触发 Ray workflow，返回 ObjectRef 的十六进制 ID 作为 task_id
+            obj_ref = delete_document_indexes_workflow.remote(document_id, index_types)
             logger.debug(
-                f"Scheduled delete indexes workflow {workflow_result} for document {document_id} with types {index_types}"
+                f"Scheduled delete indexes workflow {obj_ref} for document {document_id} with types {index_types}"
             )
+            return obj_ref.hex()
         except Exception as e:
             logger.error(f"Failed to schedule delete indexes workflow for document {document_id}: {str(e)}")
             raise
 
     def get_task_status(self, task_id: str) -> Optional[TaskResult]:
-        """Get workflow status using Celery AsyncResult (non-blocking)"""
+        """Get workflow status using Ray ObjectRef (non-blocking)"""
         try:
-            from celery.result import AsyncResult
+            # 从十六进制字符串还原 Ray ObjectRef
+            obj_ref = ray.ObjectRef.from_hex(task_id)
 
-            from config.ray_schedule import app
+            # 非阻塞检查任务是否完成
+            ready_refs, _ = ray.wait([obj_ref], timeout=0)
+            if not ready_refs:
+                return TaskResult(task_id, success=False, error="Task is pending or running")
 
-            # Get AsyncResult without calling .get()
-            workflow_result = AsyncResult(task_id, app=app)
+            # 已完成，获取结果
+            result = ray.get(obj_ref)
 
-            # Check status without blocking
-            if workflow_result.state == "PENDING":
-                return TaskResult(task_id, success=False, error="Workflow is pending")
-            elif workflow_result.state == "STARTED":
-                return TaskResult(task_id, success=False, error="Workflow is running")
-            elif workflow_result.state == "SUCCESS":
-                return TaskResult(task_id, success=True, data=workflow_result.result)
-            elif workflow_result.state == "FAILURE":
-                return TaskResult(task_id, success=False, error=str(workflow_result.info))
-            else:
-                return TaskResult(task_id, success=False, error=f"Unknown state: {workflow_result.state}")
+            # 我们的 Ray workflow 返回的是形如 {"status": "...", "error": "..."} 的 dict
+            if isinstance(result, dict):
+                status = result.get("status")
+                if status == "success":
+                    return TaskResult(task_id, success=True, data=result)
+                if status == "failed":
+                    return TaskResult(task_id, success=False, error=str(result.get("error")), data=result)
+
+            # 默认视为成功，直接返回数据
+            return TaskResult(task_id, success=True, data=result)
 
         except Exception as e:
             logger.error(f"Failed to get workflow status for {task_id}: {str(e)}")

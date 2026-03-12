@@ -559,16 +559,6 @@ async def get_knowledge_graph_for_collection(
                     routing_="r",
                 )
                 records.extend(records)
-            records, _, _ = await graphiti.driver.execute_query(
-                f"""
-                MATCH (n:Entity)
-                WHERE n.group_id = $group_id
-                RETURN {node_return}
-                LIMIT $limit
-                """,
-                params={"group_id": group_id, "limit": query_max_nodes},
-                routing_="r",
-            )
         else:
             depth = min(max(1, max_depth), 10)
             records = []
