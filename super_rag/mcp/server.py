@@ -32,9 +32,11 @@ async def list_collections() -> Dict[str, Any]:
         sensitive and unnecessary information.
     """
     try:
+        api_key = get_api_key()
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
-                f"{API_BASE_URL}/api/v1/collections"
+                f"{API_BASE_URL}/api/v1/collections",
+                headers={"Authorization": f"Bearer {api_key}"}
             )
             if response.status_code == 200:
                 try:
@@ -163,12 +165,13 @@ async def search_collection(
         # Ensure at least one search type is enabled
         if not any([use_vector_index, use_fulltext_index, use_graph_index, use_summary_index]):
             return {"error": "At least one search type must be enabled"}
-
+        api_key = get_api_key()
         # Use longer timeout for search operations (graph search can be time-consuming)
         async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/collections/{collection_id}/searches",
                 json=search_data,
+                headers={"Authorization": f"Bearer {api_key}"}
             )
             if response.status_code == 200 or response.status_code == 201:
                 try:
@@ -246,7 +249,7 @@ async def search_chat_files(
         - Use asset:// URLs for displaying images in markdown
     """
     try:
-
+        api_key = get_api_key()
         # Build search request based on enabled search types
         search_data = {"query": query, "rerank": rerank}
 
@@ -266,6 +269,7 @@ async def search_chat_files(
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/chats/{chat_id}/search",
                 json=search_data,
+                headers={"Authorization": f"Bearer {api_key}"}
             )
             if response.status_code == 200 or response.status_code == 201:
                 try:
@@ -321,6 +325,7 @@ async def web_search(
         Results are automatically merged and ranked.
     """
     try:
+        api_key = get_api_key()
         # Build search request
         search_data = {
             "max_results": max_results,
@@ -343,6 +348,7 @@ async def web_search(
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/web/search",
                 json=search_data,
+                headers={"Authorization": f"Bearer {api_key}"}
             )
             if response.status_code == 200:
                 try:
@@ -380,6 +386,7 @@ async def web_read(
         Uses WebReadResponse view model for type-safe response parsing
     """
     try:
+        api_key = get_api_key()
         # Validate url_list parameter
         if not url_list or len(url_list) == 0:
             return {"error": "url_list parameter is required and must contain at least one URL"}
@@ -397,6 +404,7 @@ async def web_read(
             response = await client.post(
                 f"{API_BASE_URL}/api/v1/web/read",
                 json=read_data,
+                headers={"Authorization": f"Bearer {api_key}"}
             )
             if response.status_code == 200:
                 try:
@@ -643,6 +651,49 @@ I can help you search your knowledge base effectively using ApeRAG.
 
 Ready to help you find the information you need!
 """
+
+def get_api_key() -> str:
+    """Get API key from HTTP headers or environment variable.
+
+    Priority order:
+    1. Authorization header from HTTP request (using FastMCP dependency)
+    2. SUPER_RAG_API_KEY environment variable
+
+    Returns:
+        API key string
+
+    Raises:
+        ValueError: If API key is not found
+    """
+    # Try to get API key from HTTP headers first
+    try:
+        # Use FastMCP's dependency function to get HTTP headers
+        headers = get_http_headers()
+
+        if headers:
+            # Try to extract Authorization header
+            auth_header = headers.get("Authorization") or headers.get("authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                api_key = auth_header[7:]  # Remove 'Bearer ' prefix
+                logger.info(f"API key found in Authorization header, length: {len(api_key)}")
+                return api_key
+
+    except Exception as e:
+        # get_http_headers() might fail if not in HTTP request context
+        logger.debug(f"Could not extract API key from headers: {e}")
+
+    # Fallback to environment variable
+    api_key = os.getenv("SUPER_RAG_API_KEY")
+
+    if api_key:
+        logger.info(f"API key found in environment variable, length: {len(api_key)}")
+        return api_key
+
+    raise ValueError(
+        "API key not found. Please provide API key via:\n"
+        "1. Authorization: Bearer <token> HTTP header, or\n"
+        "2. SUPER_RAG_API_KEY environment variable"
+    )
 
 # Export the server instance
 __all__ = ["mcp_server"]

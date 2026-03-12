@@ -427,15 +427,22 @@ class AgentChatService:
             error_msg = f"No API key available for provider '{agent_message.completion.model_service_provider}'"
             logger.error(error_msg)
             raise AgentConfigurationError("api_key", error_msg)
-
-        # super_rag API key: prefer env SUPER_RAG_API_KEY so agent can call MCP/super_rag backend
-        super_rag_api_key = settings.super_rag_api_key
+        # Query super_rag API key from database
+        super_rag_api_keys = await self.db_ops.query_api_keys(user, is_system=True)
+        for item in super_rag_api_keys:
+            super_rag_api_key = item.key
         if not super_rag_api_key:
-            logger.error("super_rag_api_key is required but not set (SUPER_RAG_API_KEY env is empty)")
-            raise AgentConfigurationError(
-                "super_rag_api_key",
-                "super_rag_api_key is required. Set environment variable SUPER_RAG_API_KEY.",
-            )
+            # Auto-create a new system super_rag API key for the user if none exists
+            logger.info(f"No super_rag API key found for user {user}, creating a new system key")
+            try:
+                api_key_result = await self.db_ops.create_api_key(user=user, description="super_rag", is_system=True)
+                super_rag_api_key = api_key_result.key
+                logger.info(f"Successfully created new system super_rag API key for user {user}")
+            except Exception as e:
+                error_msg = f"Failed to create super_rag API key for user {user}: {str(e)}"
+                logger.error(error_msg)
+                raise AgentConfigurationError(error_msg)
+
 
         # Determine system prompt: use custom if provided, otherwise use default
         system_prompt = (
