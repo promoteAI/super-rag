@@ -125,9 +125,9 @@ class MySQLChatMessageHistory:
             raw_message = json.dumps(msg_dict)
             await self.db_ops.insert_message(
                 chat_id=self.session_id,
-                role=msg_dict.get("role"),
+                role=message.role,
                 raw_message=raw_message,
-                message_id=msg_dict.get("message_id"),
+                message_id=message.message_id,
             )
         except Exception as e:
             logger.error(f"Failed to add chat message to MySQL: {e}")

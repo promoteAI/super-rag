@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from sqlalchemy import select, update
+from sqlalchemy import case, select, update
 from super_rag.db.models import ChatMessageTable
 from super_rag.utils.utils import utc_now
 
@@ -17,12 +17,17 @@ class ChatMessageRepositoryMixin(SyncRepositoryProtocol):
     def get_messages(self, chat_id: str) -> List[ChatMessageTable]:
         """
         Get all messages in a chat, ordered by created_at (asc), filtering out soft-deleted ones.
+        Secondary sort ensures human messages appear before ai messages within the same second.
         """
+        role_order = case(
+            (ChatMessageTable.role == "human", 0),
+            else_=1,
+        )
         def _query(session):
             stmt = (
                 select(ChatMessageTable)
                 .where(ChatMessageTable.chat_id == chat_id, ChatMessageTable.gmt_deleted.is_(None))
-                .order_by(ChatMessageTable.created_at.asc())
+                .order_by(ChatMessageTable.created_at.asc(), role_order.asc())
             )
             result = session.execute(stmt)
             return result.scalars().all()
@@ -136,12 +141,17 @@ class AsyncChatMessageRepositoryMixin(AsyncRepositoryProtocol):
     async def get_messages(self, chat_id: str) -> List[ChatMessageTable]:
         """
         Get all messages in a chat, ordered by created_at (asc), filtering out soft-deleted ones.
+        Secondary sort ensures human messages appear before ai messages within the same second.
         """
+        role_order = case(
+            (ChatMessageTable.role == "human", 0),
+            else_=1,
+        )
         async def _query(session):
             stmt = (
                 select(ChatMessageTable)
                 .where(ChatMessageTable.chat_id == chat_id, ChatMessageTable.gmt_deleted.is_(None))
-                .order_by(ChatMessageTable.created_at.asc())
+                .order_by(ChatMessageTable.created_at.asc(), role_order.asc())
             )
             result = await session.execute(stmt)
             return result.scalars().all()
