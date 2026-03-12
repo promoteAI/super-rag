@@ -545,10 +545,12 @@ async def get_knowledge_graph_for_collection(
         query_max_nodes = max_nodes * 2 if overview else max_nodes
         is_truncated = False
 
+        # 收集所有 group 的节点记录，避免覆盖或重复扩展
+        records: list = []
+
         if overview:
-            records = []
             for group_id in group_ids:
-                records, _, _ = await graphiti.driver.execute_query(
+                group_records, _, _ = await graphiti.driver.execute_query(
                     f"""
                     MATCH (n:Entity)
                     WHERE n.group_id = $group_id
@@ -558,12 +560,11 @@ async def get_knowledge_graph_for_collection(
                     params={"group_id": group_id, "limit": query_max_nodes},
                     routing_="r",
                 )
-                records.extend(records)
+                records.extend(group_records)
         else:
             depth = min(max(1, max_depth), 10)
-            records = []
             for group_id in group_ids:
-                records, _, _ = await graphiti.driver.execute_query(
+                group_records, _, _ = await graphiti.driver.execute_query(
                     f"""
                     MATCH (start:Entity)
                     WHERE start.group_id = $group_id AND $label IN labels(start)
@@ -577,23 +578,30 @@ async def get_knowledge_graph_for_collection(
                     params={"group_id": group_id, "label": label, "limit": query_max_nodes},
                     routing_="r",
                 )
-                records.extend(records)
+                records.extend(group_records)
+
         nodes = [entity_node_from_record(r) for r in records]
         if not nodes:
             return _graph_to_dict([], [], is_truncated=False)
         node_uuids = [n.uuid for n in nodes]
         if len(records) >= query_max_nodes:
             is_truncated = True
-        edge_records, _, _ = await graphiti.driver.execute_query(
-            f"""
-            MATCH (n:Entity)-[e:RELATES_TO]->(m:Entity)
-            WHERE n.group_id = $group_id AND m.group_id = $group_id
-            AND n.uuid IN $node_uuids AND m.uuid IN $node_uuids
-            RETURN {edge_return}
-            """,
-            params={"group_id": group_id, "node_uuids": node_uuids},
-            routing_="r",
-        )
+
+        # 对每个 group 分别查询边，再汇总，避免只使用最后一个 group_id
+        edge_records: list = []
+        for group_id in group_ids:
+            group_edge_records, _, _ = await graphiti.driver.execute_query(
+                f"""
+                MATCH (n:Entity)-[e:RELATES_TO]->(m:Entity)
+                WHERE n.group_id = $group_id AND m.group_id = $group_id
+                AND n.uuid IN $node_uuids AND m.uuid IN $node_uuids
+                RETURN {edge_return}
+                """,
+                params={"group_id": group_id, "node_uuids": node_uuids},
+                routing_="r",
+            )
+            edge_records.extend(group_edge_records)
+
         edges = [entity_edge_from_record(r) for r in edge_records]
         if overview and len(nodes) > max_nodes:
             nodes, edges = _optimize_graph_for_visualization(nodes, edges, max_nodes)
