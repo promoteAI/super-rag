@@ -552,8 +552,6 @@ class AgentChatService:
 
             tool_references = extract_tool_call_references(llm.history)
             urls = []
-            # MCP 工具调用结果在生成最终分析之前发送给前端
-            await message_queue.put(format_tool_call_result(message_id, json.dumps(tool_references), "tool_call_result", None))
             await message_queue.put(format_stream_content(message_id, full_content))
 
             await message_queue.put(format_stream_end(message_id, references=tool_references, urls=urls))

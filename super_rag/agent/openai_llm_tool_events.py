@@ -65,6 +65,11 @@ class SuperRagOpenAIAugmentedLLM(OpenAIAugmentedLLM):
             message_id, message_queue = ctx
             display_text = _call_result_to_display_text(result)
             tool_name = request.params.name
+            # Preserve the original tool input for history reconstruction
+            try:
+                args_str = json.dumps(request.params.arguments or {}, ensure_ascii=False)
+            except Exception:
+                args_str = None
             tid = tool_call_id or "unknown"
             try:
                 msg = format_tool_call_result(
@@ -73,6 +78,7 @@ class SuperRagOpenAIAugmentedLLM(OpenAIAugmentedLLM):
                     tool_name,
                     None,
                     tool_call_id=tid,
+                    arguments=args_str,
                 )
                 await message_queue.put(msg)
             except Exception as e:

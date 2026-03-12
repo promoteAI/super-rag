@@ -174,6 +174,9 @@ def create_assistant_message(
                 "tool_name": step.get("tool_name"),
                 "tool_call_id": step.get("tool_call_id"),
                 "result": step.get("result"),
+                # Persist raw tool arguments if available so that
+                # AG-UI style history can reconstruct INPUT blocks.
+                "args": step.get("args"),
             }
             # Merge existing metadata with AG-UI specific tool metadata
             part_metadata: Dict[str, Any] = {

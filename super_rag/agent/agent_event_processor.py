@@ -76,9 +76,18 @@ class AgentEventProcessor(EventListener):
         if not self.formatter.should_display_result(interface_type, typed_result, structured_content):
             return
 
-        display_text = self.formatter.format_tool_response(interface_type, typed_result, structured_content, is_error)
+        display_text = self.formatter.format_tool_response(
+            interface_type, typed_result, structured_content, is_error
+        )
 
-        formatted_message = format_tool_call_result(self.message_id, display_text + "\n\n", interface_type, None)
+        # For generic tool responses we don't have structured arguments,
+        # so we only populate the display text and tool name.
+        formatted_message = format_tool_call_result(
+            self.message_id,
+            display_text + "\n\n",
+            interface_type,
+            None,
+        )
         await self.message_queue.put(formatted_message)
 
         if interface_type in ("search_collection", "search_chat_files") and typed_result is not None:

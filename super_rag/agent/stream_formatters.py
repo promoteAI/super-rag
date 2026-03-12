@@ -105,9 +105,20 @@ def format_tool_call_start(
 
 
 def format_tool_call_result(
-    msg_id: str, data: str, tool_name: str, result: Any, tool_call_id: str | None = None
+    msg_id: str,
+    data: str,
+    tool_name: str,
+    result: Any,
+    tool_call_id: str | None = None,
+    arguments: str | None = None,
 ) -> AgentToolCallResultResponse:
-    return AgentToolCallResultResponse(
+    """
+    Format tool call result event.
+
+    `arguments` is optional and may contain the JSON-encoded tool input,
+    which is useful for persisting full tool traces in history.
+    """
+    msg: AgentToolCallResultResponse = AgentToolCallResultResponse(
         type="tool_call_result",
         id=msg_id,
         data=data,
@@ -116,6 +127,11 @@ def format_tool_call_result(
         tool_call_id=tool_call_id,
         timestamp=int(time.time()),
     )
+    # Attach arguments in a backward-compatible way (extra field on the dict)
+    if arguments is not None:
+        # type: ignore[assignment]
+        msg["args"] = arguments
+    return msg
 
 
 # New unified formatter functions
