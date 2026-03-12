@@ -306,6 +306,8 @@ class ChatMessage(BaseModel):
     urls: Optional[list[str]] = None
     feedback: Optional[Feedback] = None
     files: Optional[list[File]] = None
+    # Optional structured metadata for rich UI (e.g. AG-UI traces)
+    metadata: Optional[Dict[str, Any]] = None
 
 class Query(BaseModel):
     query: str

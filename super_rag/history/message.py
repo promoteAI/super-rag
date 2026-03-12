@@ -80,6 +80,7 @@ class StoredChatMessage(BaseModel):
                 urls=part.urls if part.urls else None,
                 feedback=part.feedback,
                 files=self.files,
+                metadata=part.metadata,
             )
             frontend_messages.append(chatMessage)
         return frontend_messages
@@ -166,9 +167,19 @@ def create_assistant_message(
 
     parts = []
 
-    # Add thinking steps
+    # Add tool call result steps (used for AG-UI style history reconstruction)
     if tool_use_list:
         for step in tool_use_list:
+            tool_meta: Dict[str, Any] = {
+                "tool_name": step.get("tool_name"),
+                "tool_call_id": step.get("tool_call_id"),
+                "result": step.get("result"),
+            }
+            # Merge existing metadata with AG-UI specific tool metadata
+            part_metadata: Dict[str, Any] = {
+                **(metadata or {}),
+                "agui_tool_call": tool_meta,
+            }
             parts.append(
                 StoredChatMessagePart(
                     chat_id=chat_id,
@@ -177,7 +188,7 @@ def create_assistant_message(
                     type="tool_call_result",
                     role="ai",
                     content=step.get("data"),
-                    metadata=metadata,
+                    metadata=part_metadata,
                 )
             )
 

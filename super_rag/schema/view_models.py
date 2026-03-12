@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Optional, Union
+from typing import Any, Dict, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, RootModel, confloat, conint
 
@@ -786,6 +786,7 @@ class ChatMessage(BaseModel):
     urls: Optional[list[str]] = None
     feedback: Optional[Feedback] = None
     files: Optional[list[File]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 class ChatDetails(BaseModel):
