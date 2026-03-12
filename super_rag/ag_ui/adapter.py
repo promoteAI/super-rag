@@ -3,6 +3,7 @@ Consume super_rag message queue and yield AG-UI protocol events as SSE.
 Maps: start -> RunStarted; message -> TextMessageStart/Content/End; tool_call_result -> ToolCallResult; stop -> RunFinished; error -> RunError.
 """
 
+import asyncio
 import logging
 import time
 from typing import Any, AsyncGenerator, Dict, Optional
@@ -82,6 +83,7 @@ async def stream_ag_ui_events(
 
     tool_call_index = 0
     tool_call_starts_sent = set()  # tool_call_ids for which we already emitted ToolCallStartEvent
+    text_stream_started = False  # whether we have emitted TextMessageStartEvent for streaming deltas
 
     try:
         while True:
@@ -95,7 +97,26 @@ async def stream_ag_ui_events(
             msg_type = message.get("type")
             msg_id = message.get("id") or message_id
 
-            if msg_type == "tool_call_start":
+            if msg_type == "text_delta":
+                delta = message.get("data") or ""
+                if not delta:
+                    continue
+                if not text_stream_started:
+                    text_stream_started = True
+                    event_start = TextMessageStartEvent(
+                        type=EventType.TEXT_MESSAGE_START,
+                        message_id=msg_id,
+                        role="assistant",
+                    )
+                    yield _enc(event_start)
+                event_content = TextMessageContentEvent(
+                    type=EventType.TEXT_MESSAGE_CONTENT,
+                    message_id=msg_id,
+                    delta=delta,
+                )
+                yield _enc(event_content)
+
+            elif msg_type == "tool_call_start":
                 tool_call_id = message.get("tool_call_id") or f"tool_{msg_id}_{tool_call_index}"
                 tool_call_index += 1
                 tool_name = message.get("tool_name") or "tool"
@@ -124,6 +145,9 @@ async def stream_ag_ui_events(
                 data = message.get("data") or ""
                 if not data:
                     continue
+                if text_stream_started:
+                    # Text was already streamed via text_delta events; skip duplicate.
+                    continue
                 event_start = TextMessageStartEvent(
                     type=EventType.TEXT_MESSAGE_START,
                     message_id=msg_id,
@@ -139,6 +163,7 @@ async def stream_ag_ui_events(
                             delta=chunk,
                         )
                         yield _enc(event_content)
+                        await asyncio.sleep(0.01)
                 event_end = TextMessageEndEvent(
                     type=EventType.TEXT_MESSAGE_END,
                     message_id=msg_id,
@@ -202,6 +227,15 @@ async def stream_ag_ui_events(
                     yield _enc(event)
 
             elif msg_type == "stop":
+                # Close the text stream if it was opened via text_delta events
+                if text_stream_started:
+                    event_end = TextMessageEndEvent(
+                        type=EventType.TEXT_MESSAGE_END,
+                        message_id=msg_id,
+                    )
+                    yield _enc(event_end)
+                    text_stream_started = False
+
                 refs = message.get("data")
                 event = RunFinishedEvent(
                     type=EventType.RUN_FINISHED,

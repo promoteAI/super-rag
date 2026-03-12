@@ -246,7 +246,15 @@ async def ag_ui_run_endpoint(
                 logger.exception("AG-UI: failed to save conversation history: %s", e)
 
     media_type = get_ag_ui_sse_media_type(request.headers.get("accept"))
-    return StreamingResponse(stream_with_cleanup(), media_type=media_type)
+    return StreamingResponse(
+        stream_with_cleanup(),
+        media_type=media_type,
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/agents/{agent_id}/chats/{chat_id}/title")
