@@ -426,9 +426,9 @@ async def web_read(
 async def super_rag_usage_guide() -> str:
     """Resource providing usage guide for Super RAG search."""
     return """
-# ApeRAG Search Guide
+# SuperRAG Search Guide
 
-ApeRAG provides powerful knowledge search capabilities across your collections.
+SuperRAG provides powerful knowledge search capabilities across your collections.
 
 ## Available Operations:
 1. **list_collections**: Get all available collections with essential information (ID, title, description)
@@ -439,7 +439,7 @@ ApeRAG provides powerful knowledge search capabilities across your collections.
 ## Authentication:
 API authentication is handled automatically through one of these methods:
 1. **HTTP Authorization header**: `Authorization: Bearer your-api-key` (when using HTTP transport)
-2. **Environment variable**: `APERAG_API_KEY=your-api-key` (fallback method)
+2. **Environment variable**: `SuperRAG_API_KEY=your-api-key` (fallback method)
 
 The server will automatically try both methods in order of preference.
 
@@ -515,7 +515,7 @@ You can also search the web and extract content from web pages:
 ```
 # Basic web search
 web_results = web_search(
-    query="ApeRAG RAG system 2025",
+    query="SuperRAG RAG system 2025",
     max_results=5,
     locale="zh-CN"
 )
@@ -619,11 +619,11 @@ for item in internal_results.items:
 # Add a prompt for search assistance
 @mcp_server.prompt
 async def search_assistant() -> str:
-    """Help prompt for effective ApeRAG searching."""
+    """Help prompt for effective SuperRAG searching."""
     return """
-# ApeRAG Search Assistant
+# SuperRAG Search Assistant
 
-I can help you search your knowledge base effectively using ApeRAG.
+I can help you search your knowledge base effectively using SuperRAG.
 
 ## How to use me:
 1. **Tell me what you're looking for** - I'll help you search across your collections
