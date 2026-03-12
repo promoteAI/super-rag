@@ -100,12 +100,16 @@ async def stream_ag_ui_events(
                 tool_call_index += 1
                 tool_name = message.get("tool_name") or "tool"
                 tool_call_starts_sent.add(tool_call_id)
-                start_ev = ToolCallStartEvent(
+                start_kwargs: Dict[str, Any] = dict(
                     type=EventType.TOOL_CALL_START,
                     tool_call_id=tool_call_id,
                     tool_call_name=tool_name,
                     parent_message_id=msg_id,
                 )
+                args_data = message.get("data")
+                if args_data:
+                    start_kwargs["tool_call_args"] = args_data
+                start_ev = ToolCallStartEvent(**start_kwargs)
                 yield _enc(start_ev)
 
             elif msg_type == "start":
@@ -149,12 +153,13 @@ async def stream_ag_ui_events(
                     tool_call_index += 1
                     tool_call_starts_sent.add(tool_call_id)
                     tool_name = message.get("tool_name") or "tool"
-                    start_ev = ToolCallStartEvent(
+                    fallback_kwargs: Dict[str, Any] = dict(
                         type=EventType.TOOL_CALL_START,
                         tool_call_id=tool_call_id,
                         tool_call_name=tool_name,
                         parent_message_id=msg_id,
                     )
+                    start_ev = ToolCallStartEvent(**fallback_kwargs)
                     yield _enc(start_ev)
                 content = message.get("data") or ""
                 if not isinstance(content, str):
