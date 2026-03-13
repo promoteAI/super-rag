@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from super_rag.db.models import User
 from super_rag.exceptions import (
     AlreadySubscribedError,
+    CollectionNotFoundException,
     CollectionNotPublishedError,
     SelfSubscriptionError,
 )
@@ -57,8 +58,10 @@ async def subscribe_collection(
 ) -> view_models.SharedCollection:
     """Subscribe to a Collection"""
     try:
-        result = await marketplace_service.subscribe_collection(user.id, collection_id)
+        result = await marketplace_service.subscribe_collection(str(user.id), collection_id)
         return result
+    except CollectionNotFoundException:
+        raise HTTPException(status_code=404, detail="Collection not found")
     except CollectionNotPublishedError:
         raise HTTPException(status_code=400, detail="Collection is not published to marketplace")
     except SelfSubscriptionError:
@@ -77,7 +80,7 @@ async def unsubscribe_collection(
 ) -> Dict[str, Any]:
     """Unsubscribe from a Collection"""
     try:
-        await marketplace_service.unsubscribe_collection(user.id, collection_id)
+        await marketplace_service.unsubscribe_collection(str(user.id), collection_id)
         return {"message": "Successfully unsubscribed"}
     except Exception as e:
         logger.error(f"Error unsubscribing from collection {collection_id}: {e}")
