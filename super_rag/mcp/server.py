@@ -58,7 +58,6 @@ async def search_collection(
     collection_id: str,
     query: str,
     use_vector_index: bool = True,
-    use_fulltext_index: bool = True,
     use_graph_index: bool = True,
     use_summary_index: bool = True,
     use_vision_index: bool = True,
@@ -76,9 +75,7 @@ async def search_collection(
     Args:
         collection_id: The ID of the collection to search in
         query: The search query
-        query_keywords: The keywords extracted from query to use for fulltext search (optional), only effective when use_fulltext_index is True.
         use_vector_index: Whether to use vector/semantic search (default: True)
-        use_fulltext_index: Whether to use full-text keyword search (default: True)
         use_graph_index: Whether to use knowledge graph search (default: True)
         use_summary_index: Whether to use summary search (default: True)
         use_vision_index: Whether to use vision search (default: True)
@@ -150,9 +147,6 @@ async def search_collection(
         if use_vector_index:
             search_data["vector_search"] = {"topk": topk, "similarity": 0.2}
 
-        if use_fulltext_index:
-            search_data["fulltext_search"] = {"topk": topk, "keywords": query_keywords}
-
         if use_graph_index:
             search_data["graph_search"] = {"topk": topk}
 
@@ -163,7 +157,7 @@ async def search_collection(
             search_data["vision_search"] = {"topk": topk, "similarity": 0.2}
 
         # Ensure at least one search type is enabled
-        if not any([use_vector_index, use_fulltext_index, use_graph_index, use_summary_index]):
+        if not any([use_vector_index, use_graph_index, use_summary_index]):
             return {"error": "At least one search type must be enabled"}
         api_key = get_api_key()
         # Use longer timeout for search operations (graph search can be time-consuming)
@@ -202,7 +196,6 @@ async def search_chat_files(
     chat_id: str,
     query: str,
     use_vector_index: bool = True,
-    use_fulltext_index: bool = True,
     rerank: bool = True,
     topk: int = 5,
 ) -> Dict[str, Any]:
@@ -223,7 +216,6 @@ async def search_chat_files(
         chat_id: The ID of the chat to search files in
         query: The search query
         use_vector_index: Whether to use vector/semantic search (default: True)
-        use_fulltext_index: Whether to use full-text keyword search (default: True)
         rerank: Whether to enable reranking of search results for better relevance (default: True)
         topk: Maximum number of results to return per search type (default: 5)
 
@@ -257,11 +249,8 @@ async def search_chat_files(
         if use_vector_index:
             search_data["vector_search"] = {"topk": topk, "similarity": 0.2}
 
-        if use_fulltext_index:
-            search_data["fulltext_search"] = {"topk": topk}
-
         # Ensure at least one search type is enabled
-        if not any([use_vector_index, use_fulltext_index]):
+        if not any([use_vector_index]):
             return {"error": "At least one search type must be enabled"}
 
         # Use longer timeout for search operations

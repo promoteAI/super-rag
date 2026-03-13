@@ -342,7 +342,6 @@ async def search_chat_files_view(
             id=None,  # No ID since not saved
             query=data.query,
             vector_search=data.vector_search,
-            fulltext_search=data.fulltext_search,
             graph_search=data.graph_search,
             summary_search=data.summary_search,
             items=items,

@@ -916,6 +916,12 @@ class CollectionView(BaseModel):
     created: Optional[datetime] = None
     updated: Optional[datetime] = None
     owner_user_id: Optional[str] = Field(None, description='Collection owner user ID')
+    is_published: Optional[bool] = Field(
+        False, description='Whether the collection is published to marketplace'
+    )
+    published_at: Optional[datetime] = Field(
+        None, description='Publication time, null when not published'
+    )
 
 
 class CollectionViewList(BaseModel):
@@ -1082,7 +1088,6 @@ class SearchResult(BaseModel):
     id: Optional[str] = Field(None, description='The id of the search result')
     query: Optional[str] = None
     vector_search: Optional[VectorSearchParams] = None
-    fulltext_search: Optional[FulltextSearchParams] = None
     graph_search: Optional[GraphSearchParams] = None
     summary_search: Optional[SummarySearchParams] = None
     vision_search: Optional[VisionSearchParams] = None

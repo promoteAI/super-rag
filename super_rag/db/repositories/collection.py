@@ -2,9 +2,9 @@
 
 from typing import List, Optional
 
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, func, outerjoin, select
 
-from super_rag.db.models import Collection, CollectionStatus, CollectionType, User
+from super_rag.db.models import Collection, CollectionMarketplace, CollectionMarketplaceStatusEnum, CollectionStatus, CollectionType, User
 from super_rag.db.repositories.base import (
     AsyncRepositoryProtocol,
     SyncRepositoryProtocol,
@@ -139,12 +139,23 @@ class AsyncCollectionRepositoryMixin(AsyncRepositoryProtocol):
                     Collection.gmt_created,
                     Collection.gmt_updated,
                     Collection.user,
+                    CollectionMarketplace.status.label("marketplace_status"),
+                    CollectionMarketplace.gmt_created.label("published_at"),
                 )
-                .select_from(Collection)
+                .select_from(
+                    outerjoin(
+                        Collection,
+                        CollectionMarketplace,
+                        and_(
+                            Collection.id == CollectionMarketplace.collection_id,
+                            CollectionMarketplace.status == CollectionMarketplaceStatusEnum.PUBLISHED.value,
+                        ),
+                    )
+                )
                 .where(
                     Collection.user == user_id,
                     Collection.status != CollectionStatus.DELETED,
-                    Collection.type != CollectionType.CHAT,  # Exclude chat collections from regular list
+                    Collection.type != CollectionType.CHAT,
                 )
                 .order_by(desc(Collection.gmt_created))
             )

@@ -37,6 +37,16 @@ class CollectionService:
 
     async def build_collection_response(self, instance: db_models.Collection) -> view_models.Collection:
         """Build Collection response object for API return."""
+        is_published = False
+        published_at = None
+        try:
+            marketplace = await self.db_ops.get_collection_marketplace_by_collection_id(instance.id)
+            if marketplace and marketplace.status == db_models.CollectionMarketplaceStatusEnum.PUBLISHED.value:
+                is_published = True
+                published_at = marketplace.gmt_created
+        except Exception:
+            pass
+
         return Collection(
             id=instance.id,
             title=instance.title,
@@ -46,6 +56,8 @@ class CollectionService:
             config=parseCollectionConfig(instance.config),
             created=instance.gmt_created.isoformat(),
             updated=instance.gmt_updated.isoformat(),
+            is_published=is_published,
+            published_at=published_at,
         )
 
     async def create_collection(self, user: str, collection: view_models.CollectionCreate) -> view_models.Collection:
@@ -106,7 +118,7 @@ class CollectionService:
         # 1. Get user's owned collections with marketplace info
         owned_collections_data = await self.db_ops.query_collections_with_marketplace_info(user_id)
         for row in owned_collections_data:
-            # is_published = row.marketplace_status == "PUBLISHED"
+            is_published = row.marketplace_status == "PUBLISHED"
             items.append(
                 view_models.CollectionView(
                     id=row.id,
@@ -117,6 +129,8 @@ class CollectionService:
                     created=row.gmt_created,
                     updated=row.gmt_updated,
                     owner_user_id=row.user,
+                    is_published=is_published,
+                    published_at=row.published_at if is_published else None,
                 )
             )
 
