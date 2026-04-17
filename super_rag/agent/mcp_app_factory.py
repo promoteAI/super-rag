@@ -57,7 +57,17 @@ class MCPAppFactory:
                             http_timeout_seconds=30,
                             read_timeout_seconds=120,
                             description="super_rag knowledge base server",
-                        )
+                        ),
+                        "hindsight": MCPServerSettings(
+                            transport="streamable_http",
+                            url="http://localhost:8888/mcp",
+                            headers={
+                                "Content-Type": "application/json",
+                            },
+                            http_timeout_seconds=30,
+                            read_timeout_seconds=120,
+                            description="hindsight knowledge base server",
+                        ),
                     }
                 ),
                 openai=OpenAISettings(

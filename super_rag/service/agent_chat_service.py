@@ -459,7 +459,9 @@ class AgentChatService:
             default_model=agent_message.completion.model,
             language=agent_message.language if agent_message.language else "en-US",
             instruction=system_prompt,
-            server_names=["super_rag"],
+            # Expose both MCP servers to the agent. Without including hindsight here,
+            # the model cannot trigger hindsight tool calls even if it's registered.
+            server_names=["super_rag", "hindsight"],
             super_rag_api_key=super_rag_api_key,
             super_rag_mcp_url=os.getenv("super_rag_MCP_URL", "http://localhost:8000/mcp/"),
             temperature=0.7,
