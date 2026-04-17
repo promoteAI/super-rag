@@ -199,6 +199,18 @@ wheels = [
 ]
 
 [[package]]
+name = "aiohttp-retry"
+version = "2.9.1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "aiohttp" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/9d/61/ebda4d8e3d8cfa1fd3db0fb428db2dd7461d5742cea35178277ad180b033/aiohttp_retry-2.9.1.tar.gz", hash = "sha256:8eb75e904ed4ee5c2ec242fefe85bf04240f685391c4879d8f541d6028ff01f1" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1a/99/84ba7273339d0f3dfa57901b846489d2e5c2cd731470167757f1935fffbd/aiohttp_retry-2.9.1-py3-none-any.whl", hash = "sha256:66d2759d1921838256a05a3f80ad7e724936f083e35be5abb5e16eed6be6dc54" },
+]
+
+[[package]]
 name = "aioitertools"
 version = "0.13.0"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -1008,6 +1020,25 @@ wheels = [
 ]
 
 [[package]]
+name = "cohere"
+version = "6.1.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "fastavro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "requests" },
+    { name = "tokenizers" },
+    { name = "types-requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/d0/67/7aff8a870889ee931aa19e1deb138691e3cc909ee61e1daea86f3475a818/cohere-6.1.0.tar.gz", hash = "sha256:6a52bb459b71b5e79735412ee1a8e87028c5b3afba050c39815fe03c083249b3" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9e/b4/00c2f9f8387a2e77faf8410210466c46d55dd30a0388de41c54441b148fb/cohere-6.1.0-py3-none-any.whl", hash = "sha256:ad286b3af2583c75ba93624e6f680603d3578a3d73704f997430260b87537ac7" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -1657,6 +1688,57 @@ wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/5c/05/5cbb59154b093548acd0f4c7c474a118eda06da25aa75c616b72d8fcd92a/fastapi-0.128.0-py3-none-any.whl", hash = "sha256:aebd93f9716ee3b4f4fcfe13ffb7cf308d99c9f3ab5622d8877441072561582d" },
 ]
 
+[package.optional-dependencies]
+standard = [
+    { name = "email-validator" },
+    { name = "fastapi-cli", extra = ["standard"] },
+    { name = "httpx" },
+    { name = "jinja2" },
+    { name = "pydantic-extra-types" },
+    { name = "pydantic-settings" },
+    { name = "python-multipart" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[[package]]
+name = "fastapi-cli"
+version = "0.0.24"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "rich-toolkit" },
+    { name = "typer" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/6e/58/74797ae9e4610cfa0c6b34c8309096d3b20bb29be3b8b5fbf1004d10fa5f/fastapi_cli-0.0.24.tar.gz", hash = "sha256:1afc9c9e21d7ebc8a3ca5e31790cd8d837742be7e4f8b9236e99cb3451f0de00" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c7/4b/68f9fe268e535d79c76910519530026a4f994ce07189ac0dded45c6af825/fastapi_cli-0.0.24-py3-none-any.whl", hash = "sha256:4a1f78ed798f106b4fee85ca93b85d8fe33c0a3570f775964d37edb80b8f0edc" },
+]
+
+[package.optional-dependencies]
+standard = [
+    { name = "fastapi-cloud-cli" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[[package]]
+name = "fastapi-cloud-cli"
+version = "0.17.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "fastar" },
+    { name = "httpx" },
+    { name = "pydantic", extra = ["email"] },
+    { name = "rich-toolkit" },
+    { name = "rignore" },
+    { name = "sentry-sdk" },
+    { name = "typer" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/67/79/66567c39c5fab6dbebf9e40b3a3fcb0e2ec359517c87a67434c76b06e60b/fastapi_cloud_cli-0.17.0.tar.gz", hash = "sha256:2b6c241b63427023bd1e23b3251f23234aba4b05428b245a050e92db1389823c" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/50/31/fa442466bacadffec3d6611509d6ea391b6ca01b6ee0d4af835bfdea3483/fastapi_cloud_cli-0.17.0-py3-none-any.whl", hash = "sha256:b496e6998f037f572ab06a233ce257828b4c701488ce500b5c9d725e970a7cb1" },
+]
+
 [[package]]
 name = "fastapi-users"
 version = "15.0.3"
@@ -1693,6 +1775,148 @@ dependencies = [
 sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/87/12/bc9e6146ae31564741cefc87ee6e37fa5b566933f0afe8aa030779d60e60/fastapi_users_db_sqlalchemy-7.0.0.tar.gz", hash = "sha256:6823eeedf8a92f819276a2b2210ef1dcfd71fe8b6e37f7b4da8d1c60e3dfd595" }
 wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/a6/08/9968963c1fb8c34627b7f1fbcdfe9438540f87dc7c9bfb59bb4fd19a4ecf/fastapi_users_db_sqlalchemy-7.0.0-py3-none-any.whl", hash = "sha256:5fceac018e7cfa69efc70834dd3035b3de7988eb4274154a0dbe8b14f5aa001e" },
+]
+
+[[package]]
+name = "fastar"
+version = "0.11.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/03/0f/0aeb3fc50046617702acc0078b277b58367fd62eb727b9ec733ae0e8bbcc/fastar-0.11.0.tar.gz", hash = "sha256:aa7f100f7313c03fdb20f1385927ba95671071ba308ad0c1763fef295e1895ce" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/11/7a/fb367bdaf4efa2c7952a45aeab2e87a564293ecffe150af673ec8edfda46/fastar-0.11.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:b82fd6f996e65a86f67a6bd64dd22ef3e8ae2dcaed0ae3b550e71f7e1bbb1df5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/80/ff/b87efb0dcfd081c62c7c7601d7681dabe63103cd51fc16f8d57a1ab45961/fastar-0.11.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:27eed386fd0558e6daa29211111bbd7b740f7c7e881197f8a00ac7c0f3cdb1d7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/7c/0ed6dd38b9adc04b3a8ec3b7045908e7c2170ba0ff6e6d2c51bc9fc770f3/fastar-0.11.0-cp311-cp311-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:a6931bebc1d8e95ddeef55732c195449e6b44ef33aa31b325505097ed3b4d6aa" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/58/ce/8b7fb3f23855accebaaf2d2637eac7f261a7a5d936f861a172079f1ef511/fastar-0.11.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:891f72ce42a5e28a74fbd4d5fbf1a3ac1a1163d13cbc200cbd005fb0fabc54bd" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/07/cc/5491e2b677bb841f768e3aba052d0344338a5c78aa5d4c18b443831a8e8d/fastar-0.11.0-cp311-cp311-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:5b83c1f61f7017d6e1498568038f8745440cfc16ca2f697ec81bac83050108f6" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/4e/b7/643630bdbd179e41e9fae31c03b4cf6061dbf4d6fbbae8425d16eb12545d/fastar-0.11.0-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:db73a9b765a516e73983b25341e7b5e0189733878279e278b2295131b0e3a21e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/09/5d/37ade50003b4540e0a53ef100f6692d7ab2ac1122d5acf39920cc09a3e8b/fastar-0.11.0-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:625827d52eb4e8fec942e0233f125ff8010fcf6a67c0a974a8e5f4666b771e3c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c3/ff/135d177de32cc1e837c99019e4643e6e79352bde49544d4ece5b5eebf56b/fastar-0.11.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d7f5fd8fa21ec0a88296a38dc5d7fc35efd3b26d46a17b8b7c73c5563925ca15" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/27/cb/b835dbe76ceac7fa6105851468c259ffd06830eb9c029402e499d0ec153b/fastar-0.11.0-cp311-cp311-manylinux_2_31_riscv64.whl", hash = "sha256:8c15af91b8cd87ddf23ea55355ae513c1de3ab67178f26dad017c9e9c0af6096" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9e/54/aa8289eb57fc550535470397cb051f5a58a7c89ca4de31d5502b916dd894/fastar-0.11.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:03a112395a8b0bff251423bd1564c012f0cc058ad8b6bd8fba96f3d7fc117e44" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1f/fd/776d50a0897c01dc6bfd0926772ee913436fdae91b9affaf0a0cbd09f0a1/fastar-0.11.0-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:f2994bb8f5f8c11eb12beae1e6e77a907173c9819236b8a4c8f0573652ceccce" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c8/f1/cf0f9b499fb37ac065c8a01ec642f96a3c5eb849c38ae983b59f3b3245e0/fastar-0.11.0-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:dcf99e4b5973d842c7f19c776c3a83cdc0977d505edce6206438505c0456b517" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f8/9e/21e4701aec4a1123d4dc4d31578dc18875582b5710e4725f7ceb752a248b/fastar-0.11.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:29c9c386dc0d5dda78845a8e6b1480d26ab861c1e0b68f42ae5735cb70ca07f1" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ce/e2/5872b28c72c27ec1a00760eace6ff35f714f41ebbd5208cf016b12e29250/fastar-0.11.0-cp311-cp311-win32.whl", hash = "sha256:030b2580fc394f2c9b7890b6735810404e9b9ed5e0344db150b945965b5482b7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fd/6e/ce6832a16193eb4466f4108be8809c249b51cb1f89dd7894545700d079d5/fastar-0.11.0-cp311-cp311-win_amd64.whl", hash = "sha256:83ab57ae067969cd0b483ac3b6dccc4b595fc77f5c820760998648d4c42822b5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/15/5a/9cfb80661cf38fd7b0889224beb7d2746784d4ade2a931ed9775a18d8602/fastar-0.11.0-cp311-cp311-win_arm64.whl", hash = "sha256:27b1a4cee2298b704de8151d310462ee7335ed036011ca9aa6e784b30b6c73a9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0f/06/a5773706afc8bd496769786590bbc56d2d0ee419a299cc12ea3f5717fcf3/fastar-0.11.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:3c51f1c2cdddbd1420d2897ace7738e36c65e17f6ae84e0bfe763f8d1068bb97" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/cc/a6/d5e2a4e48495616440a21eed07558219ca90243ad00b0502586f95bd4833/fastar-0.11.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:0d9d6b052baf5380baea866675dab6ccd04ec2460d12b1c46f10ce3f4ee6a820" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ab/69/9816d69ac8265c9e50456637a487ccfb7a9c566efd9dbcd673df9c2558c2/fastar-0.11.0-cp312-cp312-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:bd2f05666d4df7e14885b5c38fefd92a785917387513d33d837ff42ec143a22f" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5b/0d/f88daad53aff2e754b6b5ff2a7113f72447a34f6ef17cc23ca99988117b7/fastar-0.11.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c1e6e74aba1ae77ca4aedcaf1697cd413319f4c88a5ccbe5b42c709517c5097e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2f/a6/82ef4ecd969d50d92ed3ed9dbd8fe77faa24be5e5736f716edc9f4ce8d62/fastar-0.11.0-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:38ef77fe940bbc9b37a98bd838727f844b11731cd39358a2640ff864fb385086" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/03/35/50249f0d827251f8ac511495e2eacccebda80a00a0ad73e9615b8113b84f/fastar-0.11.0-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:8955e61b32d6aff82c983217abf80933fd823b0e727586fc72f08043d996fd59" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7b/d8/faee41659e9c379d906d24eaee6d6833ac8cfef0a5df480e5c2a8d3efb33/fastar-0.11.0-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:483532442cdb08fbff0169510224eae0836f2f672cea6aacb52847d90fefdc46" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/22/47/0448ea7992b997dad2bf004bfd98eca74b5858630eae080b50c7b17d9ddc/fastar-0.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef5a6071121e05d8287fc75bccb054bcbac8bb0501200a0c0a8feeace5303ea4" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/33/ef/0d63eb43586831b7a6f8b22c4d77125a7c594423af1f4f090fa9541b9b40/fastar-0.11.0-cp312-cp312-manylinux_2_31_riscv64.whl", hash = "sha256:e45e598af5afe8412197d4786efd6cf29be02e7d3d4f6a3461149eae5d7e94f1" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/01/25/edd584675d69e49a165052c3ee886df1c5d574f3e7d813c990306387c623/fastar-0.11.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:2e160919b1c47ddb8538e7e8eb4cd527281b40f0bf75110a75993838ef61f286" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a5/37/e8bb24f506ba2b08fbaf36c5800e843bd4d542954e9331f00418e2d23349/fastar-0.11.0-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:4bb4dc0fc8f7a6807febcebce8a2f3626ba4955a9263d81ecc630aad83be84c0" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9a/bf/be753736296338149ee4cb3e92e2b5423d6ba17c7b951d15218fd7e99bbf/fastar-0.11.0-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:4ec95af56aa173f6e320e1183001bf108ba59beaf13edd1fc8200648db203588" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d2/cd/a81c1aaafb5a22ce57c98ae22f39c89413ed53e4ee6e1b1444b0bd666a6c/fastar-0.11.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:136cf342735464091c39dc3708168f9fdeb9ebea40b1ead937c61afaf46143d9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ec/88/1ce4eed3d70627c95f49ca017f6bbbf2ddcc4b0c601d293259de7689bc20/fastar-0.11.0-cp312-cp312-win32.whl", hash = "sha256:35f23c11b556cc4d3704587faacbc0037f7bdf6c4525cd1d09c70bda4b1c6809" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/8f/1d/26ce92f4331cd61a69840db9ca6115829805eec24f285481a854f578e917/fastar-0.11.0-cp312-cp312-win_amd64.whl", hash = "sha256:920bc56c3c0b8a8ca492904941d1883c1c947c858cd93343356c29122a38f44c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ed/96/e6eda4480559c69b05d466e7b5ea9170e81fef3795a73e059959a3258319/fastar-0.11.0-cp312-cp312-win_arm64.whl", hash = "sha256:395248faf89e8a6bd5dc1fd544c8465113b627cb6d7c8b296796b60ebea33593" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c9/d6/3be260037e86fb694e88d47f583bac3a0188c99cee1a6b257ac26cb6b53c/fastar-0.11.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:33f544b08b4541b678e53749b4552a44720d96761fb79c172b005b1089c443ed" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e1/cd/7867aefb1784662554a335f2952c75a50f0c70585ed0d2210d6cc15e5627/fastar-0.11.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:91c1c792447e4a642745f347ff9847c52af39633071c57ee67ed53c157fc3506" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e5/2b/d11d84bdd5e0e377771b955755771e3460b290da5809cb78c1b735ee2228/fastar-0.11.0-cp313-cp313-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:881247e6b6eaea59fc6569f9b61447aa6b9fc2ee864e048b4643d69c52745805" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/25/39/d3f428b318fa940b1b6e785b8d54fc895dfb5d5b945ef8d5442ffa904fb2/fastar-0.11.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:863b7929845c9fec92ef6c8d59579cf46af5136655e5342f8df5cebe46cab06c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9e/04/03949aee82aabb8ede06ac5a4a5579ffaf98a8fe59ce958494508ff15513/fastar-0.11.0-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:96b4a57df12bf3211662627a3ea29d62ecb314a2434a0d0843f9fc23e47536e5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/3f/0c/2ca1ae0a3828ca51047962d932b80daca2522db73e8cb9d040cb6ebe28d5/fastar-0.11.0-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ceef1c2c4df7b7b8ebd3f5d718bbf457b9bbdf25ce0bd07870211ec4fbd9aff4" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/65/68/7fe808b1f73a68e686f25434f538c6dc10ef4dfb3db0ace22cd861744bf8/fastar-0.11.0-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:b8e545918441910a779659d4759ad0eef349e935fbdb4668a666d3681567eb05" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1f/17/07d086080f8a83b8d7966955e29bcdbd6a060f5bd949dc9d5abd3658cead/fastar-0.11.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:28095bb8f821e85fc2764e1a55f03e5e2876dee2abe7cd0ee9420d929905d643" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fb/e2/2c4edf0910af2e814ff6d65b77a91196d472ca8a9fb2033bd983f6856caa/fastar-0.11.0-cp313-cp313-manylinux_2_31_riscv64.whl", hash = "sha256:0fafb95ecbe70f666a5e9b35dd63974ccdc9bb3d99ccdbd4014a823ec3e659b5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fa/ba/04fdcbd6558e60de4ced3b55230fac47675d181252582b2fcec3c74608e5/fastar-0.11.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:af48fed039b94016629dcdad1c95c90c486326dd068de2b0a4df419ee09b6821" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/df/b3/2b860a9658550167dbd5824c85e88d0b4b912bf493e42a6322544d6e483d/fastar-0.11.0-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:74cd96163f39b8638ab4e8d49708ca887959672a22871d8170d01f067319533b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b7/9b/fa42ea1188b144bac4b1b60753dfd449974a4d5eda132029ee7711569f94/fastar-0.11.0-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:4e8b993cb5613bab495ed482810bedc0986633fcb9a3b55c37ec88e0d6714f6a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/95/c8/d2e501556dca9f1fbc9246111a31792fb49ad908fa4927f34938a97a3604/fastar-0.11.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:dfe39d91fc28e37e06162d94afe01050220edb7df554acb5b702b5503e564816" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/db/33/5f11f23eca0a569cd052507bc45dda2e5468697f8665728d25be44120f7d/fastar-0.11.0-cp313-cp313-win32.whl", hash = "sha256:c5f63d4d99ff4bfb37c659982ec413358bdee747005348756cc50a04d412d989" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/da/2f/35ff03c939cba7a255a9132367873fec6c355fd06a7f84fedcbaf4c8129f/fastar-0.11.0-cp313-cp313-win_amd64.whl", hash = "sha256:8690ed1928d31ded3ada308e1086525fb3871f5fa81e1b69601a3f7774004583" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ef/71/ee9246cbfcbfd4144558f35e7e9a306ffe0a7564730a5188c45f21d2dab8/fastar-0.11.0-cp313-cp313-win_arm64.whl", hash = "sha256:d977ded9d98a0719a305e0a4d5ee811f1d3e856d853a50acb8ae833c3cd6d5d2" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7a/cd/3644c48ecac456f928c12d47ec3bed36c36555b17c3859856f1ff860265d/fastar-0.11.0-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:71375bd6f03c2a43eb47bd949ea38ff45434917f9cdac79675c5b9f60de4fa73" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/69/ca/dee04476ae3626b2b040a60ad84628f77e1ffd8444232f2426b0ca1e0d7e/fastar-0.11.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:eddfd9cab16e19ae247fe44bf992cb403ccfe27d3931d6de29a4695d95ad386c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/dc/5e/9395c7353d079cb4f5be0f7982ce0dc9f2e7dec5fd175eef466729d6023a/fastar-0.11.0-cp314-cp314-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:7c371f1d4386c699018bb64eb2fa785feacf32785559049d2bb72fe4af023f53" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fa/ba/1e4f67148223ff219612b6281a6000357abbcc2417964fa5c83f11d68fce/fastar-0.11.0-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cad7fa41e3e66554387481c1a09365e4638becd322904932674159d5f4046728" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0f/82/09d11fb6d12f17993ffaf32ffd30c3c121a11e2966e84f19fb6f66430118/fastar-0.11.0-cp314-cp314-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:cf36652fa71b83761717c9899b98732498f8a2cb6327ff16bbf07f6be85c3437" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/52/1f/5aeeacc4cb65615e2c9292cd9c5b0cd6fb6d2e6ee472ca6adc6c1b1b22ef/fastar-0.11.0-cp314-cp314-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:f68ff8c17833053da4841720e95edde80ce45bb994b6b7d51418dddaac70ee47" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/bb/1a/1e5bdabbeaf2e856928956292609f2ff6a650f94480fb8afaca30229e483/fastar-0.11.0-cp314-cp314-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:4563ed37a12ea1cdc398af8571258d24b988bf342b7b3bf5451bd5891243280c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/87/24/f960147910da3bed41a3adfcb026e17d5f50f4cf467a3324237a7088f61a/fastar-0.11.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cee63c9875cba3b70dc44338c560facc5d6e763047dcc4a30501f9a68cf5f890" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/cc/f4/3e77d7901d5707fd7f8a352e153c8ae09ea974e6fabad0b7c4eb9944b8d4/fastar-0.11.0-cp314-cp314-manylinux_2_31_riscv64.whl", hash = "sha256:bd76bfffae6d0a91f4ac4a612f721e7aec108db97dccdd120ae063cd66959f27" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/47/01/1585edd5ec47782ae93cd94edf05828e0ab02ef00aec00aea4194a600464/fastar-0.11.0-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:8f5b707501ec01c1bc0518f741f01d322e50c9adc19a451aa24f67a2316e9397" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f1/e9/6874c9d1236ded565a0bed54b320ac9f165f287b1d89490fb70f9f323c81/fastar-0.11.0-cp314-cp314-musllinux_1_2_armv7l.whl", hash = "sha256:37c0b5a88a657839aad98b0a6c9e4ac4c2c15d6b49c44ee3935c6b08e9d3e479" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/14/d8/4ab20613ce2983427aee958e39be878dba874aa227c530a845e32429c4f6/fastar-0.11.0-cp314-cp314-musllinux_1_2_i686.whl", hash = "sha256:6c55f536c62a6efb180c1af0d5182948bff576bbfe6276e8e1359c9c7d2215d8" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1f/ae/5ac3b7c20ce4b08f011dd2b979f96caabe64f9b10b157f211ea91bdfadca/fastar-0.11.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:3082eeca59e189b9039335862f4c2780c0c8871d656bfdf559db4414a105b251" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/8a/e7/37cd6a1d4e288292170b64e19d79ecce2a7de8bb76790323399a2abc4619/fastar-0.11.0-cp314-cp314-win32.whl", hash = "sha256:b201a0a4e29f9fec2a177e13154b8725ec65ab9f83bd6415483efaa2aa18344b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ff/1c/795c878b1ee29d79021cf8ed81f18f2b25ccde58453b0d34b9bdc7e025ea/fastar-0.11.0-cp314-cp314-win_amd64.whl", hash = "sha256:868fddb26072a43e870a8819134b9f80ee602931be5a76e6fb873e04da343637" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ff/a4/113f104301df8bddcc0b3775b611a30cb7610baa3add933c7ccac9386467/fastar-0.11.0-cp314-cp314-win_arm64.whl", hash = "sha256:3db39c9cc42abb0c780a26b299f24dfbc8be455985e969e15336d70d7b2f833b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5a/a6/5c5f2c2c8e0c63e56a5636ebc7721589c889e94c0092cec7eb28ae7207e6/fastar-0.11.0-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:49c3299dec5e125e7ebaa27545714da9c7391777366015427e0ae62d548b442b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/df/f7/982c01b61f0fc135ad2b16d01e6d0ee53cf8791e68827f5f7c5a65b2e5b1/fastar-0.11.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:3328ed1ed56d31f5198350b17dd60449b8d6b9d47abb4688bab6aef4450a165b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2b/c3/38f1dac77ae0c71c37b176277c96d830796b8ce2fe69705f917829b53829/fastar-0.11.0-cp314-cp314t-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:bd3eca3bbfec84a614bcb4143b4ad4f784d0895babc26cfc88436af88ca23c7a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6e/f0/e69c363bdb3e5a5848e937b662b5469581ee6682c51bc1c0556494773929/fastar-0.11.0-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ff86a967acb0d621dd24063dda090daa67bf4993b9570e97fe156de88a9006ca" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/3b/29/4d8737590c2a6357d614d7cc7288e8f68e7e449680b8922997cc4349e65e/fastar-0.11.0-cp314-cp314t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:86eaf7c0e985d93a7734168be2fb232b2a8cca53e41431c2782d7c12b12c03b1" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/bb/ec/400de7b3b7d48801908f19cf5462177104395799472671b3e8152b2b04ca/fastar-0.11.0-cp314-cp314t-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:91f07b0b8eb67e2f177733a1f884edad7dfb9f8977ffef15927b20cb9604027d" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5d/01/8926c53da923fed7ab4b96e7fbf7f73b663beb4f02095b654d6fab46f9ad/fastar-0.11.0-cp314-cp314t-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f85c896885eb4abf1a635d54dea22cac6ae48d04fc2ea26ae652fcf1febe1220" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/89/f0/5fef4c7946e352651b504b1a4235dac3505e7cfd24020788ab50552e84bf/fastar-0.11.0-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:075c07095c8de4b774ba8f28b9c0a02b1a2cd254da50cbe464dd3bb2432e9158" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b3/c8/0ebc3298b4a45e7bddc50b169ae6a6f5b80c939394d4befe6e60de535ee7/fastar-0.11.0-cp314-cp314t-manylinux_2_31_riscv64.whl", hash = "sha256:07f028933820c65750baf3383b807ecce1cd9385cf00ce192b79d263ad6b856c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ae/9f/7baa4cdff8d6fbca41fa5c764b48a941fed8a9ec6c4cc92de65895a28299/fastar-0.11.0-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:039f875efa0f01fa43c20bf4e2fc7305489c61d0ac76eda991acfba7820a0e63" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d4/dc/1ebbfb58a47056ba866494f19efbcdd2ba2897096b94f36e796594b4d05b/fastar-0.11.0-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:fff12452a9a5c6814a012445f26365541cc3d99dcca61f09762e6a389f7a32ea" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c2/5f/ce4e3914066f08c99eb8c32952cc07c1a013e81b1db1b0f598130bf6b974/fastar-0.11.0-cp314-cp314t-musllinux_1_2_i686.whl", hash = "sha256:2bf733e09f942b6fa876efe30a90508d1f4caef5630c00fb2a84fba355873712" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/03/2a/6bca72992c84151c387cc6558f3867f5ebe5fb3684ee6fa9b76280ba4b8e/fastar-0.11.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:d1531fa848fdd3677d2dce0a4b436ea64d9ae38fb8babe2ddbc180dd153cb7a3" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/83/18/7a7c15657a3da5569b26fc51cde6a80f8d84cb54b3b1aea6d74a103db4ad/fastar-0.11.0-cp314-cp314t-win32.whl", hash = "sha256:5744551bc67c6fc6581cbd0e34a0fd6e2cd0bd30b43e94b1c3119cf35064b162" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6d/d8/331b59a6de279f3ad75c10c02c40a12f21d64a437d9c3d6f1af2dcbd7a76/fastar-0.11.0-cp314-cp314t-win_amd64.whl", hash = "sha256:f4ce44e3b56c47cf38244b98d29f269b259740a580c47a2552efa5b96a5458fb" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6b/fd/5390ec4f49100f3ecb9968a392f9e6d039f1e3fe0ecd28443716ff01e589/fastar-0.11.0-cp314-cp314t-win_arm64.whl", hash = "sha256:76c1359314355eafbc6989f20fb1ad565a3d10200117923b9da765a17e2f6f11" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/cc/5c/9bbeffbf1905391446dd98aa520422ce7affde5c9a7c22d757cc5d7c1397/fastar-0.11.0-pp311-pypy311_pp73-macosx_10_12_x86_64.whl", hash = "sha256:1266d6a004f427b0d61bd6c7b544d84cc964691b2232c2f4d635a1b75f2f6d5e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7e/af/ae5cf39d4fb82d0c592705f5ec6db1b065be5265c151b108f86126ee8773/fastar-0.11.0-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:298a827ec04ade43733f6ca960d0faec38706aa1494175869ea7ea17f5bad5d3" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7e/36/8d4569e26473c72ccb02d1c5df3ed710073f1c06eca09c26d52ea79fd815/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:8800e2387e463a0e5799416a1cbe72dd0fde7270a20e4bde684145e7878f6516" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/bf/46/724dc796e1756d3977970f820d30d59bb8cab8e3671b285f1d82ab513aec/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7496def0a2befd82d429cb004ef7ca831585cc887947bd6b9abb68a5ef852b0b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/99/e3/74d6859e632e8fb9339a14f652fb9f800c2bd6aa53071e311c0be3fbab8b/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:878eaf15463eb572e3538af7ca3a8534e5e279cf8196db902d24e5725c4af86e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a3/e7/cc70e2be5ef8731a7525552b1c35c1448cf9eae6a62cb3a56f12c1bf27ea/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:0324ed1d1ef0186e1bbd843b17807d6d837d0906899d4c99378b02c5d86bdd9c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/3c/33/c9a969e78dca323547276a6fee5f4f9588f7cd5ab45acec3778c67399589/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:bdf9bd863205590beaf8ef6e66f315310196632180dceaf674985d01a876cac3" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/84/bd/6b9434b541fe55c125b5f2e017a565596a2d215aa09207e4555e4585064f/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:59af8dbb683b24b90fb5b506de080faeab0a17a908e6c2a5d93a97260ed75d7b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/8d/871d5f8cf4c6f13987119fb0a9ae8be131e34f2756c2524e9974adf33824/fastar-0.11.0-pp311-pypy311_pp73-manylinux_2_31_riscv64.whl", hash = "sha256:9f3df73a3c4292cfe15696cdf59cdb6c309ab59d30b34c733be13c6e32d9a264" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d0/26/cca0fd2704f3ed20165e5613ed911549aef3aaf3b0b5b02fee0e8e23e6cc/fastar-0.11.0-pp311-pypy311_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:aa3762cbb16e41a76b61f4a6914937a71aab3a7b6c2d82ca233bc686ebaf756b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/99/94/8bbb0b13f5b6cbe2492f0b7cbba5103e6163976a3331466d010e781fa189/fastar-0.11.0-pp311-pypy311_pp73-musllinux_1_2_armv7l.whl", hash = "sha256:a8c7bc8ac74cb359bb546b199288c83236372d094b402e557c197e85527495cd" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ed/d3/5b7df222a30eac2822ffd00f82fd4c2ce84fba4b369d1e1a03732fd177fc/fastar-0.11.0-pp311-pypy311_pp73-musllinux_1_2_i686.whl", hash = "sha256:587cbd060a2699c5f66281081395bb4657b2b1e0eef5c206b1aabf740019d670" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ec/6d/56ef943ea524784598c035ccbd42e564e937da0438ae3f55f0e76cb95571/fastar-0.11.0-pp311-pypy311_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:6a1c56957ac82408be37a3f63594bc83e0919e8760492a4475e542f9f1828778" },
+]
+
+[[package]]
+name = "fastavro"
+version = "1.12.1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/65/8b/fa2d3287fd2267be6261d0177c6809a7fa12c5600ddb33490c8dc29e77b2/fastavro-1.12.1.tar.gz", hash = "sha256:2f285be49e45bc047ab2f6bed040bb349da85db3f3c87880e4b92595ea093b2b" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a0/e9/31c64b47cefc0951099e7c0c8c8ea1c931edd1350f34d55c27cbfbb08df1/fastavro-1.12.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:6b632b713bc5d03928a87d811fa4a11d5f25cd43e79c161e291c7d3f7aa740fd" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/10/76/111560775b548f5d8d828c1b5285ff90e2d2745643fb80ecbf115344eea4/fastavro-1.12.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:eaa7ab3769beadcebb60f0539054c7755f63bd9cf7666e2c15e615ab605f89a8" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b0/07/6bb93cb963932146c2b6c5c765903a0a547ad9f0f8b769a4a9aad8c06369/fastavro-1.12.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:123fb221df3164abd93f2d042c82f538a1d5a43ce41375f12c91ce1355a9141e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d1/67/8115ec36b584197ea737ec79e3499e1f1b640b288d6c6ee295edd13b80f6/fastavro-1.12.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:632a4e3ff223f834ddb746baae0cc7cee1068eb12c32e4d982c2fee8a5b483d0" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9e/9e/a7cebb3af967e62539539897c10138fa0821668ec92525d1be88a9cd3ee6/fastavro-1.12.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:83e6caf4e7a8717d932a3b1ff31595ad169289bbe1128a216be070d3a8391671" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c0/d1/7774ddfb8781c5224294c01a593ebce2ad3289b948061c9701bd1903264d/fastavro-1.12.1-cp311-cp311-win_amd64.whl", hash = "sha256:b91a0fe5a173679a6c02d53ca22dcaad0a2c726b74507e0c1c2e71a7c3f79ef9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7c/f0/10bd1a3d08667fa0739e2b451fe90e06df575ec8b8ba5d3135c70555c9bd/fastavro-1.12.1-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:509818cb24b98a804fc80be9c5fed90f660310ae3d59382fc811bfa187122167" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/78/ad/0d985bc99e1fa9e74c636658000ba38a5cd7f5ab2708e9c62eaf736ecf1a/fastavro-1.12.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:089e155c0c76e0d418d7e79144ce000524dd345eab3bc1e9c5ae69d500f71b14" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0d/9e/b4951dc84ebc34aac69afcbfbb22ea4a91080422ec2bfd2c06076ff1d419/fastavro-1.12.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:44cbff7518901c91a82aab476fcab13d102e4999499df219d481b9e15f61af34" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/af/f8/5a8df450a9f55ca8441f22ea0351d8c77809fc121498b6970daaaf667a21/fastavro-1.12.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:a275e48df0b1701bb764b18a8a21900b24cf882263cb03d35ecdba636bbc830b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/99/b2/40f25299111d737e58b85696e91138a66c25b7334f5357e7ac2b0e8966f8/fastavro-1.12.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:2de72d786eb38be6b16d556b27232b1bf1b2797ea09599507938cdb7a9fe3e7c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e0/07/85157a7c57c5f8b95507d7829b5946561e5ee656ff80e9dd9a757f53ddaf/fastavro-1.12.1-cp312-cp312-win_amd64.whl", hash = "sha256:9090f0dee63fe022ee9cc5147483366cc4171c821644c22da020d6b48f576b4f" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/bb/57/26d5efef9182392d5ac9f253953c856ccb66e4c549fd3176a1e94efb05c9/fastavro-1.12.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:78df838351e4dff9edd10a1c41d1324131ffecbadefb9c297d612ef5363c049a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/33/cb/8ab55b21d018178eb126007a56bde14fd01c0afc11d20b5f2624fe01e698/fastavro-1.12.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:780476c23175d2ae457c52f45b9ffa9d504593499a36cd3c1929662bf5b7b14b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fe/03/9c94ec9bf873eb1ffb0aa694f4e71940154e6e9728ddfdc46046d7e8ced4/fastavro-1.12.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:0714b285160fcd515eb0455540f40dd6dac93bdeacdb03f24e8eac3d8aa51f8d" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/75/c8/cb472347c5a584ccb8777a649ebb28278fccea39d005fc7df19996f41df8/fastavro-1.12.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:a8bc2dcec5843d499f2489bfe0747999108f78c5b29295d877379f1972a3d41a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e1/77/569ce9474c40304b3a09e109494e020462b83e405545b78069ddba5f614e/fastavro-1.12.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:3b1921ac35f3d89090a5816b626cf46e67dbecf3f054131f84d56b4e70496f45" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/4a/1f/9589e35e9ea68035385db7bdbf500d36b8891db474063fb1ccc8215ee37c/fastavro-1.12.1-cp313-cp313-win_amd64.whl", hash = "sha256:5aa777b8ee595b50aa084104cd70670bf25a7bbb9fd8bb5d07524b0785ee1699" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6c/d2/78435fe737df94bd8db2234b2100f5453737cffd29adee2504a2b013de84/fastavro-1.12.1-cp313-cp313t-macosx_10_13_universal2.whl", hash = "sha256:c3d67c47f177e486640404a56f2f50b165fe892cc343ac3a34673b80cc7f1dd6" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b6/be/428f99b10157230ddac77ec8cc167005b29e2bd5cbe228345192bb645f30/fastavro-1.12.1-cp313-cp313t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5217f773492bac43dae15ff2931432bce2d7a80be7039685a78d3fab7df910bd" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/16/08/a2eea4f20b85897740efe44887e1ac08f30dfa4bfc3de8962bdcbb21a5a1/fastavro-1.12.1-cp313-cp313t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:469fecb25cba07f2e1bfa4c8d008477cd6b5b34a59d48715e1b1a73f6160097d" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/87/bb/b4c620b9eb6e9838c7f7e4b7be0762834443adf9daeb252a214e9ad3178c/fastavro-1.12.1-cp313-cp313t-musllinux_1_2_aarch64.whl", hash = "sha256:d71c8aa841ef65cfab709a22bb887955f42934bced3ddb571e98fdbdade4c609" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/3d/d1/e69534ccdd5368350646fea7d93be39e5f77c614cca825c990bd9ca58f67/fastavro-1.12.1-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:b81fc04e85dfccf7c028e0580c606e33aa8472370b767ef058aae2c674a90746" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/58/54/b7b4a0c3fb5fcba38128542da1b26c4e6d69933c923f493548bdfd63ab6a/fastavro-1.12.1-cp314-cp314-macosx_10_15_universal2.whl", hash = "sha256:9445da127751ba65975d8e4bdabf36bfcfdad70fc35b2d988e3950cce0ec0e7c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1e/4f/0e589089c7df0d8f57d7e5293fdc34efec9a3b758a0d4d0c99a7937e2492/fastavro-1.12.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ed924233272719b5d5a6a0b4d80ef3345fc7e84fc7a382b6232192a9112d38a6" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f9/19/260110d56194ae29d7e423a336fccea8bcd103196d00f0b364b732bdb84e/fastavro-1.12.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3616e2f0e1c9265e92954fa099db79c6e7817356d3ff34f4bcc92699ae99697c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d0/96/58b0411e8be9694d5972bee3167d6c1fd1fdfdf7ce253c1a19a327208f4f/fastavro-1.12.1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:cb0337b42fd3c047fcf0e9b7597bd6ad25868de719f29da81eabb6343f08d399" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5b/db/38660660eac82c30471d9101f45b3acfdcbadfe42d8f7cdb129459a45050/fastavro-1.12.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:64961ab15b74b7c168717bbece5660e0f3d457837c3cc9d9145181d011199fa7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9d/a9/1672910f458ecb30b596c9e59e41b7c00309b602a0494341451e92e62747/fastavro-1.12.1-cp314-cp314-win_amd64.whl", hash = "sha256:792356d320f6e757e89f7ac9c22f481e546c886454a6709247f43c0dd7058004" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/dc/8d/2e15d0938ded1891b33eff252e8500605508b799c2e57188a933f0bd744c/fastavro-1.12.1-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:120aaf82ac19d60a1016afe410935fe94728752d9c2d684e267e5b7f0e70f6d9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a7/1c/6dfd082a205be4510543221b734b1191299e6a1810c452b6bc76dfa6968e/fastavro-1.12.1-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b6a3462934b20a74f9ece1daa49c2e4e749bd9a35fa2657b53bf62898fba80f5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/90/9de694625a1a4b727b1ad0958d220cab25a9b6cf7f16a5c7faa9ea7b2261/fastavro-1.12.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:1f81011d54dd47b12437b51dd93a70a9aa17b61307abf26542fc3c13efbc6c51" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fa/93/b44f67589e4d439913dab6720f7e3507b0fa8b8e56d06f6fc875ced26afb/fastavro-1.12.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:43ded16b3f4a9f1a42f5970c2aa618acb23ea59c4fcaa06680bdf470b255e5a8" },
 ]
 
 [[package]]
@@ -1848,6 +2072,22 @@ source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
 sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/bb/29/745f7d30d47fe0f251d3ad3dc2978a23141917661998763bebb6da007eb1/filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb" }
 wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25" },
+]
+
+[[package]]
+name = "flashrank"
+version = "0.2.10"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "onnxruntime" },
+    { name = "requests" },
+    { name = "tokenizers" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/55/1f/176cb4a857a70c3538f637e19389ab6aed21548a1ba1d1424fccc8bba108/FlashRank-0.2.10.tar.gz", hash = "sha256:f8f82a25c32fdfc668a09dc4089421d6aab8e7f71308424b541f40bb3f01d9db" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ec/99/72639cc1c9221c5bc77a2df1c2d352fe11965553bdf7d3e0856e7fcc8fd6/FlashRank-0.2.10-py3-none-any.whl", hash = "sha256:5d3272ae657d793c132d1e7917ed9e2adf49e0e1c60735583a67b051c6f0434a" },
 ]
 
 [[package]]
@@ -2034,6 +2274,45 @@ wheels = [
 ]
 
 [[package]]
+name = "google-auth"
+version = "2.49.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "pyasn1-modules" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/c6/fc/e925290a1ad95c975c459e2df070fac2b90954e13a0370ac505dff78cb99/google_auth-2.49.2.tar.gz", hash = "sha256:c1ae38500e73065dcae57355adb6278cf8b5c8e391994ae9cbadbcb9631ab409" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/73/76/d241a5c927433420507215df6cac1b1fa4ac0ba7a794df42a84326c68da8/google_auth-2.49.2-py3-none-any.whl", hash = "sha256:c2720924dfc82dedb962c9f52cabb2ab16714fd0a6a707e40561d217574ed6d5" },
+]
+
+[package.optional-dependencies]
+requests = [
+    { name = "requests" },
+]
+
+[[package]]
+name = "google-genai"
+version = "1.73.1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "google-auth", extra = ["requests"] },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "requests" },
+    { name = "sniffio" },
+    { name = "tenacity" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/3d/d8/40f5f107e5a2976bbac52d421f04d14fc221b55a8f05e66be44b2f739fe6/google_genai-1.73.1.tar.gz", hash = "sha256:b637e3a3b9e2eccc46f27136d470165803de84eca52abfed2e7352081a4d5a15" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/65/af/508e0528015240d710c6763f7c89ff44fab9a94a80b4377e265d692cbfd6/google_genai-1.73.1-py3-none-any.whl", hash = "sha256:af2d2287d25e42a187de19811ef33beb2e347c7e2bdb4dc8c467d78254e43a2c" },
+]
+
+[[package]]
 name = "googleapis-common-protos"
 version = "1.56.1"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -2208,6 +2487,94 @@ wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/93/9b/72ea50783a6e2bb9ed36f0cbda708be4166a50dc535d3c8def264c306086/hf_xet-1.2.1-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:397c6dadecf1303d084b675efa4afd920229ccc13b84bfc095f48dfd508f464e" },
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/fe/5e/759607f3e52c56cb583432ae8754ae51e97e9cc1e98088eb4f2eca3b34e0/hf_xet-1.2.1-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:885ac1975b064cf3919650f5e5efdddf72a4ebe3e1f6fe027a4a9a319e43a17b" },
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/0b/de/bfc699b3b1f746ce2bfe1ebed6da746c745110c48fd70da4f081b8c2cfbd/hf_xet-1.2.1-cp37-abi3-win_amd64.whl", hash = "sha256:c76704cdda11cac957519dc8cb868eb103e561e9bfea284c8678e7d975bb4369" },
+]
+
+[[package]]
+name = "hindsight-all"
+version = "0.4.17"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "hindsight-api" },
+    { name = "hindsight-client" },
+    { name = "hindsight-embed" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/f5/3b/77e1084d83a9a01c0386850b0a538fbcc520a08db10e3590d30641e86839/hindsight_all-0.4.17.tar.gz", hash = "sha256:ef0900ab6d71856bc1c93f7e4c8afac3b721e8f24ad8e1ddcb5e3d6c6f24c82a" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ca/a5/9b4d3007bcc037553ecb880222ea83558fd00b6ed71311a1fb48598e5e88/hindsight_all-0.4.17-py3-none-any.whl", hash = "sha256:480bcdb04049fc8aeeeb5b55390e63c90803ba1e52cb2c8b7a3aa270557e7a99" },
+]
+
+[[package]]
+name = "hindsight-api"
+version = "0.3.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "alembic" },
+    { name = "anthropic" },
+    { name = "asyncpg" },
+    { name = "cohere" },
+    { name = "dateparser" },
+    { name = "fastapi", extra = ["standard"] },
+    { name = "fastmcp" },
+    { name = "flashrank" },
+    { name = "google-genai" },
+    { name = "greenlet" },
+    { name = "httpx" },
+    { name = "langchain-text-splitters" },
+    { name = "openai" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-prometheus" },
+    { name = "opentelemetry-instrumentation-fastapi" },
+    { name = "opentelemetry-sdk" },
+    { name = "pg0-embedded" },
+    { name = "pgvector" },
+    { name = "psycopg2-binary" },
+    { name = "pydantic" },
+    { name = "python-dateutil" },
+    { name = "python-dotenv" },
+    { name = "rich" },
+    { name = "sentence-transformers" },
+    { name = "sqlalchemy" },
+    { name = "tiktoken" },
+    { name = "torch" },
+    { name = "transformers" },
+    { name = "typer" },
+    { name = "uvicorn" },
+    { name = "uvloop" },
+    { name = "wsproto" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/b1/e1/f9dac356c84c05672672635641c3fde176a8ec73472392596f348cb2ef86/hindsight_api-0.3.0.tar.gz", hash = "sha256:cbb607e23784e6769894f0ac9ed77b0f01d376bd2a704ba70ec80c296427923d" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/35/b6/96e17f671bf8e4c41037a9841ecb29892a831587b6731f04d20784e902cd/hindsight_api-0.3.0-py3-none-any.whl", hash = "sha256:4e4b0623cdb04884e71538c7d28bcac0974462c05e87a9057c2bee793f794942" },
+]
+
+[[package]]
+name = "hindsight-client"
+version = "0.5.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "aiohttp-retry" },
+    { name = "pydantic" },
+    { name = "python-dateutil" },
+    { name = "typing-extensions" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/ff/ee/b22c14d77aff8888e482c36923100c10ed5a5dfa5e63f8b4d24256465ae2/hindsight_client-0.5.2.tar.gz", hash = "sha256:3a6892a06466422f11ad395977541e6f467493001f5e92ad3086ec1d621a5267" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ad/fc/7bc9bd18773dbef011a1a1e41a7c8cc9ec2ae98dadbc10d185173ae941f8/hindsight_client-0.5.2-py3-none-any.whl", hash = "sha256:8c8c40bd20f9744e84a6b60cc6cbf8fabcd9f50146a7bbc9141782636412ef39" },
+]
+
+[[package]]
+name = "hindsight-embed"
+version = "0.5.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "rich" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/a4/63/384f44af673c9ddeff845e94259bade6b17663c833165585930f5700a861/hindsight_embed-0.5.2.tar.gz", hash = "sha256:3d327ff263677bca27e46307e2eb269ac2a9747974ef0f5ca9ed16de4e9673cf" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a7/d6/f79f0c8fa4f911900cdeb6f9401faa660f0883c15391084400c42f8c96ec/hindsight_embed-0.5.2-py3-none-any.whl", hash = "sha256:fc02606caab3cd1280f020f70a79fa216ae3f6f2718231c40580108ad95511d1" },
 ]
 
 [[package]]
@@ -4335,6 +4702,20 @@ wheels = [
 ]
 
 [[package]]
+name = "opentelemetry-exporter-prometheus"
+version = "1.12.0rc1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+    { name = "prometheus-client" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/87/fe/e94cf40c01f2ba78dc4854c8ea61be2f6d418387c2f0f739232dba716419/opentelemetry-exporter-prometheus-1.12.0rc1.tar.gz", hash = "sha256:f10c6c243d69d5b63f755885b36a4ce8ef2cdf3e737c4e6bf00f32e87668f0a9" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e9/ae/d44f958d61700daaaead0452d7d911170117863ab392d0741cf21aaec451/opentelemetry_exporter_prometheus-1.12.0rc1-py3-none-any.whl", hash = "sha256:1f0c8f93d62e1575313966ceb8abf11e9a46e1839fda9ee4269b06d40494280f" },
+]
+
+[[package]]
 name = "opentelemetry-instrumentation"
 version = "0.55b1"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -4677,6 +5058,31 @@ dependencies = [
 sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/a9/7b/fe3205d44d6058932bbc785f0b9da2ed35b62e17479a8a7d2baca9df1cc6/pdftext-0.6.3.tar.gz", hash = "sha256:ab5c5dfe0f1fb78de1db837ccadac1ea41b07ce1890fead973c9a84cdaf54dec" }
 wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/bc/b9/4437bb89f04e57f48c96492a50d6168da5e201940de6620730d390449991/pdftext-0.6.3-py3-none-any.whl", hash = "sha256:528431ed8bdce39d74372cd3d27e8544af812f1f1adc81db229cf9fb48dacacb" },
+]
+
+[[package]]
+name = "pg0-embedded"
+version = "0.12.3"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/5d/2e/f9a90ac54e30e8052ecea563939679cfee7933e557a1197787a9b791b26e/pg0_embedded-0.12.3.tar.gz", hash = "sha256:09776dc4d85027bf3475dd30106d22e46a27324ccc9d451dfe4a10e61152d582" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0d/84/c3d19ec4a6a4078a812ed97966784191f97887a39ebc055ef0d0602f6411/pg0_embedded-0.12.3-py3-none-macosx_14_0_arm64.whl", hash = "sha256:36ff6b58ff02fe974d77a5091f99410383094613ab90abee475ed6f39cbd10af" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/26/c2/4226c37a3225c1e55428bd466cc2e08accfb59aa6659996858c4635f02ac/pg0_embedded-0.12.3-py3-none-macosx_15_0_x86_64.whl", hash = "sha256:c4fa2c1f8d495a1ebc4e61ad6c73d46e784f2fd0c62d4d87302ef3c946b8a1ce" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0d/9d/f253ae71b1de7b88a2399b49eaa4d28eab8b699d50d458b4ccfefc6a40ea/pg0_embedded-0.12.3-py3-none-manylinux_2_35_aarch64.whl", hash = "sha256:7a93d2a36312cbe99b3d21ef99998077c5a296b14b6b6e3e8a6b33b33a15f729" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/44/5c/4c6e1621d7c5cc37485ed297181bab62371ab089b2e69ef8b5b147b17455/pg0_embedded-0.12.3-py3-none-manylinux_2_35_x86_64.whl", hash = "sha256:4a18463a0fd0c0300a399022b283b14360344c4cf1a418c2f388389c5aba5eb0" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/01/17/b37f87ef4c20ceb3ce7d191c7965b140e6857c92e760fa6b9c82427df603/pg0_embedded-0.12.3-py3-none-win_amd64.whl", hash = "sha256:912e6c64338a613befe627dc6679058cad80c093fe5b7e1867d52726c719083e" },
+]
+
+[[package]]
+name = "pgvector"
+version = "0.4.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/25/6c/6d8b4b03b958c02fa8687ec6063c49d952a189f8c91ebbe51e877dfab8f7/pgvector-0.4.2.tar.gz", hash = "sha256:322cac0c1dc5d41c9ecf782bd9991b7966685dee3a00bc873631391ed949513a" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5a/26/6cee8a1ce8c43625ec561aff19df07f9776b7525d9002c86bceb3e0ac970/pgvector-0.4.2-py3-none-any.whl", hash = "sha256:549d45f7a18593783d5eec609ea1684a724ba8405c4cb182a0b2b08aeff04e08" },
 ]
 
 [[package]]
@@ -5192,6 +5598,27 @@ wheels = [
 ]
 
 [[package]]
+name = "pyasn1"
+version = "0.6.3"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/5c/5f/6583902b6f79b399c9c40674ac384fd9cd77805f9e6205075f828ef11fb2/pyasn1-0.6.3.tar.gz", hash = "sha256:697a8ecd6d98891189184ca1fa05d1bb00e2f84b5977c481452050549c8a72cf" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5d/a0/7d793dce3fa811fe047d6ae2431c672364b462850c6235ae306c0efd025f/pyasn1-0.6.3-py3-none-any.whl", hash = "sha256:a80184d120f0864a52a073acc6fc642847d0be408e7c7252f31390c0f4eadcde" },
+]
+
+[[package]]
+name = "pyasn1-modules"
+version = "0.4.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "pyasn1" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/e9/e6/78ebbb10a8c8e4b61a59249394a4a594c1a7af95593dc933a349c8d00964/pyasn1_modules-0.4.2.tar.gz", hash = "sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/47/8d/d529b5d697919ba8c11ad626e835d4039be708a35b0d22de83a269a6682c/pyasn1_modules-0.4.2-py3-none-any.whl", hash = "sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a" },
+]
+
+[[package]]
 name = "pybcj"
 version = "1.0.7"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -5468,6 +5895,19 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-extra-types"
+version = "2.11.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/41/d3/3be31542180c0300b6860129ff1e3a428f3ef580727616ce22462626129b/pydantic_extra_types-2.11.2.tar.gz", hash = "sha256:3a2b83b61fe920925688e7838b59caa90a45637d1dbba2b1364b8d1f7ff72a0a" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/92/a4/7b6ab05c18d6c6e682382a0f0235301684452c4131a869f45961d1d032c9/pydantic_extra_types-2.11.2-py3-none-any.whl", hash = "sha256:683b8943252543e49760f89733b1519bc62f31d1a287ebbdc5a7b7959fb4acfd" },
+]
+
+[[package]]
 name = "pydantic-settings"
 version = "2.12.0"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -5548,17 +5988,17 @@ sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/5d/ab/34e
 
 [[package]]
 name = "pylibseekdb"
-version = "1.0.1.post1"
+version = "1.2.0"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
 wheels = [
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7c/8a/3e2aea58ac4488432cb3ca06217cd933b2edc51477399832a02f6e878418/pylibseekdb-1.0.1.post1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:579b27712e81104b7bc5ab6941cffd405a7746dc17d42d9d79ba48ab5803db5d" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c6/e6/cbdc5496e40e8be22d9e390b7bd3174f99a39c658cfd832ad7c1e84d5d9d/pylibseekdb-1.0.1.post1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:144a2685887ad7f39a51564c0d17d15540e14d088ce9b345aee9a3dae40a145a" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/04/1e/4a56d7d38f3c0fdc1e301fd8ad4d411a6a0aead27d73229b8f112e171d69/pylibseekdb-1.0.1.post1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:4bb13b73e6e6410856602acbbbf6aacd8b90c48837f986195d1a9355cdbe839d" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/50/c6/8711c96253677a0b96e83362d5fb21351fb689a6060cca68f3d79ade8858/pylibseekdb-1.0.1.post1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:3bbf648d79d5f35af4c3d97ef0dfcc9fe9f86069589339e840d524366abab3fa" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/81/96/2a4fdf951832cfaaf9beaf8e4e3b81361bae461cd2226f8cbac2b4ba1225/pylibseekdb-1.0.1.post1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:09223127715804b0dc68a86cc46bf6617cc748b0c3129d9eda7413becce5aaac" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/48/83/803ccda9daa70830c227b03ba9155fe9cf295bf9a550167bbe0dbde8d9ec/pylibseekdb-1.0.1.post1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:8d86f219e48196e5dab95ca95b1d6db2fd82b06571543e550c421893b4100523" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ca/96/317f3decdd2255b9fbbe5f17c80eff7e2fcaddbd067f89e0806286c67a8f/pylibseekdb-1.0.1.post1-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:854d71b585c993fb7c23c601a52478b4ec2beb6d7e2e6cfdc889229ab461ea38" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f0/cb/f967ecff02c7d5e86ed28683139e40a3af4241246fab3f2fd0f9af1a6c36/pylibseekdb-1.0.1.post1-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:cc0ccabbf3c8964f4721a675488d93568692acd2f85ebf07f4fa8218fc5b5758" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9c/f8/fb1fb4a8cf6befcf1b2efb3324a8967d4764c2637c5073ef51ed58e58233/pylibseekdb-1.2.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:90f463bddea9b8daae7345bea25c73345a8c948c87aba55169df34d4eeb6e248" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0f/db/3b35cde2a4d13f5d72492763946321fb7dbc5d5718267f248c0463c96e93/pylibseekdb-1.2.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:ea2bcc12e0cbc8e1c56336cb5804c211acacbfcb0c81d807be6eefbffd07256f" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/78/ae/547f523e192db59f96c0ef7e003f0fe02aed1e0acb0c7db91aa7b9c7b185/pylibseekdb-1.2.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:6604951035ad97f4e4a6e78e6a90737b95497de9560f4297e43bcc1a1ffdccac" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/12/ef/d7cd6d9d16fad0e511c27fd6b3e4c3bea1a1c3937e6ba227c2796d6f2974/pylibseekdb-1.2.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:d52078ca4b4e20f44006b2b362a9c20b76f4e88fab0d345c54002953228ab7c7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ca/5d/0668cd45a321557700fb0746387770fc773dee543e3bafcfcd88e5acd68c/pylibseekdb-1.2.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:25bc0401f8a51a4c20091983ac674cb6d807ba5548bee00ff24d3d76b3cdbdfc" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ed/85/1ea4aa2683ef4499968333feb507b03a5d39d324eaf1b34515e9f3e3a690/pylibseekdb-1.2.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:be7bee96cfdc2fb0947d943db5625e6dfb7e6234b2c827b8e7ced9feee9abd39" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5e/45/65aa1678720b73b29cda4b9a504ef5cf8f76e4336ef7a5c3253c99b2f069/pylibseekdb-1.2.0-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:ae3390d2c58eeb1c773fb7d9d32c1502ac14bd22ceaf74ed5429edc3332b7447" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a5/e5/e9c98c78d4fdc7229d7fc9cd050fb8e6dff46af2560e4ffcd845de80e8a3/pylibseekdb-1.2.0-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:f3ca63e4a750ea57eb2fafaa58e6cd0bb99a1e3edd73d41f7097b1089c1eb2ba" },
 ]
 
 [[package]]
@@ -6219,6 +6659,115 @@ wheels = [
 ]
 
 [[package]]
+name = "rich-toolkit"
+version = "0.19.7"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "rich" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/42/ba/dae9e3096651042754da419a4042bc1c75e07d615f9b15066d738838e4df/rich_toolkit-0.19.7.tar.gz", hash = "sha256:133c0915872da91d4c25d85342d5ec1dfacc69b63448af1a08a0d4b4f23ef46e" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fb/3c/c923619f6d2f5fafcc96fec0aaf9550a46cd5b6481f06e0c6b66a2a4fed0/rich_toolkit-0.19.7-py3-none-any.whl", hash = "sha256:0288e9203728c47c5a4eb60fd2f0692d9df7455a65901ab6f898437a2ba5989d" },
+]
+
+[[package]]
+name = "rignore"
+version = "0.7.6"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/e5/f5/8bed2310abe4ae04b67a38374a4d311dd85220f5d8da56f47ae9361be0b0/rignore-0.7.6.tar.gz", hash = "sha256:00d3546cd793c30cb17921ce674d2c8f3a4b00501cb0e3dd0e82217dbeba2671" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/25/41/b6e2be3069ef3b7f24e35d2911bd6deb83d20ed5642ad81d5a6d1c015473/rignore-0.7.6-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:40be8226e12d6653abbebaffaea2885f80374c1c8f76fe5ca9e0cadd120a272c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/52/66/ba7f561b6062402022887706a7f2b2c2e2e2a28f1e3839202b0a2f77e36d/rignore-0.7.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:182f4e5e4064d947c756819446a7d4cdede8e756b8c81cf9e509683fe38778d7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f5/81/4087453df35a90b07370647b19017029324950c1b9137d54bf1f33843f17/rignore-0.7.6-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:16b63047648a916a87be1e51bb5c009063f1b8b6f5afe4f04f875525507e63dc" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fb/c9/390a8fdfabb76d71416be773bd9f162977bd483084f68daf19da1dec88a6/rignore-0.7.6-cp311-cp311-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:ba5524f5178deca4d7695e936604ebc742acb8958f9395776e1fcb8133f8257a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/df/c9/79404fcb0faa76edfbc9df0901f8ef18568d1104919ebbbad6d608c888d1/rignore-0.7.6-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:62020dbb89a1dd4b84ab3d60547b3b2eb2723641d5fb198463643f71eaaed57d" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6e/8d/b3466d32d445d158a0aceb80919085baaae495b1f540fb942f91d93b5e5b/rignore-0.7.6-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:b34acd532769d5a6f153a52a98dcb81615c949ab11697ce26b2eb776af2e174d" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e8/40/9cd949761a7af5bc27022a939c91ff622d29c7a0b66d0c13a863097dde2d/rignore-0.7.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1c5e53b752f9de44dff7b3be3c98455ce3bf88e69d6dc0cf4f213346c5e3416c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b5/87/1e1a145731f73bdb7835e11f80da06f79a00d68b370d9a847de979575e6d/rignore-0.7.6-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:25b3536d13a5d6409ce85f23936f044576eeebf7b6db1d078051b288410fc049" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6c/31/1ecff992fc3f59c4fcdcb6c07d5f6c1e6dfb55ccda19c083aca9d86fa1c6/rignore-0.7.6-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:6e01cad2b0b92f6b1993f29fc01f23f2d78caf4bf93b11096d28e9d578eb08ce" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/17/18/162eedadb4c2282fa4c521700dbf93c9b14b8842e8354f7d72b445b8d593/rignore-0.7.6-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:5991e46ab9b4868334c9e372ab0892b0150f3f586ff2b1e314272caeb38aaedb" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/78/96/a9ca398a8af74bb143ad66c2a31303c894111977e28b0d0eab03867f1b43/rignore-0.7.6-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:6c8ae562e5d1246cba5eaeb92a47b2a279e7637102828dde41dcbe291f529a3e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9f/22/1c1a65047df864def9a047dbb40bc0b580b8289a4280e62779cd61ae21f2/rignore-0.7.6-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:aaf938530dcc0b47c4cfa52807aa2e5bfd5ca6d57a621125fe293098692f6345" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/bd/f4/1526eb01fdc2235aca1fd9d0189bee4021d009a8dcb0161540238c24166e/rignore-0.7.6-cp311-cp311-win32.whl", hash = "sha256:166ebce373105dd485ec213a6a2695986346e60c94ff3d84eb532a237b24a4d5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7c/c8/dda0983e1845706beb5826459781549a840fe5a7eb934abc523e8cd17814/rignore-0.7.6-cp311-cp311-win_amd64.whl", hash = "sha256:44f35ee844b1a8cea50d056e6a595190ce9d42d3cccf9f19d280ae5f3058973a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e3/47/eb1206b7bf65970d41190b879e1723fc6bbdb2d45e53565f28991a8d9d96/rignore-0.7.6-cp311-cp311-win_arm64.whl", hash = "sha256:14b58f3da4fa3d5c3fa865cab49821675371f5e979281c683e131ae29159a581" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/0b/0e/012556ef3047a2628842b44e753bb15f4dc46806780ff090f1e8fe4bf1eb/rignore-0.7.6-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:03e82348cb7234f8d9b2834f854400ddbbd04c0f8f35495119e66adbd37827a8" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/93/b0/d4f1f3fe9eb3f8e382d45ce5b0547ea01c4b7e0b4b4eb87bcd66a1d2b888/rignore-0.7.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b9e624f6be6116ea682e76c5feb71ea91255c67c86cb75befe774365b2931961" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/4a/c8/dea564b36dedac8de21c18e1851789545bc52a0c22ece9843444d5608a6a/rignore-0.7.6-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bda49950d405aa8d0ebe26af807c4e662dd281d926530f03f29690a2e07d649a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b3/2b/ee96db17ac1835e024c5d0742eefb7e46de60020385ac883dd3d1cde2c1f/rignore-0.7.6-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:b5fd5ab3840b8c16851d327ed06e9b8be6459702a53e5ab1fc4073b684b3789e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a5/8c/ad5a57bbb9d14d5c7e5960f712a8a0b902472ea3f4a2138cbf70d1777b75/rignore-0.7.6-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ced2a248352636a5c77504cb755dc02c2eef9a820a44d3f33061ce1bb8a7f2d2" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/80/e6/5b00bc2a6bc1701e6878fca798cf5d9125eb3113193e33078b6fc0d99123/rignore-0.7.6-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:a04a3b73b75ddc12c9c9b21efcdaab33ca3832941d6f1d67bffd860941cd448a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/85/e5/7f99bd0cc9818a91d0e8b9acc65b792e35750e3bdccd15a7ee75e64efca4/rignore-0.7.6-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d24321efac92140b7ec910ac7c53ab0f0c86a41133d2bb4b0e6a7c94967f44dd" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/55/54/2ffea79a7c1eabcede1926347ebc2a81bc6b81f447d05b52af9af14948b9/rignore-0.7.6-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:73c7aa109d41e593785c55fdaa89ad80b10330affa9f9d3e3a51fa695f739b20" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/41/f7/e80f55dfe0f35787fa482aa18689b9c8251e045076c35477deb0007b3277/rignore-0.7.6-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:1734dc49d1e9501b07852ef44421f84d9f378da9fbeda729e77db71f49cac28b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d4/cf/2c64f0b6725149f7c6e7e5a909d14354889b4beaadddaa5fff023ec71084/rignore-0.7.6-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:5719ea14ea2b652c0c0894be5dfde954e1853a80dea27dd2fbaa749618d837f5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/75/95/a86c84909ccc24af0d094b50d54697951e576c252a4d9f21b47b52af9598/rignore-0.7.6-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:8e23424fc7ce35726854f639cb7968151a792c0c3d9d082f7f67e0c362cfecca" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/7f/5e/13b249613fd5d18d58662490ab910a9f0be758981d1797789913adb4e918/rignore-0.7.6-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:3efdcf1dd84d45f3e2bd2f93303d9be103888f56dfa7c3349b5bf4f0657ec696" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c7/28/fa5dcd1e2e16982c359128664e3785f202d3eca9b22dd0b2f91c4b3d242f/rignore-0.7.6-cp312-cp312-win32.whl", hash = "sha256:ccca9d1a8b5234c76b71546fc3c134533b013f40495f394a65614a81f7387046" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/26/87/69387fb5dd81a0f771936381431780b8cf66fcd2cfe9495e1aaf41548931/rignore-0.7.6-cp312-cp312-win_amd64.whl", hash = "sha256:c96a285e4a8bfec0652e0bfcf42b1aabcdda1e7625f5006d188e3b1c87fdb543" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/5f/e8418108dcda8087fb198a6f81caadbcda9fd115d61154bf0df4d6d3619b/rignore-0.7.6-cp312-cp312-win_arm64.whl", hash = "sha256:a64a750e7a8277a323f01ca50b7784a764845f6cce2fe38831cb93f0508d0051" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b7/8a/a4078f6e14932ac7edb171149c481de29969d96ddee3ece5dc4c26f9e0c3/rignore-0.7.6-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:2bdab1d31ec9b4fb1331980ee49ea051c0d7f7bb6baa28b3125ef03cdc48fdaf" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f9/8f/f8daacd177db4bf7c2223bab41e630c52711f8af9ed279be2058d2fe4982/rignore-0.7.6-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:90f0a00ce0c866c275bf888271f1dc0d2140f29b82fcf33cdbda1e1a6af01010" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/36/31/b65b837e39c3f7064c426754714ac633b66b8c2290978af9d7f513e14aa9/rignore-0.7.6-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c1ad295537041dc2ed4b540fb1a3906bd9ede6ccdad3fe79770cd89e04e3c73c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ca/58/1970ce006c427e202ac7c081435719a076c478f07b3a23f469227788dc23/rignore-0.7.6-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:f782dbd3a65a5ac85adfff69e5c6b101285ef3f845c3a3cae56a54bebf9fe116" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d4/00/eb45db9f90137329072a732273be0d383cb7d7f50ddc8e0bceea34c1dfdf/rignore-0.7.6-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:65cece3b36e5b0826d946494734c0e6aaf5a0337e18ff55b071438efe13d559e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f3/f1/6f1d72ddca41a64eed569680587a1236633587cc9f78136477ae69e2c88a/rignore-0.7.6-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:d7e4bb66c13cd7602dc8931822c02dfbbd5252015c750ac5d6152b186f0a8be0" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/48/6f/2f178af1c1a276a065f563ec1e11e7a9e23d4996fd0465516afce4b5c636/rignore-0.7.6-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:297e500c15766e196f68aaaa70e8b6db85fa23fdc075b880d8231fdfba738cd7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5b/db/423a81c4c1e173877c7f9b5767dcaf1ab50484a94f60a0b2ed78be3fa765/rignore-0.7.6-cp313-cp313-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:a07084211a8d35e1a5b1d32b9661a5ed20669970b369df0cf77da3adea3405de" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/31/eb/c4f92cc3f2825d501d3c46a244a671eb737fc1bcf7b05a3ecd34abb3e0d7/rignore-0.7.6-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:181eb2a975a22256a1441a9d2f15eb1292839ea3f05606620bd9e1938302cf79" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/26/09/99442f02794bd7441bfc8ed1c7319e890449b816a7493b2db0e30af39095/rignore-0.7.6-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:7bbcdc52b5bf9f054b34ce4af5269df5d863d9c2456243338bc193c28022bd7b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2c/88/bcfc21e520bba975410e9419450f4b90a2ac8236b9a80fd8130e87d098af/rignore-0.7.6-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:f2e027a6da21a7c8c0d87553c24ca5cc4364def18d146057862c23a96546238e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e2/25/d37215e4562cda5c13312636393aea0bafe38d54d4e0517520a4cc0753ec/rignore-0.7.6-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:ee4a18b82cbbc648e4aac1510066682fe62beb5dc88e2c67c53a83954e541360" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/dc/76/a264ab38bfa1620ec12a8ff1c07778da89e16d8c0f3450b0333020d3d6dc/rignore-0.7.6-cp313-cp313-win32.whl", hash = "sha256:a7d7148b6e5e95035d4390396895adc384d37ff4e06781a36fe573bba7c283e5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/62/44/3c31b8983c29ea8832b6082ddb1d07b90379c2d993bd20fce4487b71b4f4/rignore-0.7.6-cp313-cp313-win_amd64.whl", hash = "sha256:b037c4b15a64dced08fc12310ee844ec2284c4c5c1ca77bc37d0a04f7bff386e" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/aa/41/e26a075cab83debe41a42661262f606166157df84e0e02e2d904d134c0d8/rignore-0.7.6-cp313-cp313-win_arm64.whl", hash = "sha256:e47443de9b12fe569889bdbe020abe0e0b667516ee2ab435443f6d0869bd2804" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9a/b9/1f5bd82b87e5550cd843ceb3768b4a8ef274eb63f29333cf2f29644b3d75/rignore-0.7.6-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:8e41be9fa8f2f47239ded8920cc283699a052ac4c371f77f5ac017ebeed75732" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e9/6b/07714a3efe4a8048864e8a5b7db311ba51b921e15268b17defaebf56d3db/rignore-0.7.6-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:6dc1e171e52cefa6c20e60c05394a71165663b48bca6c7666dee4f778f2a7d90" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ac/0f/348c829ea2d8d596e856371b14b9092f8a5dfbb62674ec9b3f67e4939a9d/rignore-0.7.6-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0ce2268837c3600f82ab8db58f5834009dc638ee17103582960da668963bebc5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f0/30/2e1841a19b4dd23878d73edd5d82e998a83d5ed9570a89675f140ca8b2ad/rignore-0.7.6-cp314-cp314-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:690a3e1b54bfe77e89c4bacb13f046e642f8baadafc61d68f5a726f324a76ab6" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c2/bf/0ce9beb2e5f64c30e3580bef09f5829236889f01511a125f98b83169b993/rignore-0.7.6-cp314-cp314-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:09d12ac7a0b6210c07bcd145007117ebd8abe99c8eeb383e9e4673910c2754b2" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b9/8b/571c178414eb4014969865317da8a02ce4cf5241a41676ef91a59aab24de/rignore-0.7.6-cp314-cp314-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:2a2b2b74a8c60203b08452479b90e5ce3dbe96a916214bc9eb2e5af0b6a9beb0" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/19/62/7a3cf601d5a45137a7e2b89d10c05b5b86499190c4b7ca5c3c47d79ee519/rignore-0.7.6-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8fc5a531ef02131e44359419a366bfac57f773ea58f5278c2cdd915f7d10ea94" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/5f/1f/4261f6a0d7caf2058a5cde2f5045f565ab91aa7badc972b57d19ce58b14e/rignore-0.7.6-cp314-cp314-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:b7a1f77d9c4cd7e76229e252614d963442686bfe12c787a49f4fe481df49e7a9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2b/bf/628dfe19c75e8ce1f45f7c248f5148b17dfa89a817f8e3552ab74c3ae812/rignore-0.7.6-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:ead81f728682ba72b5b1c3d5846b011d3e0174da978de87c61645f2ed36659a7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/af/a5/be29c50f5c0c25c637ed32db8758fdf5b901a99e08b608971cda8afb293b/rignore-0.7.6-cp314-cp314-musllinux_1_2_armv7l.whl", hash = "sha256:12ffd50f520c22ffdabed8cd8bfb567d9ac165b2b854d3e679f4bcaef11a9441" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2a/40/3c46cd7ce4fa05c20b525fd60f599165e820af66e66f2c371cd50644558f/rignore-0.7.6-cp314-cp314-musllinux_1_2_i686.whl", hash = "sha256:e5a16890fbe3c894f8ca34b0fcacc2c200398d4d46ae654e03bc9b3dbf2a0a72" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/8c/b9/aea926f263b8a29a23c75c2e0d8447965eb1879d3feb53cfcf84db67ed58/rignore-0.7.6-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:3abab3bf99e8a77488ef6c7c9a799fac22224c28fe9f25cc21aa7cc2b72bfc0b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a4/f6/0d6242f8d0df7f2ecbe91679fefc1f75e7cd2072cb4f497abaab3f0f8523/rignore-0.7.6-cp314-cp314-win32.whl", hash = "sha256:eeef421c1782953c4375aa32f06ecae470c1285c6381eee2a30d2e02a5633001" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d5/38/c0dcd7b10064f084343d6af26fe9414e46e9619c5f3224b5272e8e5d9956/rignore-0.7.6-cp314-cp314-win_amd64.whl", hash = "sha256:6aeed503b3b3d5af939b21d72a82521701a4bd3b89cd761da1e7dc78621af304" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d9/7a/290f868296c1ece914d565757ab363b04730a728b544beb567ceb3b2d96f/rignore-0.7.6-cp314-cp314-win_arm64.whl", hash = "sha256:104f215b60b3c984c386c3e747d6ab4376d5656478694e22c7bd2f788ddd8304" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ca/d2/3c74e3cd81fe8ea08a8dcd2d755c09ac2e8ad8fe409508904557b58383d3/rignore-0.7.6-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:bb24a5b947656dd94cb9e41c4bc8b23cec0c435b58be0d74a874f63c259549e8" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/77/61/a772a34b6b63154877433ac2d048364815b24c2dd308f76b212c408101a2/rignore-0.7.6-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:5b1e33c9501cefe24b70a1eafd9821acfd0ebf0b35c3a379430a14df089993e3" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/71/30/054880b09c0b1b61d17eeb15279d8bf729c0ba52b36c3ada52fb827cbb3c/rignore-0.7.6-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bec3994665a44454df86deb762061e05cd4b61e3772f5b07d1882a8a0d2748d5" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1e/40/b2d1c169f833d69931bf232600eaa3c7998ba4f9a402e43a822dad2ea9f2/rignore-0.7.6-cp314-cp314t-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:26cba2edfe3cff1dfa72bddf65d316ddebf182f011f2f61538705d6dbaf54986" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/55/59/ca5ae93d83a1a60e44b21d87deb48b177a8db1b85e82fc8a9abb24a8986d/rignore-0.7.6-cp314-cp314t-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ffa86694fec604c613696cb91e43892aa22e1fec5f9870e48f111c603e5ec4e9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a5/52/cf3dce392ba2af806cba265aad6bcd9c48bb2a6cb5eee448d3319f6e505b/rignore-0.7.6-cp314-cp314t-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:48efe2ed95aa8104145004afb15cdfa02bea5cdde8b0344afeb0434f0d989aa2" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ec/be/3f344c6218d779395e785091d05396dfd8b625f6aafbe502746fcd880af2/rignore-0.7.6-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8dcae43eb44b7f2457fef7cc87f103f9a0013017a6f4e62182c565e924948f21" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/c9/34/d3fa71938aed7d00dcad87f0f9bcb02ad66c85d6ffc83ba31078ce53646a/rignore-0.7.6-cp314-cp314t-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:2cd649a7091c0dad2f11ef65630d30c698d505cbe8660dd395268e7c099cc99f" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/a4/52a697158e9920705bdbd0748d59fa63e0f3233fb92e9df9a71afbead6ca/rignore-0.7.6-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:42de84b0289d478d30ceb7ae59023f7b0527786a9a5b490830e080f0e4ea5aeb" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ac/65/aa76dbcdabf3787a6f0fd61b5cc8ed1e88580590556d6c0207960d2384bb/rignore-0.7.6-cp314-cp314t-musllinux_1_2_armv7l.whl", hash = "sha256:875a617e57b53b4acbc5a91de418233849711c02e29cc1f4f9febb2f928af013" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/08/44/31b31a49b3233c6842acc1c0731aa1e7fb322a7170612acf30327f700b44/rignore-0.7.6-cp314-cp314t-musllinux_1_2_i686.whl", hash = "sha256:8703998902771e96e49968105207719f22926e4431b108450f3f430b4e268b7c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e9/ae/1b199a2302c19c658cf74e5ee1427605234e8c91787cfba0015f2ace145b/rignore-0.7.6-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:602ef33f3e1b04c1e9a10a3c03f8bc3cef2d2383dcc250d309be42b49923cabc" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fc/d3/18210222b37e87e36357f7b300b7d98c6dd62b133771e71ae27acba83a4f/rignore-0.7.6-cp314-cp314t-win32.whl", hash = "sha256:c1d8f117f7da0a4a96a8daef3da75bc090e3792d30b8b12cfadc240c631353f9" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/3e/87/033eebfbee3ec7d92b3bb1717d8f68c88e6fc7de54537040f3b3a405726f/rignore-0.7.6-cp314-cp314t-win_amd64.whl", hash = "sha256:ca36e59408bec81de75d307c568c2d0d410fb880b1769be43611472c61e85c96" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/79/62/b88e5879512c55b8ee979c666ee6902adc4ed05007226de266410ae27965/rignore-0.7.6-cp314-cp314t-win_arm64.whl", hash = "sha256:b83adabeb3e8cf662cabe1931b83e165b88c526fa6af6b3aa90429686e474896" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/82/78/a6250ff0c49a3cdb943910ada4116e708118e9b901c878cfae616c80a904/rignore-0.7.6-pp311-pypy311_pp73-macosx_10_12_x86_64.whl", hash = "sha256:a20b6fb61bcced9a83dfcca6599ad45182b06ba720cff7c8d891e5b78db5b65f" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/35/af/c69c0c51b8f9f7914d95c4ea91c29a2ac067572048cae95dd6d2efdbe05d/rignore-0.7.6-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:392dcabfecbe176c9ebbcb40d85a5e86a5989559c4f988c2741da7daf1b5be25" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f1/d2/1b264f56132264ea609d3213ab603d6a27016b19559a1a1ede1a66a03dcd/rignore-0.7.6-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:22baa462abdc36fdd5a5e2dae423107723351b85ff093762f9261148b9d0a04a" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/55/e4/b3c5dfdd8d8a10741dfe7199ef45d19a0e42d0c13aa377c83bd6caf65d90/rignore-0.7.6-pp311-pypy311_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:53fb28882d2538cb2d231972146c4927a9d9455e62b209f85d634408c4103538" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/cc/10/d6f3750233881a2a154cefc9a6a0a9b19da526b19f7f08221b552c6f827d/rignore-0.7.6-pp311-pypy311_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:87409f7eeb1103d6b77f3472a3a0d9a5953e3ae804a55080bdcb0120ee43995b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6e/10/ad98ca05c9771c15af734cee18114a3c280914b6e34fde9ffea2e61e88aa/rignore-0.7.6-pp311-pypy311_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:684014e42e4341ab3ea23a203551857fcc03a7f8ae96ca3aefb824663f55db32" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/de/00/ab5c0f872acb60d534e687e629c17e0896c62da9b389c66d3aa16b817aa8/rignore-0.7.6-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:77356ebb01ba13f8a425c3d30fcad40e57719c0e37670d022d560884a30e4767" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b8/86/3030fdc363a8f0d1cd155b4c453d6db9bab47a24fcc64d03f61d9d78fe6a/rignore-0.7.6-pp311-pypy311_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:6cbd8a48abbd3747a6c830393cd578782fab5d43f4deea48c5f5e344b8fed2b0" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/33/b8/133aa4002cee0ebbb39362f94e4898eec7fbd09cec9fcbce1cd65b355b7f/rignore-0.7.6-pp311-pypy311_pp73-musllinux_1_2_aarch64.whl", hash = "sha256:2673225dcec7f90497e79438c35e34638d0d0391ccea3cbb79bfb9adc0dc5bd7" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/67/56/36d5d34210e5e7dfcd134eed8335b19e80ae940ee758f493e4f2b344dd70/rignore-0.7.6-pp311-pypy311_pp73-musllinux_1_2_armv7l.whl", hash = "sha256:c081f17290d8a2b96052b79207622aa635686ea39d502b976836384ede3d303c" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6b/5b/bb4f9420802bf73678033a4a55ab1bede36ce2e9b41fec5f966d83d932b3/rignore-0.7.6-pp311-pypy311_pp73-musllinux_1_2_i686.whl", hash = "sha256:57e8327aacc27f921968cb2a174f9e47b084ce9a7dd0122c8132d22358f6bd79" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ce/8b/a1299085b28a2f6135e30370b126e3c5055b61908622f2488ade67641479/rignore-0.7.6-pp311-pypy311_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:d8955b57e42f2a5434670d5aa7b75eaf6e74602ccd8955dddf7045379cd762fb" },
+]
+
+[[package]]
 name = "robust-downloader"
 version = "0.0.2"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -6685,6 +7234,37 @@ wheels = [
 ]
 
 [[package]]
+name = "sentence-transformers"
+version = "3.2.1"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "huggingface-hub" },
+    { name = "pillow" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "torch" },
+    { name = "tqdm" },
+    { name = "transformers" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/de/61/708b20dedf26c460b416beb0acd5474c190dbca13e93b40858e99f17ac46/sentence_transformers-3.2.1.tar.gz", hash = "sha256:9fc38e620e5e1beba31d538a451778c9ccdbad77119d90f59f5bce49c4148e79" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/45/18/1ec591befcbdb2c97192a40fbe7c43a8b8a8b3c89b1fa101d3eeed4d79a4/sentence_transformers-3.2.1-py3-none-any.whl", hash = "sha256:c507e069eea33d15f1f2c72f74d7ea93abef298152cc235ab5af5e3a7584f738" },
+]
+
+[[package]]
+name = "sentry-sdk"
+version = "2.58.0"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/26/b3/fb8291170d0e844173164709fc0fa0c221ed75a5da740c8746f2a83b4eb1/sentry_sdk-2.58.0.tar.gz", hash = "sha256:c1144d947352d54e5b7daa63596d9f848adf684989c06c4f5a659f0c85a18f6f" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fa/eb/d875669993b762556ae8b2efd86219943b4c0864d22204d622a9aee3052b/sentry_sdk-2.58.0-py2.py3-none-any.whl", hash = "sha256:688d1c704ddecf382ea3326f21a67453d4caa95592d722b7c780a36a9d23109e" },
+]
+
+[[package]]
 name = "setuptools"
 version = "80.9.0"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
@@ -7058,6 +7638,7 @@ dependencies = [
     { name = "fastmcp" },
     { name = "ftfy" },
     { name = "googlesearch-python" },
+    { name = "hindsight-all" },
     { name = "jose" },
     { name = "langchain" },
     { name = "linkify-it-py" },
@@ -7113,6 +7694,7 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=2.14.5" },
     { name = "ftfy", specifier = ">=6.3.1" },
     { name = "googlesearch-python", specifier = ">=1.3.0" },
+    { name = "hindsight-all", specifier = ">=0.4.17" },
     { name = "jose", specifier = ">=1.0.0" },
     { name = "langchain", specifier = ">=0.3.23,<1.0.0" },
     { name = "linkify-it-py", specifier = ">=2.0.3" },
@@ -7291,28 +7873,27 @@ wheels = [
 
 [[package]]
 name = "tokenizers"
-version = "0.22.2"
+version = "0.20.4"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
 dependencies = [
     { name = "huggingface-hub" },
 ]
-sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/73/6f/f80cfef4a312e1fb34baf7d85c72d4411afde10978d4657f8cdd811d3ccc/tokenizers-0.22.2.tar.gz", hash = "sha256:473b83b915e547aa366d1eee11806deaf419e17be16310ac0a14077f1e28f917" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/1a/98/0df883ea6201e35e286a97f5fb2a601bfb5b52e4165f7688a76e4553eeec/tokenizers-0.20.4.tar.gz", hash = "sha256:db50ac15e92981227f499268541306824f49e97dbeec05d118ebdc7c2d22322c" }
 wheels = [
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/92/97/5dbfabf04c7e348e655e907ed27913e03db0923abb5dfdd120d7b25630e1/tokenizers-0.22.2-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:544dd704ae7238755d790de45ba8da072e9af3eea688f698b137915ae959281c" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2e/47/174dca0502ef88b28f1c9e06b73ce33500eedfac7a7692108aec220464e7/tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:1e418a55456beedca4621dbab65a318981467a2b188e982a23e117f115ce5001" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d6/84/7990e799f1309a8b87af6b948f31edaa12a3ed22d11b352eaf4f4b2e5753/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2249487018adec45d6e3554c71d46eb39fa8ea67156c640f7513eb26f318cec7" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/78/59/09d0d9ba94dcd5f4f1368d4858d24546b4bdc0231c2354aa31d6199f0399/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:25b85325d0815e86e0bac263506dd114578953b7b53d7de09a6485e4a160a7dd" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/47/50/b3ebb4243e7160bda8d34b731e54dd8ab8b133e50775872e7a434e524c28/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:bfb88f22a209ff7b40a576d5324bf8286b519d7358663db21d6246fb17eea2d5" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e0/fa/89f4cb9e08df770b57adb96f8cbb7e22695a4cb6c2bd5f0c4f0ebcf33b66/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:1c774b1276f71e1ef716e5486f21e76333464f47bece56bbd554485982a9e03e" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/64/04/ca2363f0bfbe3b3d36e95bf67e56a4c88c8e3362b658e616d1ac185d47f2/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:df6c4265b289083bf710dff49bc51ef252f9d5be33a45ee2bed151114a56207b" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/2e/76/932be4b50ef6ccedf9d3c6639b056a967a86258c6d9200643f01269211ca/tokenizers-0.22.2-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:369cc9fc8cc10cb24143873a0d95438bb8ee257bb80c71989e3ee290e8d72c67" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/1d/28/5f9f5a4cc211b69e89420980e483831bcc29dade307955cc9dc858a40f01/tokenizers-0.22.2-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:29c30b83d8dcd061078b05ae0cb94d3c710555fbb44861139f9f83dcca3dc3e4" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/6c/fb/66e2da4704d6aadebf8cb39f1d6d1957df667ab24cff2326b77cda0dcb85/tokenizers-0.22.2-cp39-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:37ae80a28c1d3265bb1f22464c856bd23c02a05bb211e56d0c5301a435be6c1a" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/16/04/fed398b05caa87ce9b1a1bb5166645e38196081b225059a6edaff6440fac/tokenizers-0.22.2-cp39-abi3-musllinux_1_2_i686.whl", hash = "sha256:791135ee325f2336f498590eb2f11dc5c295232f288e75c99a36c5dbce63088a" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/05/a1/d62dfe7376beaaf1394917e0f8e93ee5f67fea8fcf4107501db35996586b/tokenizers-0.22.2-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:38337540fbbddff8e999d59970f3c6f35a82de10053206a7562f1ea02d046fa5" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/fd/18/a545c4ea42af3df6effd7d13d250ba77a0a86fb20393143bbb9a92e434d4/tokenizers-0.22.2-cp39-abi3-win32.whl", hash = "sha256:a6bf3f88c554a2b653af81f3204491c818ae2ac6fbc09e76ef4773351292bc92" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/65/71/0670843133a43d43070abeb1949abfdef12a86d490bea9cd9e18e37c5ff7/tokenizers-0.22.2-cp39-abi3-win_amd64.whl", hash = "sha256:c9ea31edff2968b44a88f97d784c2f16dc0729b8b143ed004699ebca91f05c48" },
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/72/f4/0de46cfa12cdcbcd464cc59fde36912af405696f687e53a091fb432f694c/tokenizers-0.22.2-cp39-abi3-win_arm64.whl", hash = "sha256:9ce725d22864a1e965217204946f830c37876eee3b2ba6fc6255e8e903d5fcbc" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b7/a1/c8285e835dd185307f40bc4a308224dc357ee4d25f3fd83ef013101a5060/tokenizers-0.20.4-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:25f59ebc5b79e7bbafe86bfec62696468016627157d8a9ceba5092486796a156" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/bb/26/a4b8dfe37c92205a4ba267d35ed7a6ca0ae1cbb2a1ed8acf84813cf48704/tokenizers-0.20.4-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:f41df992797ad0ff9472e8a2c7a3ef7178667935d984639b73da7d19b33ea4e2" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/66/aa/70de5a7c96621c1962e8399245efac6d6ab3bbe873457b9beb26c406c4f0/tokenizers-0.20.4-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7786004e180fab72e6e873e982ccd18b3cfa31521d397b6c024cc19175abf91b" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b7/d1/e70b4497da0e97111ef75eba32526a98bf04268ce2a7388d9759ec89acdb/tokenizers-0.20.4-cp39-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:075635cd7e6936cc4b3a13901c1a05690d5b533ce3d0f035dee21117dd4f04ae" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/d0/29/8dff1d57d1d1bcae5f0d701759ca3f503ca31ecd443f75571d6ef3083043/tokenizers-0.20.4-cp39-abi3-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:aa392bae7f0a36e4c97ad43100390ad84f2a1bfff6742604774210f7d7a4fa13" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/65/49/e4647d5e496e64f2f639aeba9df134f59b648822a90d63ceb7b4b309ba4a/tokenizers-0.20.4-cp39-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:eee647ccba9cbd36b5ec4e8e73d25dbd586ec06de7a43ff83a3dad9fec466a29" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f6/c9/34c6a304529a0b3375533e0ccc4ffd4bcfa401cb57cdab5997efaf9836fc/tokenizers-0.20.4-cp39-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:735ffc9bba65d20f8ab5f82dfbab262bb066afc7dee3684c5e5435e7a5da445d" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/b9/1c/cc1ca0c4e4c5763b2d872935de7149633765d158f0d1a46b48d73f3a9c58/tokenizers-0.20.4-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:05c2bab579c1f31292b48bb79b6334b5346c1ec87dac81089e6098b8a20b2fd4" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/ef/bf/135de1cf1c10f53a10c8db5f067e7cf71adebd79ed2b5cf5729eded209af/tokenizers-0.20.4-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:3e960ad5c467a95e5665e518151ed9024e7aa111d2c54ff1938162cc7c2b8959" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/24/56/61b8c0cd217a5be05c4206263afdfa937848796696fee7cc14fab6c94a49/tokenizers-0.20.4-cp39-abi3-musllinux_1_2_armv7l.whl", hash = "sha256:e59a405459ed31b73426b364752c2e7c73f4a94210a63fd7acd161a774af7bd2" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/94/08/2d541e0e437e87e5cae903c55fc832fd032812c85e095bb7833d5fe65dfd/tokenizers-0.20.4-cp39-abi3-musllinux_1_2_i686.whl", hash = "sha256:84bf8b4a7bbf1c6bb78775ae309a5c69d08dadf7b88125d6d19ccb4738a87350" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/9e/62/41dc66bda0b1d45f36f324d01a3c4389caac0526d4b4ccc2d2006c7722b1/tokenizers-0.20.4-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:a6d392a20ca70692aaba8a636677b57f6c67655879773ba2b6be8cb4a19ce6b8" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a1/1c/0c9ebd40b4e6bb51b178cff6b148e985a728fc899d12f4a6ebe49044d4e2/tokenizers-0.20.4-cp39-abi3-win32.whl", hash = "sha256:60ea37c885a9bb8efa53b7542ea83561cd00eb3ffb47a77f5ae622d9f7f66ffe" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/e0/e3/c7e4adf727ddcdefc1831945bf95fe07dd6b4b879613a62b5719be539ce4/tokenizers-0.20.4-cp39-abi3-win_amd64.whl", hash = "sha256:6cba92b87969ddf5a7e2f2293577c30129d8c22c6f68e8c626d3e76b8d52412c" },
 ]
 
 [[package]]
@@ -7439,7 +8020,7 @@ wheels = [
 
 [[package]]
 name = "transformers"
-version = "4.57.5"
+version = "4.45.2"
 source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
 dependencies = [
     { name = "filelock" },
@@ -7453,9 +8034,9 @@ dependencies = [
     { name = "tokenizers" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/35/3a/7c90ee739871495f1a5cb9bdb074b42fe69357d7ccc1a8818af858d8e63b/transformers-4.57.5.tar.gz", hash = "sha256:d631faea6bd32fc51962e482744afeaa70170c70e5e991cf8e355d7275631524" }
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/4b/4c/3862b2dd6cdf83b187897bd351da0f7fb74d0df642b03c6f5d06353a3ca0/transformers-4.45.2.tar.gz", hash = "sha256:72bc390f6b203892561f05f86bbfaa0e234aab8e927a83e62b9d92ea7e3ae101" }
 wheels = [
-    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f8/de/4f95d22d9764659d2bd35065f383f3fe099699a9e6e89fa4728dbcd7244a/transformers-4.57.5-py3-none-any.whl", hash = "sha256:5a1e0deb989cd0b8f141b6d8c9b7c956fc029cd288d68844f57dc0acbaf2fe39" },
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/f9/9d/030cc1b3e88172967e22ee1d012e0d5e0384eb70d2a098d1669d549aea29/transformers-4.45.2-py3-none-any.whl", hash = "sha256:c551b33660cfc815bae1f9f097ecfd1e65be623f13c6ee0dda372bd881460210" },
 ]
 
 [[package]]
@@ -7582,6 +8163,18 @@ dependencies = [
 sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/21/ca/950278884e2ca20547ff3eb109478c6baf6b8cf219318e6bc4f666fad8e8/typer-0.19.2.tar.gz", hash = "sha256:9ad824308ded0ad06cc716434705f691d4ee0bfd0fb081839d2e426860e7fdca" }
 wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/00/22/35617eee79080a5d071d0f14ad698d325ee6b3bf824fc0467c03b30e7fa8/typer-0.19.2-py3-none-any.whl", hash = "sha256:755e7e19670ffad8283db353267cb81ef252f595aa6834a0d1ca9312d9326cb9" },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.33.0.20260408"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/69/6a/749dc53a54a3f35842c1f8197b3ca6b54af6d7458a1bfc75f6629b6da666/types_requests-2.33.0.20260408.tar.gz", hash = "sha256:95b9a86376807a216b2fb412b47617b202091c3ea7c078f47cc358d5528ccb7b" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/90/b8/78fd6c037de4788c040fdd323b3369804400351b7827473920f6c1d03c10/types_requests-2.33.0.20260408-py3-none-any.whl", hash = "sha256:81f31d5ea4acb39f03be7bc8bed569ba6d5a9c5d97e89f45ac43d819b68ca50f" },
 ]
 
 [[package]]
@@ -8076,6 +8669,18 @@ wheels = [
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/79/d9/7cfd5a312760ac4dd8bf0184a6ee9e43c33e47f3dadc303032ce012b8fa3/wrapt-1.17.3-cp314-cp314t-win_amd64.whl", hash = "sha256:73d496de46cd2cdbdbcce4ae4bcdb4afb6a11234a1df9c085249d55166b95116" },
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/46/78/10ad9781128ed2f99dbc474f43283b13fea8ba58723e98844367531c18e9/wrapt-1.17.3-cp314-cp314t-win_arm64.whl", hash = "sha256:f38e60678850c42461d4202739f9bf1e3a737c7ad283638251e79cc49effb6b6" },
     { url = "https://repo.huaweicloud.com/repository/pypi/packages/1f/f6/a933bd70f98e9cf3e08167fc5cd7aaaca49147e48411c0bd5ae701bb2194/wrapt-1.17.3-py3-none-any.whl", hash = "sha256:7171ae35d2c33d326ac19dd8facb1e82e5fd04ef8c6c0e394d7af55a55051c22" },
+]
+
+[[package]]
+name = "wsproto"
+version = "1.3.2"
+source = { registry = "https://repo.huaweicloud.com/repository/pypi/simple" }
+dependencies = [
+    { name = "h11" },
+]
+sdist = { url = "https://repo.huaweicloud.com/repository/pypi/packages/c7/79/12135bdf8b9c9367b8701c2c19a14c913c120b882d50b014ca0d38083c2c/wsproto-1.3.2.tar.gz", hash = "sha256:b86885dcf294e15204919950f666e06ffc6c7c114ca900b060d6e16293528294" }
+wheels = [
+    { url = "https://repo.huaweicloud.com/repository/pypi/packages/a4/f5/10b68b7b1544245097b2a1b8238f66f2fc6dcaeb24ba5d917f52bd2eed4f/wsproto-1.3.2-py3-none-any.whl", hash = "sha256:61eea322cdf56e8cc904bd3ad7573359a242ba65688716b0710a5eb12beab584" },
 ]
 
 [[package]]

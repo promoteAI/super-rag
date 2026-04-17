@@ -1,4 +1,36 @@
 services:
+  hindsight-db:
+    # Use a PostgreSQL-Image with pgvector extension pre-installed
+    # see https://hub.docker.com/r/pgvector/pgvector 
+    image: pgvector/pgvector:pg16
+    container_name: hindsight-db
+    restart: always
+    # Expose PostgreSQL port
+    # ports:
+      # - "5432:5432"
+    environment:
+      POSTGRES_USER: ${HINDSIGHT_DB_USER:-super_rag_user}
+      POSTGRES_PASSWORD: ${HINDSIGHT_DB_PASSWORD:-super_rag_password}
+      POSTGRES_DB: ${HINDSIGHT_DB_NAME:-super_rag_db}
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/pg_data:/var/lib/postgresql/16/docker
+
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:latest
+    container_name: hindsight
+    restart: unless-stopped
+    environment:
+      - HF_ENDPOINT=https://hf-mirror.com
+      - HINDSIGHT_API_LLM_API_KEY=${OPENAI_API_KEY-sk-xmodfeodmqedhuxxafvuazjfrqqlnplotxnfnkvmsvtecngw}
+      - HINDSIGHT_API_LLM_MODEL=Qwen/Qwen3.5-4B
+      - HINDSIGHT_API_LLM_BASE_URL=https://api.siliconflow.cn/v1
+      - HINDSIGHT_API_DATABASE_URL=postgresql://${HINDSIGHT_DB_USER:-super_rag_user}:${HINDSIGHT_DB_PASSWORD:-super_rag_password}@hindsight-db:5432/${HINDSIGHT_DB_NAME:-super_rag_db}
+    depends_on:
+      - hindsight-db
+    ports:
+      - "8888:8888"
+      - "9999:9999"
+      
   seekdb:
     image: oceanbase/seekdb:latest
     container_name: seekdb
@@ -14,7 +46,7 @@ services:
 
   rustfs:
     container_name: rustfs
-    image: rustfs/rustfs:1.0.0-alpha.58
+    image: rustfs/rustfs:latest
     environment:
       - RUSTFS_VOLUMES=/data/rustfs0,/data/rustfs1,/data/rustfs2,/data/rustfs3
       - RUSTFS_ADDRESS=0.0.0.0:9000

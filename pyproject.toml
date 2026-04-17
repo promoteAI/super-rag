@@ -56,6 +56,7 @@ dependencies = [
     "ddgs>=9.10.0",
     "fastmcp>=2.14.5",
     "ag-ui-protocol>=0.1.11",
+    "hindsight-all>=0.4.17",
 ]
 
 [tool.setuptools]
