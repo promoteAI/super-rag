@@ -21,8 +21,8 @@ services:
     restart: unless-stopped
     environment:
       - HF_ENDPOINT=https://hf-mirror.com
-      - HINDSIGHT_API_LLM_API_KEY=${LLM_API_KEY-sk-1138e3030a6348c1b95b161d0c468ecd}
-      - HINDSIGHT_API_LLM_MODEL=qwen-max
+      - HINDSIGHT_API_LLM_API_KEY=${LLM_API_KEY:-sk-1138e3030a6348c1b95b161d0c468ecd}
+      - HINDSIGHT_API_LLM_MODEL=qwen-turbo
       - HINDSIGHT_API_LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
       - HINDSIGHT_API_DATABASE_URL=postgresql://${HINDSIGHT_DB_USER:-super_rag_user}:${HINDSIGHT_DB_PASSWORD:-super_rag_password}@hindsight-db:5432/${HINDSIGHT_DB_NAME:-super_rag_db}
     depends_on:
