@@ -6,6 +6,7 @@ import logging
 
 from mcp_agent.workflows.llm.augmented_llm import SimpleMemory
 
+from super_rag.history import messages_to_openai_format
 from super_rag.utils.history import MySQLChatMessageHistory
 
 from .exceptions import handle_agent_error
@@ -45,8 +46,6 @@ class AgentMemoryManager:
         Returns:
             SimpleMemory: Memory populated with recent conversation context
         """
-        from langchain_core.messages.utils import convert_to_openai_messages
-
         logger.debug(f"Creating memory from history with context_limit: {context_limit}")
 
         # Create fresh memory instance
@@ -66,8 +65,8 @@ class AgentMemoryManager:
 
             logger.debug(f"Retrieved {len(recent_messages)} recent messages from history")
 
-            # Use LangChain's official utility to convert messages to OpenAI format
-            openai_messages = convert_to_openai_messages(recent_messages)
+            # MySQL history returns StoredChatMessage, not LangChain BaseMessage
+            openai_messages = messages_to_openai_format(recent_messages)
 
             # Add converted messages to memory
             for openai_msg in openai_messages:
@@ -114,8 +113,10 @@ class AgentMemoryManager:
 
             context_lines = []
             for message in recent_messages:
-                role = "User" if message.type == "human" else "Assistant"
-                content = message.content[:200] + "..." if len(message.content) > 200 else message.content
+                main_role = message.parts[0].role if message.parts else "ai"
+                role = "User" if main_role == "human" else "Assistant"
+                text = message.get_main_content()
+                content = text[:200] + "..." if len(text) > 200 else text
                 context_lines.append(f"{role}: {content}")
 
             context_summary = "\n".join(context_lines)
