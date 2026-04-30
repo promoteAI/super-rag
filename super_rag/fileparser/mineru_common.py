@@ -1,18 +1,17 @@
-import copy
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from loguru import logger
 
-from mineru.cli.common import convert_pdf_bytes_to_bytes_by_pypdfium2, prepare_env, read_fn
+from mineru.cli.common import convert_pdf_bytes_to_bytes, prepare_env, read_fn
 from mineru.data.data_reader_writer import FileBasedDataWriter
 from mineru.utils.draw_bbox import draw_layout_bbox, draw_span_bbox
 from mineru.utils.enum_class import MakeMode
 from mineru.backend.vlm.vlm_analyze import doc_analyze as vlm_doc_analyze
-from mineru.backend.pipeline.pipeline_analyze import doc_analyze as pipeline_doc_analyze
+from mineru.backend.pipeline.pipeline_analyze import doc_analyze_streaming as pipeline_doc_analyze_streaming
 from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
-from mineru.backend.pipeline.model_json_to_middle_json import result_to_middle_json as pipeline_result_to_middle_json
 from mineru.backend.vlm.vlm_middle_json_mkcontent import union_make as vlm_union_make
 from mineru.utils.guess_suffix_or_lang import guess_suffix_by_path
 
@@ -41,32 +40,71 @@ def do_parse(
 
     if backend == "pipeline":
         for idx, pdf_bytes in enumerate(pdf_bytes_list):
-            new_pdf_bytes = convert_pdf_bytes_to_bytes_by_pypdfium2(pdf_bytes, start_page_id, end_page_id)
+            new_pdf_bytes = convert_pdf_bytes_to_bytes(pdf_bytes, start_page_id, end_page_id)
             pdf_bytes_list[idx] = new_pdf_bytes
 
-        infer_results, all_image_lists, all_pdf_docs, lang_list, ocr_enabled_list = pipeline_doc_analyze(pdf_bytes_list, p_lang_list, parse_method=parse_method, formula_enable=formula_enable,table_enable=table_enable)
-
-        for idx, model_list in enumerate(infer_results):
-            model_json = copy.deepcopy(model_list)
-            pdf_file_name = pdf_file_names[idx]
+        image_writer_list = []
+        md_writer_list = []
+        local_output_info = []
+        for idx, pdf_file_name in enumerate(pdf_file_names):
             local_image_dir, local_md_dir = prepare_env(output_dir, pdf_file_name, parse_method)
             image_writer, md_writer = FileBasedDataWriter(local_image_dir), FileBasedDataWriter(local_md_dir)
+            image_writer_list.append(image_writer)
+            md_writer_list.append(md_writer)
+            local_output_info.append((pdf_file_name, local_image_dir, local_md_dir))
 
-            images_list = all_image_lists[idx]
-            pdf_doc = all_pdf_docs[idx]
-            _lang = lang_list[idx]
-            _ocr_enable = ocr_enabled_list[idx]
-            middle_json = pipeline_result_to_middle_json(model_list, images_list, pdf_doc, image_writer, _lang, _ocr_enable, formula_enable)
+        output_futures = []
 
-            pdf_info = middle_json["pdf_info"]
+        def run_output_task(doc_index, middle_json, model_list):
+            pdf_file_name, local_image_dir, local_md_dir = local_output_info[doc_index]
+            md_writer = md_writer_list[doc_index]
+            pdf_bytes = pdf_bytes_list[doc_index]
+            logger.debug(f"Pipeline output start: doc{doc_index}")
+            try:
+                _process_output(
+                    middle_json["pdf_info"],
+                    pdf_bytes,
+                    pdf_file_name,
+                    local_md_dir,
+                    local_image_dir,
+                    md_writer,
+                    f_draw_layout_bbox,
+                    f_draw_span_bbox,
+                    f_dump_orig_pdf,
+                    f_dump_md,
+                    f_dump_content_list,
+                    f_dump_middle_json,
+                    f_dump_model_output,
+                    f_make_md_mode,
+                    middle_json,
+                    model_list,
+                    is_pipeline=True,
+                )
+                logger.debug(f"Pipeline output complete: doc{doc_index}")
+            except Exception:
+                logger.exception(f"Pipeline output failed: doc{doc_index}")
+                raise
 
-            pdf_bytes = pdf_bytes_list[idx]
-            _process_output(
-                pdf_info, pdf_bytes, pdf_file_name, local_md_dir, local_image_dir,
-                md_writer, f_draw_layout_bbox, f_draw_span_bbox, f_dump_orig_pdf,
-                f_dump_md, f_dump_content_list, f_dump_middle_json, f_dump_model_output,
-                f_make_md_mode, middle_json, model_json, is_pipeline=True
+        with ThreadPoolExecutor(max_workers=1) as output_executor:
+            def on_doc_ready(doc_index, model_list, middle_json, ocr_enable):
+                logger.debug(
+                    f"Pipeline doc ready: doc{doc_index} pages={len(middle_json['pdf_info'])} output_submitted=1"
+                )
+                future = output_executor.submit(run_output_task, doc_index, middle_json, model_list)
+                output_futures.append(future)
+
+            pipeline_doc_analyze_streaming(
+                pdf_bytes_list,
+                image_writer_list,
+                p_lang_list,
+                on_doc_ready,
+                parse_method=parse_method,
+                formula_enable=formula_enable,
+                table_enable=table_enable,
             )
+
+            for future in output_futures:
+                future.result()
     else:
         if backend.startswith("vlm-"):
             backend = backend[4:]
@@ -75,7 +113,7 @@ def do_parse(
         parse_method = "vlm"
         for idx, pdf_bytes in enumerate(pdf_bytes_list):
             pdf_file_name = pdf_file_names[idx]
-            pdf_bytes = convert_pdf_bytes_to_bytes_by_pypdfium2(pdf_bytes, start_page_id, end_page_id)
+            pdf_bytes = convert_pdf_bytes_to_bytes(pdf_bytes, start_page_id, end_page_id)
             local_image_dir, local_md_dir = prepare_env(output_dir, pdf_file_name, parse_method)
             image_writer, md_writer = FileBasedDataWriter(local_image_dir), FileBasedDataWriter(local_md_dir)
             middle_json, infer_result = vlm_doc_analyze(pdf_bytes, image_writer=image_writer, backend=backend, server_url=server_url)
