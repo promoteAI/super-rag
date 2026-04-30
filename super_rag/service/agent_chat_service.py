@@ -44,7 +44,11 @@ from super_rag.agent.response_types import AgentErrorResponse, AgentToolCallResu
 from super_rag.history.message import StoredChatMessage, create_assistant_message
 from super_rag.db.ops import AsyncDatabaseOps, async_db_ops
 from super_rag.schema import view_models
-from super_rag.service.prompt_template_service import build_agent_query_prompt, get_agent_system_prompt
+from super_rag.service.prompt_template_service import (
+    build_agent_query_prompt,
+    format_agent_instruction_with_hindsight_bank,
+    get_agent_system_prompt,
+)
 from super_rag.trace import trace_async_function
 
 logger = logging.getLogger(__name__)
@@ -445,9 +449,10 @@ class AgentChatService:
 
 
         # Determine system prompt: use custom if provided, otherwise use default
-        system_prompt = (
+        base_instruction = (
             custom_system_prompt if custom_system_prompt else get_agent_system_prompt(language=agent_message.language)
         )
+        system_prompt = format_agent_instruction_with_hindsight_bank(base_instruction, user, agent_message.language)
 
         # Create AgentConfig with all needed parameters including chat_id
         config = AgentConfig(

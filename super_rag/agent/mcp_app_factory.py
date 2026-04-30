@@ -1,6 +1,7 @@
 
-
 import logging
+import os
+from urllib.parse import quote
 
 from mcp_agent.app import MCPApp
 from mcp_agent.config import LoggerSettings, MCPServerSettings, MCPSettings, OpenAISettings, Settings
@@ -9,6 +10,19 @@ from .agent_config import AgentConfig
 from .exceptions import agent_config_invalid, mcp_init_failed
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_HINDSIGHT_MCP_BASE = "http://localhost:8888/mcp"
+
+
+def hindsight_mcp_url_for_bank_id(bank_id: str) -> str:
+    """
+    Single-bank Hindsight MCP URL: /mcp/{bank_id}/ with path-safe encoding.
+
+    Matches https://hindsight.vectorize.io/developer/mcp-server (bank from URL path).
+    """
+    base = os.getenv("HINDSIGHT_MCP_URL", _DEFAULT_HINDSIGHT_MCP_BASE).rstrip("/")
+    segment = quote(bank_id, safe="")
+    return f"{base}/{segment}/"
 
 
 class MCPAppFactory:
@@ -22,6 +36,7 @@ class MCPAppFactory:
         api_key: str,
         super_rag_api_key: str,
         super_rag_mcp_url: str,
+        hindsight_bank_id: str | None = None,
         # Configurable LLM parameters
         temperature: float = 0.7,
         max_tokens: int = 60000,
@@ -40,6 +55,15 @@ class MCPAppFactory:
         for param_name, value in required_params.items():
             if not value:
                 raise agent_config_invalid(param_name, f"{param_name} is required")
+
+        if hindsight_bank_id:
+            hindsight_mcp_url = hindsight_mcp_url_for_bank_id(hindsight_bank_id)
+        else:
+            hindsight_mcp_url = os.getenv("HINDSIGHT_MCP_URL", _DEFAULT_HINDSIGHT_MCP_BASE)
+            logger.warning(
+                "Hindsight MCP is using multi-bank root URL without per-user bank_id; "
+                "pass hindsight_bank_id (e.g. user_id) for one-bank-per-user isolation."
+            )
 
         try:
             settings = Settings(
@@ -60,7 +84,7 @@ class MCPAppFactory:
                         ),
                         "hindsight": MCPServerSettings(
                             transport="streamable_http",
-                            url="http://localhost:8888/mcp",
+                            url=hindsight_mcp_url,
                             headers={
                                 "Content-Type": "application/json",
                             },
@@ -97,6 +121,7 @@ class MCPAppFactory:
             api_key=config.api_key,
             super_rag_api_key=config.super_rag_api_key,
             super_rag_mcp_url=config.super_rag_mcp_url,
+            hindsight_bank_id=config.user_id,
             temperature=config.temperature,
             max_tokens=config.max_tokens,
         )

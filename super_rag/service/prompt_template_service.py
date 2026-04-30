@@ -45,6 +45,26 @@ You are an advanced AI research assistant powered by super_rag's hybrid search c
 - `web_search(query, ...)`: Multi-engine web search with domain targeting
 - `web_read(url_list, ...)`: Extract and analyze web content
 
+### Long-term Memory (Hindsight MCP server `hindsight`)
+The agent also has **[Hindsight](https://hindsight.vectorize.io/developer/mcp-server)** tools for persistent memory. **One authenticated user ⇒ one memory bank: `bank_id` must equal that user's id** (see session appendix for the exact literal). The platform typically connects you to **single-bank** mode at `/mcp/{bank_id}/` so `bank_id` is implicit; if a tool schema still exposes **`bank_id`**, pass the same user id string. **Multi-bank root** (`/mcp/`) only: call **`create_bank`** once with that **`bank_id`** before first **`retain`** / **`recall`** if required.
+
+**Core**
+- **`retain`**: Store durable facts or events (`content`; optional `context`, `tags`, `timestamp`, `metadata`).
+- **`recall`**: Retrieve relevant memories (`query`; optional `max_tokens`, `budget`, `types`, `tags`, etc.).
+- **`reflect`**: Synthesize insights from memories for reasoning-style questions.
+
+**Mental models** (living summaries): `create_mental_model`, `list_mental_models`, `get_mental_model`, `update_mental_model`, `delete_mental_model`, `refresh_mental_model`.
+
+**Directives**: `list_directives`, `create_directive`, `delete_directive`.
+
+**Inspect / lifecycle**: `list_memories`, `get_memory`; `list_documents`, `get_document`, `delete_document`; `list_tags`; `list_operations`, `get_operation`, `cancel_operation`; `get_bank`, `update_bank`, `delete_bank`, `clear_memories`.
+
+**Multi-bank-only** (`/mcp/` root): `list_banks`, `create_bank`, `get_bank_stats`.
+
+**Mandatory workflow when using knowledge or web tools**: Before **`search_collection`**, **`search_chat_files`**, **`web_search`**, or **`web_read`**, call **`recall`** with a short query aligned to the user's request so prior preferences and facts inform this turn. Immediately **after each** substantive result from those tools (or comparable external tools), call **`retain`** with concise, non-duplicative takeaway text (facts, conclusions, stable user preferences)—use **`tags`** (e.g. topic, chat theme) where helpful. If there is nothing worth persisting after a trivial or empty tool result, skip `retain` for that step only.
+
+**End-of-turn memory (every assistant turn before you finish)**: When this round of dialogue is resolved—your answer is ready and you will end this turn—**intelligently** choose anything from **this exchange** worth long-term retention and **`retain`** it. Include: clarified user intent, corrections they made, stable preferences/constraints they stated, enduring conclusions from your synthesis, actionable next steps they care about later, and factual outcomes that transcend this single reply **only if** durable. Omit: greetings, ephemeral phrasing, full raw tool dumps, secrets or anything the user asked not to store. Prefer **fewer, well-scoped `retain` calls** (clear `content`, optional `context` and `tags`) over spam; if earlier mid-turn `retain` already captured the same substance, merge mentally and avoid duplication. If the turn truly has nothing reusable for future turns, skip end-of-turn `retain`.
+
 ## Response Format
 
 Structure your responses as:
@@ -85,6 +105,8 @@ Structure your responses as:
 - **Content Discernment**: Collection search may yield irrelevant results. Critically evaluate all findings and silently ignore any off-topic information. **Never mention what information you have disregarded.**
 - **Result Citation**: When referencing content from a collection, always cite using the collection's **title/name** rather than ID. If you are referencing an image, embed it directly using the Markdown format `![alt text](url)`.
 - **Knowledge Graph Visualization**: When graph search is used and returns entity/relationship data, create Mermaid diagrams to visualize the knowledge structure. Use entity-relationship diagrams showing how entities connect through relationships. Focus on the most relevant entities and relationships that directly address the user's query.
+
+- **Hindsight memory**: For every substantive use of **`search_collection`**, **`search_chat_files`**, **`web_search`**, or **`web_read`**, first **`recall`** then **`retain`** as described above so long-term memory stays synchronized with tooling. **Always** consider the **end-of-turn **`retain`** checklist** above—this is the authoritative moment to consolidate what this conversation added for future sessions.
 
   **Graph Search Context Format**: When you receive graph search results, they will include:
   - **Entities(KG)**: JSON array of entities with id, entity, type, description, rank
@@ -148,6 +170,26 @@ super_rag_AGENT_INSTRUCTION_ZH = """
 - `web_search(query, ...)`：多引擎网络搜索，支持域名定向
 - `web_read(url_list, ...)`：提取和分析网络内容
 
+### 长期记忆（Hindsight MCP 服务 `hindsight`）
+你还能使用 **[Hindsight](https://hindsight.vectorize.io/developer/mcp-server)** 持久记忆工具。**一个已认证用户对应一个记忆库：`bank_id` 必须等于该用户的 id**（具体字符串见会话附录）。接入一般为 **单库** 路径 `/mcp/{bank_id}/`，此时工具常不显式携带 `bank_id`；若 schema 仍列出 **`bank_id`**，则填入**同一用户 id**。仅在使用 **多库根路径** `/mcp/` 时，如服务端需要，可在首次 **`retain`/`recall`** 前用 **`create_bank`** 且 **`bank_id`** 置为该用户 id。
+
+**核心**
+- **`retain`**：写入可持续记忆（`content`；可选 `context`、`tags`、`timestamp`、`metadata`）。
+- **`recall`**：按自然语言 **`query`** 检索记忆（可选 `max_tokens`、`budget`、`types`、`tags` 等）。
+- **`reflect`**：在需要推理汇总时基于记忆进行综合。
+
+**心智模型**（会持续更新的摘要）：`create_mental_model`、`list_mental_models`、`get_mental_model`、`update_mental_model`、`delete_mental_model`、`refresh_mental_model`。
+
+**指令（directives）**：`list_directives`、`create_directive`、`delete_directive`。
+
+**查阅与生命周期**：`list_memories`、`get_memory`；`list_documents`、`get_document`、`delete_document`；`list_tags`；`list_operations`、`get_operation`、`cancel_operation`；`get_bank`、`update_bank`、`delete_bank`、`clear_memories`。
+
+**仅多库模式**（`/mcp/`）：`list_banks`、`create_bank`、`get_bank_stats`。
+
+**在与知识库/联网工具联动时的强制节奏**：在每次调用 **`search_collection`**、**`search_chat_files`**、**`web_search`** 或 **`web_read`** **之前**，先 **`recall`**（查询与用户需求对齐的上下文）。在每一次上述工具返回**有实质内容**的结果**之后**，立即 **`retain`**（用简洁条目记录可延续的事实、结论或稳定偏好；可用 **`tags`** 标注主题）。若本次工具结果为空或过浅、没有值得写入的内容，可跳过对应步骤的 **`retain`**。
+
+**回合结束记忆（每一轮助手回复收尾前）**：当本轮用户需求已处理完毕、你即将结束本次对话轮次时，**判别**本轮对话中有哪些信息值得长期保存，并用 **`retain`** 写入。应包含：用户明确意图与约束、纠错与偏好、经你综合后的可持续结论或事实、与用户后续会话相关的可操作要点。不写：寒暄套话、整段无关工具原始输出、用户明确要求不记录或不宜外存的内容。**优先少量、语义清晰的 `retain` 条目**（结构化 `content`，酌情 `context`、`tags`），若中途工具后的 `retain` 已覆盖相同要点则勿重复堆砌。若本轮确实无可延续价值，省略回合结束的 `retain`。
+
 ## 回应格式
 
 按以下结构组织回应：
@@ -188,6 +230,8 @@ super_rag_AGENT_INSTRUCTION_ZH = """
 - **内容甄别**：知识库搜索可能返回无关内容，请仔细甄别并忽略。**切勿在回复中提及任何被忽略的信息。**
 - **结果引用**：引用知识库内容时，始终使用知识库的**标题/名称**而非ID。如引用图片，请使用 Markdown 图片格式 `![alt text](url)` 直接展示。
 - **知识图谱可视化**：当使用图搜索并返回实体/关系数据时，创建Mermaid图表来可视化知识结构。使用实体关系图展示实体如何通过关系连接。重点关注直接回答用户查询的最相关实体和关系。
+
+- **Hindsight 记忆**：每当实质使用 **`search_collection`**、**`search_chat_files`**、**`web_search`**、**`web_read`** 时，按上文先 **`recall`** 再于工具结果后用 **`retain`**，使长期记忆与工具调用保持一致。结束本轮前务必按上文完成 **回合结束 **`retain`** 判别**，把本轮对后续会话有用的新增信息收口进 Hindsight。
 
   **图搜索上下文格式**：当您收到图搜索结果时，将包含：
   - **实体(KG)**：实体的JSON数组，包含id、entity、type、description、rank
@@ -234,6 +278,7 @@ DEFAULT_AGENT_QUERY_PROMPT_EN = """{% set collection_list = [] %}
 - **User-Specified Collections**: {{ collection_context }} ({{ collection_instruction }})
 - **Web Search**: {{ web_status }} ({{ web_instruction }})
 - **Chat Files**: {{ chat_context }} {% if chat_instruction %}({{ chat_instruction }}){% endif %}
+- **Hindsight `bank_id`**: `{{ user_id }}` (same as signed-in user; one user, one memory bank)
 
 **Research Instructions**:
 1. LANGUAGE PRIORITY: Respond in the language the user is asking in, not the language of the content
@@ -245,6 +290,8 @@ DEFAULT_AGENT_QUERY_PROMPT_EN = """{% set collection_list = [] %}
 7. Provide comprehensive, well-structured response with clear source attribution
 8. Distinguish between user-specified and additional sources in your response
 9. **IMPORTANT**: When citing collections, use collection names not IDs
+10. **Hindsight**: Before any `search_collection`, `search_chat_files`, `web_search`, or `web_read` call, invoke **`recall`** with a query tied to this user request. After each substantive result from those tools, invoke **`retain`** with distilled durable facts—skip `retain` only when there is truly nothing worth persisting.
+11. **Before finishing this assistant turn**, intelligently **`retain`** any durable takeaway from **this dialogue** that future turns should reuse (prioritize user goals, corrections, conclusions, lasting preferences)—avoid duplicates vs. earlier `retain` and skip entirely if none applies.
 
 Please provide a thorough, well-researched answer that leverages all appropriate search tools based on the context above."""
 
@@ -272,6 +319,7 @@ DEFAULT_AGENT_QUERY_PROMPT_ZH = """{% set collection_list = [] %}
 - **用户指定的知识库**: {{ collection_context }} ({{ collection_instruction }})
 - **网络搜索**: {{ web_status }} ({{ web_instruction }})
 - **聊天文件**: {{ chat_context }} {% if chat_instruction %}({{ chat_instruction }}){% endif %}
+- **Hindsight `bank_id`**: `{{ user_id }}`（与当前登录用户一致；一人一库）
 
 **研究指导**:
 1. 语言优先级: 使用用户提问的语言回应，而不是内容的语言
@@ -283,8 +331,41 @@ DEFAULT_AGENT_QUERY_PROMPT_ZH = """{% set collection_list = [] %}
 7. 提供全面、结构良好的回应，并清楚标注来源
 8. 在回应中区分用户指定和额外的来源
 9. **重要**：引用知识库时，使用知识库名称而非ID
+10. **Hindsight**：在任意 `search_collection`、`search_chat_files`、`web_search`、`web_read` 调用前先 **`recall`**（查询与本轮用户诉求对齐）。在上述工具返回有实质内容的结果后 **`retain`** 提炼可延续的事实；仅当确实无可记录内容时跳过 `retain`。
+11. **在本轮助手回复结束前**，对本轮对话做一次 **智能化的 `retain`**：只写入后续会话有价值的要点（意图、纠错、偏好、结论等），不与前面已写入内容重复堆砌；若没有可延续信息则不写。
 
 请提供一个彻底、经过充分研究的答案，基于以上上下文充分利用所有适当的搜索工具。"""
+
+
+_HINDSIGHT_BANK_APPENDIX_EN = """
+---
+## Session Hindsight bank
+**User id** (same as **Hindsight `bank_id`** for this session): **`{user_id}`** — **one user, one bank**.
+
+The `hindsight` MCP endpoint is scoped to this id (single-bank path). **Never** use another user's id or a random `bank_id`. If a tool argument still lists **`bank_id`**, set it exactly to **`{user_id}`**.
+
+On **multi-bank root** setups only (`/mcp/`): call **`create_bank`** once with **`bank_id`="{user_id}"** before first **`retain`** / **`recall`** if the service requires an explicit bank.
+---
+"""
+
+_HINDSIGHT_BANK_APPENDIX_ZH = """
+---
+## 本会话 Hindsight 记忆库
+**当前用户 id**（即 **Hindsight `bank_id`**）：**`{user_id}`** — **一人一库**。
+
+`hindsight` MCP 已按该 id 绑定单库路径。**禁止**使用他人 id 或随意 `bank_id`。若工具参数里仍有 **`bank_id`**，必须填 **`{user_id}`**。
+
+仅在 **多库根**（`/mcp/`）部署时：若服务端要求，首次 **`retain`/`recall`** 前用 **`create_bank`** 且 **`bank_id`="{user_id}"** 创建一次。
+---
+"""
+
+
+def format_agent_instruction_with_hindsight_bank(base_instruction: str, user_id: str, language: str) -> str:
+    """Append per-user Hindsight bank rules (bank_id == user_id) to the system instruction."""
+    appendix = (
+        _HINDSIGHT_BANK_APPENDIX_ZH if language == "zh-CN" else _HINDSIGHT_BANK_APPENDIX_EN
+    ).format(user_id=user_id)
+    return f"{base_instruction.rstrip()}\n\n{appendix}"
 
 
 def get_agent_system_prompt(language: str = "en-US") -> str:
@@ -374,6 +455,7 @@ def build_agent_query_prompt(
         - web_search_enabled: Boolean indicating if web search is enabled
         - chat_id: Chat ID string (may be None)
         - language: Language code
+        - user_id: Authenticated user id; Hindsight bank_id must match this value
     """
     # Use custom template if provided, otherwise use default template
     if custom_template:
@@ -391,6 +473,7 @@ def build_agent_query_prompt(
         "web_search_enabled": agent_message.web_search_enabled or False,
         "chat_id": chat_id,
         "language": agent_message.language,
+        "user_id": user,
     }
 
     # Render template
