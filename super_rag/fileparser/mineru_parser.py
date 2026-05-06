@@ -37,7 +37,7 @@ class MinerUParser(BaseParser):
             output_dir = Path(temp_dir) / "mineru_output"
             output_dir.mkdir(parents=True, exist_ok=True)
             # 调用 parse_doc 进行解析
-            parse_doc([path], output_dir=output_dir, backend="vlm", **kwargs)
+            parse_doc([path], output_dir=output_dir, **kwargs)
             # 构造 markdown 文件路径
             md_path = output_dir / f"{path.stem}/auto/{path.stem}.md"
             if not md_path.exists():

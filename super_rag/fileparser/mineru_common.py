@@ -197,7 +197,7 @@ def parse_doc(
         path_list: list[Path],
         output_dir,
         lang="ch",
-        backend="pipeline",
+        backend="vlm-transformers",
         method="auto",
         server_url=None,
         start_page_id=0,
