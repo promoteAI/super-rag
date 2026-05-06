@@ -39,7 +39,7 @@ class MinerUParser(BaseParser):
             # 调用 parse_doc 进行解析
             parse_doc([path], output_dir=output_dir, **kwargs)
             # 构造 markdown 文件路径
-            md_path = output_dir / f"{path.stem}/auto/{path.stem}.md"
+            md_path = output_dir / f"{path.stem}/vlm/{path.stem}.md"
             if not md_path.exists():
                 raise FallbackError(f"未找到 mineru 生成的 markdown 文件: {md_path}")
             # 读取 markdown 内容
@@ -52,5 +52,5 @@ if __name__ == "__main__":
     import os
     os.environ['MINERU_MODEL_SOURCE'] = "modelscope"
     parser = MinerUParser()
-    print(parser.parse_file(Path("demo/Switch_Transformers copy.pdf")))
+    print(parser.parse_file(Path("demo/test.jpg")))
     

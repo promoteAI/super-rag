@@ -5,7 +5,14 @@ from pathlib import Path
 
 from loguru import logger
 
-from mineru.cli.common import convert_pdf_bytes_to_bytes, prepare_env, read_fn
+from mineru.cli.common import (
+    convert_pdf_bytes_to_bytes,
+    image_suffixes,
+    office_suffixes,
+    pdf_suffixes,
+    prepare_env,
+    read_fn,
+)
 from mineru.data.data_reader_writer import FileBasedDataWriter
 from mineru.utils.draw_bbox import draw_layout_bbox, draw_span_bbox
 from mineru.utils.enum_class import MakeMode
@@ -13,7 +20,15 @@ from mineru.backend.vlm.vlm_analyze import doc_analyze as vlm_doc_analyze
 from mineru.backend.pipeline.pipeline_analyze import doc_analyze_streaming as pipeline_doc_analyze_streaming
 from mineru.backend.pipeline.pipeline_middle_json_mkcontent import union_make as pipeline_union_make
 from mineru.backend.vlm.vlm_middle_json_mkcontent import union_make as vlm_union_make
-from mineru.utils.guess_suffix_or_lang import guess_suffix_by_path
+
+
+def _read_fn_with_path_hint(path: Path):
+    """当魔数/Magika 与扩展名不一致时（如 .jpg 实为 AVIF 被标成 mp4），按路径扩展名交给 read_fn。"""
+    path = Path(path)
+    ext = path.suffix.lower().lstrip(".")
+    if ext in image_suffixes or ext in pdf_suffixes or ext in office_suffixes:
+        return read_fn(path, file_suffix=ext)
+    return read_fn(path)
 
 
 def do_parse(
@@ -231,8 +246,9 @@ def parse_doc(
         pdf_bytes_list = []
         lang_list = []
         for path in path_list:
-            file_name = str(Path(path).stem)
-            pdf_bytes = read_fn(path)
+            path = Path(path)
+            file_name = str(path.stem)
+            pdf_bytes = _read_fn_with_path_hint(path)
             file_name_list.append(file_name)
             pdf_bytes_list.append(pdf_bytes)
             lang_list.append(lang)
