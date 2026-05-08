@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from super_rag.exceptions import CollectionNotFoundException
 from super_rag.service.marketplace_service import marketplace_service
 from super_rag.db.models import User
@@ -234,6 +234,20 @@ async def rebuild_document_indexes_view(
     """Rebuild specified indexes for a document"""
     return await document_service.rebuild_document_indexes(
         str(user.id), collection_id, document_id, rebuild_request.index_types
+    )
+
+
+@router.post("/collections/{collection_id}/documents/{document_id}/cancel_indexes", tags=["documents"])
+async def cancel_document_index_tasks_view(
+    request: Request,
+    collection_id: str,
+    document_id: str,
+    cancel_request: view_models.CancelIndexesRequest,
+    user: User = Depends(required_user),
+):
+    """Cancel in-flight index tasks for a document."""
+    return await document_service.cancel_document_index_tasks(
+        str(user.id), collection_id, document_id, cancel_request.index_types
     )
 
 

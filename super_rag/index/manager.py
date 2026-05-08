@@ -99,6 +99,49 @@ class DocumentIndexManager:
                 doc_index.gmt_updated = utc_now()
                 logger.debug(f"Marked index {document_id}:{index_type.value} for deletion")
 
+    async def cancel_document_index_tasks(
+        self, session: AsyncSession, document_id: str, index_types: Optional[List[DocumentIndexType]] = None
+    ) -> dict:
+        """
+        Cancel in-flight index tasks for a document without deleting the document.
+        """
+        conditions = [
+            DocumentIndex.document_id == document_id,
+            DocumentIndex.status.in_(
+                [
+                    DocumentIndexStatus.PENDING,
+                    DocumentIndexStatus.CREATING,
+                    DocumentIndexStatus.DELETING,
+                    DocumentIndexStatus.DELETION_IN_PROGRESS,
+                ]
+            ),
+        ]
+        if index_types is not None:
+            conditions.append(DocumentIndex.index_type.in_(index_types))
+
+        stmt = select(DocumentIndex).where(and_(*conditions))
+        result = await session.execute(stmt)
+        doc_indexes = result.scalars().all()
+
+        cancelled_task_count = 0
+        cancelled_index_types = []
+        for doc_index in doc_indexes:
+            if doc_index.ray_task_id and self.task_scheduler.cancel_task(doc_index.ray_task_id):
+                cancelled_task_count += 1
+
+            doc_index.status = DocumentIndexStatus.FAILED
+            doc_index.error_message = "Cancelled by user"
+            doc_index.ray_task_id = None
+            doc_index.gmt_updated = utc_now()
+            cancelled_index_types.append(str(doc_index.index_type))
+            session.add(doc_index)
+
+        return {
+            "cancelled_task_count": cancelled_task_count,
+            "cancelled_index_count": len(cancelled_index_types),
+            "cancelled_index_types": cancelled_index_types,
+        }
+
 
 # Global instance
 document_index_manager = DocumentIndexManager()

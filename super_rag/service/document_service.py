@@ -670,6 +670,55 @@ class DocumentService:
         _trigger_index_reconciliation()
         return result
 
+    async def cancel_document_index_tasks(
+        self, user_id: str, collection_id: str, document_id: str, index_types: list[str] | None = None
+    ) -> dict:
+        """
+        Cancel in-flight index tasks for a document without deleting the document.
+        """
+        from super_rag.db.models import DocumentIndexType
+
+        index_type_enums = None
+        if index_types is not None:
+            if len(set(index_types)) != len(index_types):
+                raise invalid_param("index_types", "duplicate index types are not allowed")
+
+            index_type_enums = []
+            for index_type in index_types:
+                if index_type == "VECTOR_AND_FULLTEXT":
+                    index_type_enums.append(DocumentIndexType.VECTOR_AND_FULLTEXT)
+                elif index_type == "GRAPH":
+                    index_type_enums.append(DocumentIndexType.GRAPH)
+                elif index_type == "SUMMARY":
+                    index_type_enums.append(DocumentIndexType.SUMMARY)
+                elif index_type == "VISION":
+                    index_type_enums.append(DocumentIndexType.VISION)
+                else:
+                    raise invalid_param("index_type", f"Invalid index type: {index_type}")
+
+        async def _cancel_document_index_tasks_atomically(session):
+            document = await self.db_ops.query_document(user_id, collection_id, document_id)
+            if not document:
+                raise DocumentNotFoundException(f"Document {document_id} not found")
+            if document.collection_id != collection_id:
+                raise ResourceNotFoundException(f"Document {document_id} not found in collection {collection_id}")
+            collection = await self.db_ops.query_collection(user_id, collection_id)
+            if not collection or collection.user != user_id:
+                raise ResourceNotFoundException(f"Collection {collection_id} not found or access denied")
+
+            result = await document_index_manager.cancel_document_index_tasks(
+                session=session,
+                document_id=document_id,
+                index_types=index_type_enums,
+            )
+            return {
+                "code": "200",
+                "message": "Index tasks cancelled",
+                **result,
+            }
+
+        return await self.db_ops.execute_with_transaction(_cancel_document_index_tasks_atomically)
+
     async def rebuild_failed_indexes(self, user_id: str, collection_id: str) -> dict:
         """
         Rebuild all failed indexes for all documents in a collection

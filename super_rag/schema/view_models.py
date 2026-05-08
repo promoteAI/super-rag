@@ -969,6 +969,12 @@ class RebuildIndexesRequest(BaseModel):
     )
 
 
+class CancelIndexesRequest(BaseModel):
+    index_types: Optional[list[Literal['VECTOR_AND_FULLTEXT', 'GRAPH', 'SUMMARY', 'VISION']]] = (
+        Field(None, description='Types of indexes to cancel. Defaults to all in-progress indexes.')
+    )
+
+
 class VisionChunk(BaseModel):
     id: Optional[str] = None
     asset_id: Optional[str] = None
