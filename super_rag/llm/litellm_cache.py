@@ -11,12 +11,61 @@ This module configures LiteLLM's built-in caching functionality with:
 """
 
 import logging
+import os
 from typing import Any, Dict
 
 import litellm
 from litellm.types.caching import LiteLLMCacheType
 
+# Async requests default to aiohttp in LiteLLM; aiohttp rejects malformed responses such as
+# duplicate "Server" headers (common behind stacked reverse proxies). Prefer httpx unless
+# ENABLE_LITELLM_AIOHTTP_TRANSPORT=1 is set (or set LiteLLM's DISABLE_AIOHTTP_TRANSPORT).
+if os.getenv("ENABLE_LITELLM_AIOHTTP_TRANSPORT", "").lower() in ("1", "true", "yes"):
+    litellm.disable_aiohttp_transport = False
+else:
+    litellm.disable_aiohttp_transport = True
+
 logger = logging.getLogger(__name__)
+
+
+def _register_litellm_custom_model_costs() -> None:
+    """
+    Self-hosted OpenAI-compatible models are not LiteLLM's built-in price map. Without an
+    entry, streaming still works but cost calculation logs long DEBUG stack traces
+    ("This model isn't mapped yet"). Register zero-dollar placeholders; extend via env.
+
+    Merge JSON from LITELLM_CUSTOM_MODEL_COST_JSON (see litellm.register_model shape).
+    """
+    from litellm import register_model
+
+    ph: Dict[str, Any] = {
+        "max_tokens": 128000,
+        "input_cost_per_token": 0.0,
+        "output_cost_per_token": 0.0,
+        "litellm_provider": "openai",
+        "mode": "chat",
+    }
+    merged: Dict[str, Dict[str, Any]] = {
+        "qwen2.5-omni-7b": dict(ph),
+        "openai/qwen2.5-omni-7b": dict(ph),
+    }
+    raw = os.getenv("LITELLM_CUSTOM_MODEL_COST_JSON", "").strip()
+    if raw:
+        import json
+
+        try:
+            extra = json.loads(raw)
+            if isinstance(extra, dict):
+                merged.update(extra)
+        except Exception as e:
+            logger.warning("LITELLM_CUSTOM_MODEL_COST_JSON invalid: %s", e)
+    try:
+        register_model(merged)
+    except Exception as e:
+        logger.warning("litellm.register_model failed: %s", e)
+
+
+_register_litellm_custom_model_costs()
 
 # Local in-memory statistics
 # Note: These are simple integer operations that may not be thread-safe

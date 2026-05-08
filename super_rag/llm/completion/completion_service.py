@@ -4,6 +4,9 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import litellm
 
+# Import for module-level LiteLLM defaults (e.g. httpx vs aiohttp transport).
+import super_rag.llm.litellm_cache as _litellm_defaults  # noqa: F401
+
 from super_rag.llm.llm_error_types import (
     CompletionError,
     InvalidPromptError,
@@ -205,15 +208,21 @@ class CompletionService:
 if __name__ == "__main__":
     import asyncio
     litellm._turn_on_debug()
+    # llm = CompletionService(
+    #     provider="openai",
+    #     model="THUDM/glm-4-9b-chat",
+    #     base_url="https://api.siliconflow.cn/v1",
+    #     api_key="sk-xmodfeodmqedhuxxafvuazjfrqqlnplotxnfnkvmsvtecngw"
+    # )
     llm = CompletionService(
         provider="openai",
-        model="THUDM/glm-4-9b-chat",
-        base_url="https://api.siliconflow.cn/v1",
-        api_key="sk-xmodfeodmqedhuxxafvuazjfrqqlnplotxnfnkvmsvtecngw"
+        model="qwen2.5-omni-7b",
+        base_url="http://10.102.32.10:9095/v1",
+        api_key="gpustack_b21a896e3db9b50d_b788fc8d60898b28c96dcaaec89960c0"
     )
 
     async def main():
-        async for chunk in llm.agenerate_stream(history=[], prompt="你好"):
+        async for chunk in llm.agenerate_stream(history=[], prompt="鞠婧祎是谁"):
             print(chunk, end="")
 
     asyncio.run(main())
