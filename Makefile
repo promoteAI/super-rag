@@ -24,10 +24,10 @@ help:
 
 makemigration:
 	@echo "Checking database migration status..."
-	@uv run alembic -c super_rag/alembic.ini current || true
+	@alembic -c super_rag/alembic.ini current || true
 	@echo "Attempting to generate migration with autogenerate..."
 	@MSG=$${MSG:-"auto migration"}; \
-	if uv run alembic -c super_rag/alembic.ini revision --autogenerate -m "$$MSG" 2>&1; then \
+	if alembic -c super_rag/alembic.ini revision --autogenerate -m "$$MSG" 2>&1; then \
 		echo "Migration created successfully."; \
 	else \
 		echo ""; \
@@ -36,20 +36,20 @@ makemigration:
 		echo "  2. There are pending migrations to apply."; \
 		echo ""; \
 		echo "Try running 'make migrate' first, or create an empty migration:"; \
-		echo "  uv run alembic -c super_rag/alembic.ini revision -m \"your message\""; \
+		echo "  alembic -c super_rag/alembic.ini revision -m \"your message\""; \
 		exit 1; \
 	fi
 
 makemigration-empty:
 	@echo "Creating empty migration..."
 	@MSG=$${MSG:-"empty migration"}; \
-	uv run alembic -c super_rag/alembic.ini revision -m "$$MSG"
+	alembic -c super_rag/alembic.ini revision -m "$$MSG"
 
 migrate:
 	@echo "Checking current database version..."
-	@uv run alembic -c super_rag/alembic.ini current || true
+	@alembic -c super_rag/alembic.ini current || true
 	@echo "Upgrading to head..."
-	@uv run alembic -c super_rag/alembic.ini upgrade head
+	@alembic -c super_rag/alembic.ini upgrade head
 
 fix-migration-version:
 	@echo "Note: If you see 'overlaps with other requested revisions' error,"
@@ -57,7 +57,7 @@ fix-migration-version:
 	@echo "The issue has been fixed. Try 'make migrate' again."
 
 downgrade:
-	@uv run alembic -c super_rag/alembic.ini downgrade base
+	@alembic -c super_rag/alembic.ini downgrade base
 
 
 # Local development services
@@ -72,4 +72,4 @@ run-ui-dev:
 	cd super-rag-frontend/frontend && npm run dev
 
 run-ray:
-	uv run config/ray_schedule.py
+	python config/ray_schedule.py
