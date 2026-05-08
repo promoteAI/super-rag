@@ -7,6 +7,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from super_rag.db.models import DocumentIndex, DocumentIndexStatus, DocumentIndexType, utc_now
+from super_rag.tasks.scheduler import TaskScheduler, create_task_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,9 @@ all_index_types = [
 
 class DocumentIndexManager:
     """Simple manager for document index specs (frontend chain)"""
+
+    def __init__(self, task_scheduler: Optional[TaskScheduler] = None):
+        self.task_scheduler = task_scheduler or create_task_scheduler("ray")
 
     async def create_or_update_document_indexes(
         self, session: AsyncSession, document_id: str, index_types: Optional[List[DocumentIndexType]] = None
@@ -82,8 +86,16 @@ class DocumentIndexManager:
             doc_index = result.scalar_one_or_none()
 
             if doc_index:
+                if doc_index.ray_task_id:
+                    cancelled = self.task_scheduler.cancel_task(doc_index.ray_task_id)
+                    if cancelled:
+                        logger.info(f"Cancelled running Ray task for index {document_id}:{index_type.value}")
+                    else:
+                        logger.warning(f"Failed to cancel running Ray task for index {document_id}:{index_type.value}")
+
                 # Mark for deletion
                 doc_index.status = DocumentIndexStatus.DELETING
+                doc_index.ray_task_id = None
                 doc_index.gmt_updated = utc_now()
                 logger.debug(f"Marked index {document_id}:{index_type.value} for deletion")
 

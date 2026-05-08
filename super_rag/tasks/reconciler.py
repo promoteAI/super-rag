@@ -100,7 +100,7 @@ class DocumentIndexReconciler:
 
             if claimed_indexes:
                 # Schedule tasks for successfully claimed indexes
-                self._reconcile_document_operations(document_id, claimed_indexes)
+                self._reconcile_document_operations(session, document_id, claimed_indexes)
                 session.commit()
             else:
                 # Some indexes couldn't be claimed (likely already being processed), skip this document
@@ -182,7 +182,19 @@ class DocumentIndexReconciler:
             logger.error(f"Failed to claim indexes for document {document_id}: {e}")
             return []
 
-    def _reconcile_document_operations(self, document_id: str, claimed_indexes: List[dict]):
+    def _store_ray_task_id(self, session: Session, claimed_indexes: List[dict], ray_task_id: str):
+        index_ids = [claimed_index["index_id"] for claimed_index in claimed_indexes]
+        if not index_ids:
+            return
+
+        update_stmt = (
+            update(DocumentIndex)
+            .where(DocumentIndex.id.in_(index_ids))
+            .values(ray_task_id=ray_task_id, gmt_updated=utc_now())
+        )
+        session.execute(update_stmt)
+
+    def _reconcile_document_operations(self, session: Session, document_id: str, claimed_indexes: List[dict]):
         """
         Reconcile operations for a single document, batching same operation types together
         """
@@ -208,9 +220,10 @@ class DocumentIndexReconciler:
                 if target_version is not None:
                     context[f"{index_type}_version"] = target_version
 
-            self.task_scheduler.schedule_create_index(
+            ray_task_id = self.task_scheduler.schedule_create_index(
                 document_id=document_id, index_types=create_types, context=context
             )
+            self._store_ray_task_id(session, create_indexes, ray_task_id)
             logger.info(f"Scheduled create task for document {document_id}, types: {create_types}")
 
         # Process update operations as a batch
@@ -227,9 +240,10 @@ class DocumentIndexReconciler:
                 if target_version is not None:
                     context[f"{index_type}_version"] = target_version
 
-            self.task_scheduler.schedule_update_index(
+            ray_task_id = self.task_scheduler.schedule_update_index(
                 document_id=document_id, index_types=update_types, context=context
             )
+            self._store_ray_task_id(session, update_indexes, ray_task_id)
             logger.info(f"Scheduled update task for document {document_id}, types: {update_types}")
 
         # Process delete operations as a batch
@@ -237,7 +251,8 @@ class DocumentIndexReconciler:
             delete_indexes = operations_by_type[IndexAction.DELETE]
             delete_types = [claimed_index["index_type"] for claimed_index in delete_indexes]
 
-            self.task_scheduler.schedule_delete_index(document_id=document_id, index_types=delete_types)
+            ray_task_id = self.task_scheduler.schedule_delete_index(document_id=document_id, index_types=delete_types)
+            self._store_ray_task_id(session, delete_indexes, ray_task_id)
             logger.info(f"Scheduled delete task for document {document_id}, types: {delete_types}")
 
 
@@ -278,6 +293,7 @@ class IndexTaskCallbacks:
                     observed_version=target_version,  # Mark this version as processed
                     index_data=index_data,
                     error_message=None,
+                    ray_task_id=None,
                     gmt_updated=utc_now(),
                     gmt_last_reconciled=utc_now(),
                 )
@@ -314,6 +330,7 @@ class IndexTaskCallbacks:
                 .values(
                     status=DocumentIndexStatus.FAILED,
                     error_message=error_message,
+                    ray_task_id=None,
                     gmt_updated=utc_now(),
                     gmt_last_reconciled=utc_now(),
                 )
@@ -392,6 +409,7 @@ class IndexTaskCallbacks:
                     observed_version=target_version,  # Mark this version as processed
                     index_data=index_data,
                     error_message=None,
+                    ray_task_id=None,
                     gmt_updated=utc_now(),
                     gmt_last_reconciled=utc_now(),
                 )
@@ -428,6 +446,7 @@ class IndexTaskCallbacks:
                 .values(
                     status=DocumentIndexStatus.FAILED,
                     error_message=error_message,
+                    ray_task_id=None,
                     gmt_updated=utc_now(),
                     gmt_last_reconciled=utc_now(),
                 )

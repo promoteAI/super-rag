@@ -189,6 +189,7 @@ class DocumentIndex(Base):
     # Index data and task tracking
     index_data = Column(Text, nullable=True)  # JSON string for index-specific data
     error_message = Column(Text, nullable=True)
+    ray_task_id = Column(String(128), nullable=True)
 
     # Timestamps
     gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
