@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import time
+from datetime import timedelta
 from urllib.parse import quote
 from typing import Any, Dict, List, Optional
 
@@ -253,6 +254,7 @@ async def run_agno_agent(
             "Authorization": f"Bearer {super_rag_api_key}",
             "Content-Type": "application/json",
         },
+        timeout=timedelta(seconds=request_timeout_seconds),
     )
 
     hindsight_url = (
@@ -263,6 +265,7 @@ async def run_agno_agent(
     hindsight_params = StreamableHTTPClientParams(
         url=hindsight_url,
         headers={"Content-Type": "application/json"},
+        timeout=timedelta(seconds=request_timeout_seconds),
     )
 
     full_text_parts: List[str] = []
@@ -332,6 +335,7 @@ async def run_agno_agent(
             base_url=base_url,
             temperature=temperature,
             max_tokens=max_tokens,
+            timeout=request_timeout_seconds,
         )
 
         agno_agent = AgnoAgent(
