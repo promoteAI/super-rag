@@ -270,6 +270,7 @@ async def run_agno_agent(
 
     full_text_parts: List[str] = []
     captured_tools: Dict[str, Dict[str, Any]] = {}
+    emitted_tool_results: set[str] = set()
     references: List[Dict[str, Any]] = []
 
     async def _emit_run_content(delta: str) -> None:
@@ -300,6 +301,13 @@ async def run_agno_agent(
             tool_name = getattr(tool, "tool_name", None) or "unknown"
             tool_args = getattr(tool, "tool_args", None) or {}
             result = getattr(tool, "result", None)
+            captured_tools[tool_call_id] = {
+                "tool_name": tool_name,
+                "tool_args": tool_args,
+                "result": result,
+            }
+            if tool_call_id in emitted_tool_results:
+                return
             args_str = None
             try:
                 args_str = json.dumps(tool_args, ensure_ascii=False)
@@ -316,13 +324,42 @@ async def run_agno_agent(
                     arguments=args_str,
                 )
             )
+            emitted_tool_results.add(tool_call_id)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Failed to send tool_call_result: %s", e)
+
+    async def _emit_tool_error(tool: Any, error: Any) -> None:
+        try:
+            tool_call_id = getattr(tool, "tool_call_id", None) or "unknown"
+            tool_name = getattr(tool, "tool_name", None) or "unknown"
+            tool_args = getattr(tool, "tool_args", None) or {}
+            error_text = str(error) if error is not None else "Tool call failed"
+            error_result = {"error": error_text}
             captured_tools[tool_call_id] = {
                 "tool_name": tool_name,
                 "tool_args": tool_args,
-                "result": result,
+                "result": error_result,
             }
+            if tool_call_id in emitted_tool_results:
+                return
+            args_str = None
+            try:
+                args_str = json.dumps(tool_args, ensure_ascii=False)
+            except Exception:
+                args_str = None
+            await message_queue.put(
+                format_tool_call_result(
+                    message_id,
+                    error_text,
+                    tool_name,
+                    error_result,
+                    tool_call_id=tool_call_id,
+                    arguments=args_str,
+                )
+            )
+            emitted_tool_results.add(tool_call_id)
         except Exception as e:  # noqa: BLE001
-            logger.warning("Failed to send tool_call_result: %s", e)
+            logger.warning("Failed to send tool_call_error result: %s", e)
 
     pending_error_msg: Optional[str] = None
 
@@ -379,20 +416,17 @@ async def run_agno_agent(
                             getattr(event.tool, "tool_name", "unknown"),
                             event.error,
                         )
+                        await _emit_tool_error(event.tool, event.error)
                     continue
                 if isinstance(event, RunCompletedEvent):
                     if not full_text_parts and isinstance(event.content, str) and event.content:
                         full_text_parts.append(event.content)
                     if event.tools:
                         for tool in event.tools:
-                            tool_call_id = getattr(tool, "tool_call_id", None) or ""
-                            if tool_call_id in captured_tools:
+                            tool_call_id = getattr(tool, "tool_call_id", None) or "unknown"
+                            if tool_call_id in emitted_tool_results:
                                 continue
-                            captured_tools[tool_call_id] = {
-                                "tool_name": getattr(tool, "tool_name", None),
-                                "tool_args": getattr(tool, "tool_args", None) or {},
-                                "result": getattr(tool, "result", None),
-                            }
+                            await _emit_tool_completed(tool)
                     continue
                 if isinstance(event, RunErrorEvent):
                     pending_error_msg = _enrich_model_error(
