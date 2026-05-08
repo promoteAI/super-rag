@@ -339,6 +339,20 @@ async def web_search(
                 json=search_data,
                 headers={"Authorization": f"Bearer {api_key}"}
             )
+            # Some callers may forward a non-super_rag bearer token by mistake.
+            # If so, retry once with SUPER_RAG_API_KEY (if configured) for easier recovery.
+            if response.status_code == 401:
+                fallback_key = os.getenv("SUPER_RAG_API_KEY")
+                if fallback_key and fallback_key != api_key:
+                    logger.warning(
+                        "web_search got 401 with request bearer token, retrying with SUPER_RAG_API_KEY fallback"
+                    )
+                    response = await client.post(
+                        f"{API_BASE_URL}/api/v1/web/search",
+                        json=search_data,
+                        headers={"Authorization": f"Bearer {fallback_key}"}
+                    )
+
             if response.status_code == 200:
                 try:
                     # Parse response using view model for type safety
@@ -348,6 +362,11 @@ async def web_search(
                     logger.error(f"Failed to parse web search response: {e}")
                     return {"error": "Failed to parse web search response", "details": str(e)}
             else:
+                if response.status_code == 401:
+                    logger.error(
+                        "web_search unauthorized (401). Ensure Bearer token is super_rag ApiKey "
+                        "(not JWT/provider key), or set SUPER_RAG_API_KEY env var."
+                    )
                 return {"error": f"Web search failed: {response.status_code}", "details": response.text}
     except ValueError as e:
         return {"error": str(e)}

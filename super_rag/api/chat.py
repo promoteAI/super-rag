@@ -17,7 +17,6 @@ from super_rag.api.auth import required_user
 from super_rag.ag_ui import stream_ag_ui_events, get_ag_ui_sse_media_type, AGUIRunRequest
 from super_rag.agent import AgentMessageQueue
 from super_rag.service.agent_chat_service import AgentChatService
-from super_rag.agent.agent_event_listener import agent_event_listener
 
 logger = logging.getLogger(__name__)
 
@@ -194,8 +193,7 @@ async def ag_ui_run_endpoint(
     trace_id = await agent_service.register_message_queue(agent_message.language or "en-US", chat_id, message_id, message_queue)
 
     async def on_done():
-        if trace_id:
-            await agent_event_listener.unregister_listener(str(trace_id))
+        pass
 
     process_task = asyncio.create_task(
         agent_service.process_agent_message(

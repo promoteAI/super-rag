@@ -7,13 +7,11 @@ Simplified OpenTelemetry integration for super_rag with support for:
 - Basic tracing with console output
 - Jaeger integration (future)
 - FastAPI and SQLAlchemy instrumentation
-- MCP Agent trace injection
 """
 
 from typing import Optional
 
 from .instrumentation import init_fastapi_instrumentation, init_sqlalchemy_instrumentation
-from .mcp_integration import init_mcp_tracing
 from .telemetry import init_telemetry, is_telemetry_available
 from .utils import add_trace_attributes, get_current_trace_info, get_tracer, trace_async_function, trace_function
 
@@ -22,7 +20,6 @@ __all__ = [
     "init_telemetry",
     "init_fastapi_instrumentation",
     "init_sqlalchemy_instrumentation",
-    "init_mcp_tracing",
     "get_tracer",
     "get_current_trace_info",
     "trace_function",
@@ -39,7 +36,6 @@ def init_tracing(
     enable_console: bool = True,
     enable_fastapi: bool = True,
     enable_sqlalchemy: bool = True,
-    enable_mcp: bool = True,
 ) -> bool:
     """
     Initialize complete tracing for super_rag.
@@ -53,8 +49,6 @@ def init_tracing(
         enable_console: Whether to enable console output
         enable_fastapi: Whether to instrument FastAPI
         enable_sqlalchemy: Whether to instrument SQLAlchemy
-        enable_mcp: Whether to enable MCP agent trace injection
-
     Returns:
         True if tracing was successfully initialized, False otherwise
     """
@@ -73,8 +67,5 @@ def init_tracing(
 
     if enable_sqlalchemy:
         init_sqlalchemy_instrumentation()
-
-    if enable_mcp:
-        init_mcp_tracing()
 
     return True

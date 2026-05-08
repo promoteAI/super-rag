@@ -3,8 +3,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from super_rag.agent.agent_event_listener import agent_event_listener
-from super_rag.agent.agent_session_manager_lifecycle import agent_session_manager_lifespan
 from super_rag.api.agent import router as agent_router
 from super_rag.api.auth import router as auth_router
 from super_rag.api.chat import router as chat_router
@@ -24,17 +22,13 @@ mcp_app = mcp_server.http_app(path="/", stateless_http=True)
 # Combined lifespan function for both MCP and Agent session management
 @asynccontextmanager
 async def combined_lifespan(app: FastAPI):
-    """Combined lifespan manager for MCP and Agent sessions."""
+    """Combined lifespan manager for MCP and app resources."""
     # Load Nodeflow external node packs for extended workflow functionality
     load_nodeflow_packs()
-    # Initialize the global proxy listener at startup
-    await agent_event_listener.initialize()
 
     # Start MCP sub-app lifespan (required for StreamableHTTP session manager when mounted)
     async with mcp_app.router.lifespan_context(mcp_app):
-        # Then start Agent session manager
-        async with agent_session_manager_lifespan(app):
-            yield
+        yield
 
 # Explicit name so "lifespan=lifespan" or "lifespan=combined_lifespan" both work
 lifespan = combined_lifespan

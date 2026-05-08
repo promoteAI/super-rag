@@ -40,7 +40,6 @@ dependencies = [
     "ms-enclave[docker]>=0.0.4",
     "anthropic>=0.75.0",
     "langchain<1.0.0,>=0.3.23",
-    "mcp-agent>=0.2.6",
     "opentelemetry-api>=1.20.0",
     "opentelemetry-sdk>=1.20.0",
     "opentelemetry-exporter-otlp>=1.20.0",
@@ -59,6 +58,7 @@ dependencies = [
     "hindsight-all>=0.4.17",
     "transformers>=4.57.3,<5.0.0",
     "neo4j>=6.2.0",
+    "agno>=2.6.5",
 ]
 
 [tool.setuptools]

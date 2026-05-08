@@ -3,8 +3,8 @@
 """Agent memory management for conversation sessions - Pure function implementation."""
 
 import logging
-
-from mcp_agent.workflows.llm.augmented_llm import SimpleMemory
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
 
 from super_rag.history import messages_to_openai_format
 from super_rag.utils.history import MySQLChatMessageHistory
@@ -12,6 +12,19 @@ from super_rag.utils.history import MySQLChatMessageHistory
 from .exceptions import handle_agent_error
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class SimpleMemory:
+    """Lightweight memory container replacing mcp-agent SimpleMemory."""
+
+    history: List[Dict[str, Any]] = field(default_factory=list)
+
+    def append(self, message: Dict[str, Any]) -> None:
+        self.history.append(message)
+
+    def get(self) -> List[Dict[str, Any]]:
+        return self.history
 
 
 class AgentMemoryManager:

@@ -2,13 +2,9 @@
 
 """Agent module for MCP-based intelligent conversation."""
 
-# Use simple session management instead of complex singleton patterns
-from .agent_event_processor import AgentEventProcessor
 from .agent_history_manager import AgentHistoryManager
 from .agent_memory_manager import AgentMemoryManager
 from .agent_message_queue import AgentMessageQueue
-from .agent_session_manager import get_or_create_session, get_stats
-from .agent_session_manager_lifecycle import agent_session_manager_lifespan
 from .error_message_formatter import (
     format_agent_execution_error,
     format_agent_initialization_error,
@@ -46,7 +42,6 @@ from .exceptions import (
     tool_execution_failed,
     with_retry,
 )
-from .mcp_app_factory import MCPAppFactory
 from .response_types import (
     AgentChatResponse,
     AgentErrorResponse,
@@ -70,20 +65,11 @@ from .stream_formatters import (
 from .tool_reference_extractor import extract_tool_call_references
 
 __all__ = [
-    # Event listener
-    "AgentEventProcessor",
     # Message queue
     "AgentMessageQueue",
     # Memory and history managers
     "AgentMemoryManager",
     "AgentHistoryManager",
-    # Simple session management
-    "get_or_create_session",
-    "get_stats",
-    # Agent session manager lifecycle management
-    "agent_session_manager_lifespan",
-    # MCP App Factory
-    "MCPAppFactory",
     # Stream formatters
     "format_i18n_error",
     "format_stream_content",

@@ -7,31 +7,21 @@ import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import WebSocket
-from starlette.websockets import WebSocketDisconnect
-from mcp_agent.workflows.llm.augmented_llm import RequestParams
 from sqlalchemy.ext.asyncio import AsyncSession
-from super_rag.config import settings
+from starlette.websockets import WebSocketDisconnect
 
 from super_rag.agent import (
     AgentHistoryManager,
     AgentMemoryManager,
     AgentMessageQueue,
-    agent_session_manager,
-    extract_tool_call_references,
     format_agent_setup_error,
     format_invalid_json_error,
     format_invalid_model_spec_error,
     format_mcp_connection_error,
     format_processing_error,
     format_query_required_error,
-    format_stream_content,
-    format_stream_end,
-    format_stream_start, 
-    format_tool_call_result,
 )
-from super_rag.agent.agent_config import AgentConfig
-from super_rag.agent.agent_event_listener import agent_event_listener
-from super_rag.agent.tool_call_context import clear_tool_call_context, set_tool_call_context
+from super_rag.agent.agno_runner import run_agno_agent
 from super_rag.agent.exceptions import (
     AgentConfigurationError,
     JSONParsingError,
@@ -41,8 +31,12 @@ from super_rag.agent.exceptions import (
     safe_json_parse,
 )
 from super_rag.agent.response_types import AgentErrorResponse, AgentToolCallResultResponse
-from super_rag.history.message import StoredChatMessage, create_assistant_message
 from super_rag.db.ops import AsyncDatabaseOps, async_db_ops
+from super_rag.history.message import (
+    StoredChatMessage,
+    create_assistant_message,
+    messages_to_openai_format,
+)
 from super_rag.schema import view_models
 from super_rag.service.prompt_template_service import (
     build_agent_query_prompt,
@@ -76,12 +70,13 @@ def format_websocket_error(error: Exception, data: str) -> AgentErrorResponse:
 
 class AgentChatService:
     """
-    Chat service specifically for agent-type bots that uses MCPApp for intelligent conversation.
+    Chat service for agent-type bots, powered entirely by Agno.
 
-    This service uses AgentSessionManager for efficient session lifecycle management,
-    including collection selection, model choice, and web search capabilities.
-
-    Refactored to use message queue for clean separation of concerns.
+    The previous implementation drove a custom mcp-agent + OpenAIAugmentedLLM
+    loop. It has been fully replaced with `agno.agent.Agent` + `agno.tools.mcp`
+    (super_rag and hindsight). The WebSocket protocol, history persistence
+    and message queue layer are intentionally preserved so callers do not
+    need to change.
     """
 
     def __init__(self, session: AsyncSession = None):
@@ -90,7 +85,6 @@ class AgentChatService:
         else:
             self.db_ops = AsyncDatabaseOps(session)
 
-        # Initialize memory and history managers
         self.memory_manager = AgentMemoryManager()
         self.history_manager = AgentHistoryManager()
 
@@ -116,22 +110,10 @@ class AgentChatService:
     def _parse_websocket_message(
         self, raw_data: str
     ) -> Tuple[Optional[view_models.AgentMessage], Optional[AgentErrorResponse]]:
-        """
-        Parse WebSocket message using Go-style error handling.
-
-        Args:
-            raw_data: Raw JSON string from WebSocket
-
-        Returns:
-            Tuple of (agent_message, error_response):
-            - If successful: (agent_message, None)
-            - If failed: (None, error_response_dict)
-        """
+        """Parse WebSocket message using Go-style error handling."""
         try:
-            # Step 1: Safe JSON parsing using agent module utilities
             message_data = safe_json_parse(raw_data, "websocket_message")
 
-            # Step 2: Validate required query field early
             query = (
                 message_data.get("query")
                 or message_data.get("data")
@@ -145,11 +127,9 @@ class AgentChatService:
                 error_response = format_websocket_error(error, raw_data)
                 return None, error_response
 
-            # Normalize query field for downstream validation
             if not message_data.get("query"):
                 message_data["query"] = query
 
-            # Step 3: Parse and validate AgentMessage using Pydantic
             agent_message = view_models.AgentMessage(**message_data)
             logger.info(f"Agent message: {agent_message}")
             return agent_message, None
@@ -158,7 +138,6 @@ class AgentChatService:
             error_response = format_websocket_error(e, raw_data)
             return None, error_response
         except Exception as e:
-            # Handle unexpected errors
             from super_rag.agent.exceptions import agent_config_invalid
 
             config_error = agent_config_invalid("agent_message", f"Unexpected error: {str(e)}")
@@ -168,14 +147,12 @@ class AgentChatService:
     @handle_agent_error("websocket_agent_chat", reraise=False)
     async def handle_websocket_agent_chat(self, websocket: WebSocket, user: str, agent_id: str, chat_id: str):
         """Handle WebSocket connections for agent-type bot chats with message queue architecture"""
-        # Get bot configuration once at the beginning for performance
         agent = await self.db_ops.query_agent(user, agent_id)
         if not agent:
             error_response = format_processing_error("Agent not found", "en-US")
             await websocket.send_text(json.dumps(error_response))
             return
 
-        # Parse bot configuration and get default collections once
         bot_config = None
         default_collections = []
         custom_system_prompt = None
@@ -192,29 +169,23 @@ class AgentChatService:
                 bot_config = None
 
         if bot_config and bot_config.agent:
-            # Get custom prompts from bot config
             custom_system_prompt = bot_config.agent.system_prompt_template
             custom_query_prompt = bot_config.agent.query_prompt_template
 
-            # Get default collections once for performance
             if bot_config.agent.collections:
                 collection_ids = [collection.id for collection in bot_config.agent.collections]
                 db_collections = await self.db_ops.query_collections_by_ids(user, collection_ids)
-                # Convert SQLAlchemy models to Pydantic models
                 default_collections = await self._convert_db_collections_to_pydantic(db_collections)
 
         try:
             while True:
-                # Receive message from WebSocket
                 data = await websocket.receive_text()
                 logger.info(f"Received message from WebSocket: {data}")
-                # Parse WebSocket message using Go-style error handling
                 agent_message, error_response = self._parse_websocket_message(data)
                 if error_response:
                     await websocket.send_text(json.dumps(error_response))
                     continue
                 logger.info(f"Parsed agent message: {agent_message}")
-                # Process each message in a new trace context
                 await self._handle_single_message(
                     websocket,
                     agent_message,
@@ -230,7 +201,6 @@ class AgentChatService:
             logger.info(f"WebSocket disconnected for agent chat {chat_id}: {e.code}")
             return
         except RuntimeError as e:
-            # Handle closed/abnormal socket states without surfacing as agent errors
             logger.info(f"WebSocket runtime closed for agent chat {chat_id}: {e}")
             return
 
@@ -252,16 +222,19 @@ class AgentChatService:
         try:
             message_id = str(uuid.uuid4())
             message_queue = AgentMessageQueue()
-            trace_id = await self.register_message_queue(agent_message.language, chat_id, message_id, message_queue)
+            trace_id = await self.register_message_queue(
+                agent_message.language, chat_id, message_id, message_queue
+            )
 
-            # Get document metadata and associate documents with message if files are provided
             from super_rag.service.chat_document_service import chat_document_service
 
             files = await chat_document_service.associate_documents_with_message(
-                chat_id=chat_id, message_id=message_id, files=[file.id for file in agent_message.files], user=user
+                chat_id=chat_id,
+                message_id=message_id,
+                files=[file.id for file in agent_message.files],
+                user=user,
             )
 
-            # Message Producer: Start background task to process agent generation message
             process_task = asyncio.create_task(
                 self.process_agent_message(
                     agent_message,
@@ -276,13 +249,13 @@ class AgentChatService:
                     custom_query_prompt=custom_query_prompt,
                 )
             )
-            # Message Consumer
             consumer_task = asyncio.create_task(
                 self._consume_messages_from_queue(chat_id, message_id, trace_id, message_queue, websocket)
             )
-            process_result, consumer_result = await asyncio.gather(process_task, consumer_task, return_exceptions=True)
+            process_result, consumer_result = await asyncio.gather(
+                process_task, consumer_task, return_exceptions=True
+            )
 
-            # Handle process_task exceptions with unified error formatting
             if isinstance(process_result, Exception):
                 logger.error(f"Process task failed: {process_result}")
                 error_response = self._format_exception_to_error_response(
@@ -291,15 +264,12 @@ class AgentChatService:
                 await websocket.send_text(json.dumps(error_response))
                 return
 
-            # Handle consumer_task exceptions
             if isinstance(consumer_result, Exception):
                 logger.error(f"Consumer task failed: {consumer_result}")
                 error_response = format_processing_error(str(consumer_result), agent_message.language or "en-US")
                 await websocket.send_text(json.dumps(error_response))
                 return
 
-            # Handle history saving at WebSocket layer (better separation of concerns)
-            # process_result now contains {query, content, references} on success
             query = process_result.get("query", "")
             ai_response = process_result.get("content", "")
             references = process_result.get("references", "")
@@ -309,55 +279,30 @@ class AgentChatService:
             )
 
         except Exception as e:
-            # This catches any other unexpected errors not handled above
             logger.error(f"Unexpected error processing agent websocket message: {e}")
             error_response = format_processing_error(str(e), agent_message.language or "en-US")
             await websocket.send_text(json.dumps(error_response))
         finally:
-            if trace_id:
-                await agent_event_listener.unregister_listener(str(trace_id))
+            pass
 
     async def register_message_queue(self, language, chat_id, message_id, message_queue):
-        # Get the trace_id from the current span
-        from super_rag.trace.mcp_integration import get_current_trace_info
+        from super_rag.trace import get_current_trace_info
 
         trace_id, _ = get_current_trace_info()
-        if not trace_id:
-            logger.error("Could not get trace_id from current span, event dispatching will fail.")
-        else:
-            # Register a listener for this request with the global proxy.
-            await agent_event_listener.register_listener(
-                trace_id=str(trace_id),
-                chat_id=chat_id,
-                message_id=message_id,
-                queue=message_queue,
-                language=language,
-            )
         return trace_id
 
     async def _stream_message_content(
         self, message: Dict[str, Any], websocket: WebSocket, chunk_size: int = 5, delay: float = 0.01
     ) -> None:
-        """
-        Stream message content in small chunks to simulate typing effect.
-
-        Args:
-            message: The message dict with type="message"
-            websocket: WebSocket connection to send chunks
-            chunk_size: Number of characters per chunk
-            delay: Delay in seconds between chunks
-        """
+        """Stream message content in small chunks to simulate typing effect."""
         content = message.get("data", "")
         if not content:
-            # If no content, send the original message
             await websocket.send_text(json.dumps(message))
             return
 
-        # Split content into chunks
-        chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
+        chunks = [content[i: i + chunk_size] for i in range(0, len(content), chunk_size)]
 
         for i, chunk in enumerate(chunks):
-            # Create a chunk message with same structure but partial content
             chunk_message = {
                 "type": "message",
                 "id": message.get("id"),
@@ -368,7 +313,6 @@ class AgentChatService:
             await websocket.send_text(json.dumps(chunk_message))
             logger.debug(f"Sent message chunk {i + 1}/{len(chunks)}: {len(chunk)} chars")
 
-            # Add delay between chunks (except for the last one)
             if i < len(chunks) - 1:
                 await asyncio.sleep(delay)
 
@@ -377,33 +321,24 @@ class AgentChatService:
     ) -> List[AgentToolCallResultResponse]:
         """
         Consume messages from queue, send to WebSocket, and collect AgentToolCallResultResponse messages.
-
-        This method runs as a separate task to avoid race conditions.
-        Returns a list of all AgentToolCallResultResponse messages.
         """
         try:
-            # Properly initialize list to collect AgentToolCallResultResponse messages
             tool_call_results: List[Dict] = []
 
             while True:
-                # Get message from queue (blocks until message is available)
                 message = await message_queue.get()
 
-                # None message signals end of stream
                 if message is None:
                     logger.debug("Received end-of-stream signal from message queue")
                     break
 
-                # Collect AgentToolCallResultResponse messages
                 if isinstance(message, dict) and message.get("type") == "tool_call_result":
                     tool_call_results.append(message)
 
-                # Special handling for type="message" - stream it in chunks
                 if isinstance(message, dict) and message.get("type") == "message":
                     await self._stream_message_content(message, websocket)
                     logger.debug(f"Streamed message content: {message.get('type', 'unknown')}")
                 else:
-                    # Send other message types normally (start, stop, tool_call_result, etc.)
                     await websocket.send_text(json.dumps(message))
                     logger.debug(f"Sent message to WebSocket: {message.get('type', 'unknown')}")
 
@@ -413,70 +348,188 @@ class AgentChatService:
             logger.error(f"Error in message consumer: {e}")
             raise
 
-    async def _get_agent_session(
-        self, agent_message: view_models.AgentMessage, user: str, chat_id: str, custom_system_prompt: str = None
-    ):
-        """Get or create chat session using AgentConfig."""
-        # Query provider details and API key from database
-        provider_info = await self.db_ops.query_llm_provider_by_name(agent_message.completion.model_service_provider)
-        if not provider_info:
-            error_msg = f"Provider '{agent_message.completion.model_service_provider}' not found in database"
-            logger.error(error_msg)
-            raise AgentConfigurationError("provider", error_msg)
+    async def _resolve_runtime_settings(
+        self,
+        agent_message: view_models.AgentMessage,
+        user: str,
+        custom_system_prompt: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Resolve provider/api keys and build the system instruction.
 
-        api_key = await self.db_ops.query_provider_api_key(
-            agent_message.completion.model_service_provider, user_id=user, need_public=True
-        )
-        if not api_key:
-            error_msg = f"No API key available for provider '{agent_message.completion.model_service_provider}'"
-            logger.error(error_msg)
-            raise AgentConfigurationError("api_key", error_msg)
-        # Query super_rag API key from database
+        Important:
+        - We do NOT trust `completion.model_service_provider` blindly.
+        - We first reverse-map provider by model (`api=completion`) from DB.
+        - Then we pick a provider that both supports the model and has available key.
+        """
+        requested_provider = agent_message.completion.model_service_provider
+        requested_model = agent_message.completion.model
+
+        # Build model -> provider candidates from DB model registry.
+        provider_models = await self.db_ops.query_llm_provider_models()
+        candidate_providers: List[str] = []
+        fallback_case_insensitive: List[str] = []
+        for item in provider_models:
+            api_value = getattr(item, "api", None)
+            if str(api_value).lower().endswith("completion"):
+                if item.model == requested_model:
+                    candidate_providers.append(item.provider_name)
+                elif item.model.lower() == requested_model.lower():
+                    fallback_case_insensitive.append(item.provider_name)
+
+        # Keep unique order, prefer requested provider if it is in candidates.
+        dedup = []
+        seen = set()
+        ordered = candidate_providers or fallback_case_insensitive
+        if requested_provider and requested_provider in ordered:
+            dedup.append(requested_provider)
+            seen.add(requested_provider)
+        for p in ordered:
+            if p not in seen:
+                dedup.append(p)
+                seen.add(p)
+        candidate_providers = dedup
+
+        # If no provider can be mapped by model, fall back to requested provider for compatibility.
+        if not candidate_providers and requested_provider:
+            candidate_providers = [requested_provider]
+
+        selected_provider_name = None
+        selected_provider_info = None
+        selected_api_key = None
+        for provider_name in candidate_providers:
+            provider_info = await self.db_ops.query_llm_provider_by_name(provider_name)
+            if not provider_info:
+                continue
+            api_key = await self.db_ops.query_provider_api_key(
+                provider_name, user_id=user, need_public=True
+            )
+            if not api_key:
+                continue
+            selected_provider_name = provider_name
+            selected_provider_info = provider_info
+            selected_api_key = api_key
+            break
+
+        if not selected_provider_info or not selected_api_key:
+            candidate_preview = ", ".join(candidate_providers) if candidate_providers else "none"
+            raise AgentConfigurationError(
+                "completion.model_service_provider",
+                (
+                    f"Cannot resolve provider/base_url/api_key for model '{requested_model}'. "
+                    f"Requested provider='{requested_provider}', matched providers=[{candidate_preview}]"
+                ),
+            )
+
+        if requested_provider and selected_provider_name != requested_provider:
+            logger.warning(
+                "Model/provider mismatch detected, auto-switched provider from '%s' to '%s' for model '%s'",
+                requested_provider,
+                selected_provider_name,
+                requested_model,
+            )
+
         super_rag_api_keys = await self.db_ops.query_api_keys(user, is_system=True)
+        super_rag_api_key = None
         for item in super_rag_api_keys:
             super_rag_api_key = item.key
         if not super_rag_api_key:
-            # Auto-create a new system super_rag API key for the user if none exists
             logger.info(f"No super_rag API key found for user {user}, creating a new system key")
             try:
-                api_key_result = await self.db_ops.create_api_key(user=user, description="super_rag", is_system=True)
+                api_key_result = await self.db_ops.create_api_key(
+                    user=user, description="super_rag", is_system=True
+                )
                 super_rag_api_key = api_key_result.key
                 logger.info(f"Successfully created new system super_rag API key for user {user}")
             except Exception as e:
                 error_msg = f"Failed to create super_rag API key for user {user}: {str(e)}"
                 logger.error(error_msg)
-                raise AgentConfigurationError(error_msg)
+                raise AgentConfigurationError("super_rag_api_key", error_msg)
 
-
-        # Determine system prompt: use custom if provided, otherwise use default
         base_instruction = (
-            custom_system_prompt if custom_system_prompt else get_agent_system_prompt(language=agent_message.language)
+            custom_system_prompt
+            if custom_system_prompt
+            else get_agent_system_prompt(language=agent_message.language)
         )
-        system_prompt = format_agent_instruction_with_hindsight_bank(base_instruction, user, agent_message.language)
-
-        # Create AgentConfig with all needed parameters including chat_id
-        config = AgentConfig(
-            user_id=user,
-            chat_id=chat_id,
-            provider_name=agent_message.completion.model_service_provider,
-            api_key=api_key,
-            base_url=provider_info.base_url,
-            default_model=agent_message.completion.model,
-            language=agent_message.language if agent_message.language else "en-US",
-            instruction=system_prompt,
-            # Expose both MCP servers to the agent. Without including hindsight here,
-            # the model cannot trigger hindsight tool calls even if it's registered.
-            server_names=["super_rag", "hindsight"],
-            super_rag_api_key=super_rag_api_key,
-            super_rag_mcp_url=os.getenv("super_rag_MCP_URL", "http://localhost:8000/mcp/"),
-            temperature=0.7,
-            max_tokens=60000,
+        system_prompt = format_agent_instruction_with_hindsight_bank(
+            base_instruction, user, agent_message.language or "en-US"
         )
 
-        # Get or create chat session using config
-        session = await agent_session_manager.get_or_create_session(config)
+        return {
+            "provider_name": selected_provider_name,
+            "api_key": selected_api_key,
+            "base_url": selected_provider_info.base_url,
+            "super_rag_api_key": super_rag_api_key,
+            "super_rag_mcp_url": os.getenv("super_rag_MCP_URL", "http://localhost:8000/mcp/"),
+            "system_prompt": system_prompt,
+        }
 
-        return session
+    async def _build_history_openai_messages(
+        self, chat_id: str, context_limit: int = 4
+    ) -> List[Dict[str, Any]]:
+        """Load chat history and convert it to OpenAI-format dicts for Agno."""
+        try:
+            history = await self.history_manager.get_chat_history(chat_id)
+            messages = await history.messages
+            if not messages:
+                return []
+            recent_messages = (
+                messages[-(context_limit * 2):]
+                if len(messages) > context_limit * 2
+                else messages
+            )
+            return messages_to_openai_format(recent_messages)
+        except Exception as e:
+            logger.warning(f"Failed to load chat history for {chat_id}: {e}")
+            return []
+
+    async def _validate_model_provider_compatibility(
+        self,
+        provider_name: str,
+        model_name: str,
+        base_url: str,
+    ) -> None:
+        """
+        Validate model/provider/base_url compatibility before invoking Agno.
+
+        The DB keeps provider-scoped model lists (llm_provider_models). If the
+        requested completion model is not in that provider's completion models,
+        we fail early with an actionable message instead of letting provider SDK
+        fail later with opaque "Unknown model error".
+        """
+        provider_models = await self.db_ops.query_llm_provider_models(provider_name=provider_name)
+        completion_models: List[str] = []
+        for item in provider_models:
+            api_value = getattr(item, "api", None)
+            if str(api_value).lower().endswith("completion"):
+                completion_models.append(item.model)
+
+        if not completion_models:
+            logger.warning(
+                "No completion models configured for provider=%s (base_url=%s), skip strict compatibility check",
+                provider_name,
+                base_url,
+            )
+            return
+
+        if model_name in completion_models:
+            return
+
+        # Also accept case-insensitive exact match.
+        lower_map = {m.lower(): m for m in completion_models}
+        if model_name.lower() in lower_map:
+            return
+
+        preview = ", ".join(completion_models[:10])
+        if len(completion_models) > 10:
+            preview += ", ..."
+        raise AgentConfigurationError(
+            "completion.model",
+            (
+                f"Model '{model_name}' does not match provider '{provider_name}' "
+                f"(base_url='{base_url}'). Available completion models: [{preview}]"
+            ),
+        )
 
     async def process_agent_message(
         self,
@@ -491,25 +544,22 @@ class AgentChatService:
         custom_system_prompt=None,
         custom_query_prompt=None,
     ) -> Dict[str, Any]:
-        # Use pre-parsed configuration for performance
         # Priority: agent_message > bot_config > defaults
         final_completion = agent_message.completion
         final_collections = agent_message.collections
 
-        # Use bot config as fallback for completion and collections
         if not final_completion and bot_config and bot_config.agent and bot_config.agent.completion:
             final_completion = bot_config.agent.completion
 
         if not final_collections and default_collections:
             final_collections = default_collections
 
-        # Validate ModelSpec
         if not final_completion or not final_completion.model:
             raise AgentConfigurationError(
-                config_key="completion.model", reason="Model specification is required for AI response generation"
+                config_key="completion.model",
+                reason="Model specification is required for AI response generation",
             )
 
-        # Create a new agent message with merged configuration
         merged_agent_message = view_models.AgentMessage(
             query=agent_message.query,
             collections=final_collections,
@@ -519,75 +569,54 @@ class AgentChatService:
             files=agent_message.files,
         )
 
-        try:
-            # Send start message
-            await message_queue.put(format_stream_start(message_id))
+        runtime = await self._resolve_runtime_settings(
+            merged_agent_message, user, custom_system_prompt
+        )
+        await self._validate_model_provider_compatibility(
+            provider_name=runtime["provider_name"],
+            model_name=final_completion.model,
+            base_url=runtime["base_url"],
+        )
 
-            # Create memory from chat history
-            history = await self.history_manager.get_chat_history(chat_id)
-            memory = await self.memory_manager.create_memory_from_history(history, context_limit=4)
+        history_openai_messages = await self._build_history_openai_messages(chat_id, context_limit=4)
 
-            # Get chat session using merged agent message and custom system prompt
-            session = await self._get_agent_session(merged_agent_message, user, chat_id, custom_system_prompt)
-            llm = await session.get_llm(final_completion.model)
+        comprehensive_prompt = build_agent_query_prompt(
+            chat_id,
+            agent_message=merged_agent_message,
+            user=user,
+            custom_template=custom_query_prompt,
+        )
 
-            llm.history = memory
+        run_result = await run_agno_agent(
+            message_id=message_id,
+            message_queue=message_queue,
+            user_id=user,
+            chat_id=chat_id,
+            api_key=runtime["api_key"],
+            base_url=runtime["base_url"],
+            model_name=final_completion.model,
+            instruction=runtime["system_prompt"],
+            prompt=comprehensive_prompt,
+            history_openai_messages=history_openai_messages,
+            super_rag_mcp_url=runtime["super_rag_mcp_url"],
+            super_rag_api_key=runtime["super_rag_api_key"],
+            hindsight_bank_id=user,
+            enable_hindsight=True,
+            temperature=final_completion.temperature
+            if final_completion.temperature is not None
+            else 0.7,
+            max_tokens=final_completion.max_tokens or 8192,
+        )
 
-            # Build query prompt using custom template if provided
-            comprehensive_prompt = build_agent_query_prompt(
-                chat_id, agent_message=merged_agent_message, user=user, custom_template=custom_query_prompt
-            )
-
-            request_params = RequestParams(
-                maxTokens=8192,
-                model=final_completion.model,
-                use_history=True,
-                max_iterations=10,
-                parallel_tool_calls=True,
-                temperature=0.7,
-                user=user,
-            )
-
-            set_tool_call_context(message_id, message_queue)
-            try:
-                response = await llm.generate_str_streaming(comprehensive_prompt, request_params)
-            finally:
-                clear_tool_call_context()
-            full_content = response if response else "No response generated"
-
-            await asyncio.sleep(0.1)
-
-            tool_references = extract_tool_call_references(llm.history)
-            urls = []
-            # Send the full content as a message event for non-streaming consumers / history.
-            # The AG-UI adapter will skip it if text was already streamed via text_delta events.
-            await message_queue.put(format_stream_content(message_id, full_content))
-
-            await message_queue.put(format_stream_end(message_id, references=tool_references, urls=urls))
-
-            return {
-                "query": merged_agent_message.query,
-                "content": full_content,
-                "references": tool_references,
-            }
-
-        finally:
-            await message_queue.close()
+        return {
+            "query": merged_agent_message.query,
+            "content": run_result.get("content", ""),
+            "references": run_result.get("references", []),
+        }
 
     def _format_exception_to_error_response(self, exception: Exception, language: str) -> AgentErrorResponse:
-        """
-        Convert exception to properly formatted error response using unified error handling.
-
-        Args:
-            exception: The exception to format
-            language: Language code for i18n error messages
-
-        Returns:
-            Formatted error response for WebSocket
-        """
-        # Use existing exception hierarchy and formatting utilities
+        """Convert exception to properly formatted error response."""
         if isinstance(exception, AgentConfigurationError):
-            # Check for specific configuration error types
             error_msg = str(exception).lower()
             if "model" in error_msg or "completion" in error_msg:
                 return format_invalid_model_spec_error(str(exception), language)
@@ -601,7 +630,6 @@ class AgentChatService:
             return format_agent_setup_error(str(exception), language)
 
         else:
-            # Handle unexpected errors with generic processing error
             return format_processing_error(str(exception), language)
 
     async def chat_for_evaluation(
@@ -618,7 +646,6 @@ class AgentChatService:
         Handle internal chat requests for evaluation tasks, bypassing WebSockets.
         Returns the AI response as a dictionary representation of StoredChatMessage.
         """
-        # Construct AgentMessage
         agent_message = view_models.AgentMessage(
             query=query,
             completion=view_models.ModelSpec(
@@ -630,16 +657,16 @@ class AgentChatService:
             language=language,
         )
 
-        # Generate unique IDs for this interaction
         chat_id = f"eval-chat-{uuid.uuid4()}"
         message_id = str(uuid.uuid4())
         trace_id = None
 
         try:
             message_queue = AgentMessageQueue()
-            trace_id = await self.register_message_queue(agent_message.language, chat_id, message_id, message_queue)
+            trace_id = await self.register_message_queue(
+                agent_message.language, chat_id, message_id, message_queue
+            )
 
-            # Simplified consumer that just collects results without a websocket
             async def consume_and_collect():
                 tool_calls = []
                 while True:
@@ -654,7 +681,7 @@ class AgentChatService:
                 self.process_agent_message(
                     agent_message,
                     user_id,
-                    None,  # The 'bot' parameter is unused in the target function, so we pass None for now.
+                    None,
                     chat_id,
                     message_id,
                     message_queue,
@@ -662,9 +689,10 @@ class AgentChatService:
             )
             consumer_task = asyncio.create_task(consume_and_collect())
 
-            process_result, consumer_result = await asyncio.gather(process_task, consumer_task, return_exceptions=True)
+            process_result, consumer_result = await asyncio.gather(
+                process_task, consumer_task, return_exceptions=True
+            )
 
-            # Handle process_task exceptions with unified error formatting
             if isinstance(process_result, Exception):
                 logger.error(f"Process task failed: {process_result}")
                 error_response = self._format_exception_to_error_response(
@@ -672,7 +700,6 @@ class AgentChatService:
                 )
                 return error_response
 
-            # Handle consumer_task exceptions
             if isinstance(consumer_result, Exception):
                 logger.error(f"Consumer task failed: {consumer_result}")
                 error_response = format_processing_error(str(consumer_result), agent_message.language or "en-US")
@@ -683,7 +710,6 @@ class AgentChatService:
             references = process_result.get("references", "")
             tool_use_list = consumer_result
 
-            # AI message
             ai_message = create_assistant_message(
                 content=ai_response,
                 chat_id=chat_id,
@@ -691,7 +717,6 @@ class AgentChatService:
                 trace_id=trace_id,
                 tool_use_list=tool_use_list,
                 references=references,
-                # urls=,
             )
             return ai_message
 
@@ -700,8 +725,7 @@ class AgentChatService:
             error_response = self._format_exception_to_error_response(e, agent_message.language or "en-US")
             return error_response
         finally:
-            if trace_id:
-                await agent_event_listener.unregister_listener(str(trace_id))
+            pass
 
     async def _save_conversation_history(
         self,
@@ -714,18 +738,10 @@ class AgentChatService:
         tool_use_list: List[Dict],
         tool_references: List[Dict[str, Any]],
     ) -> None:
-        """
-        Save conversation history from successful agent processing.
-
-        Args:
-            chat_id: Chat session ID
-            conversation_data: Dictionary containing query, content, and references
-        """
+        """Save conversation history from successful agent processing."""
         try:
-            # Get history instance through history manager
             history = await self.history_manager.get_chat_history(chat_id)
 
-            # Save conversation turn with data from successful processing
             history_saved = await self.history_manager.save_conversation_turn(
                 message_id=message_id,
                 trace_id=trace_id,
@@ -741,5 +757,4 @@ class AgentChatService:
                 logger.warning(f"Failed to save conversation history for chat: {chat_id}")
 
         except Exception as e:
-            # Don't let history saving errors break the flow
             logger.error(f"Error saving conversation history for chat {chat_id}: {e}")
