@@ -5,6 +5,7 @@ import logging
 from super_rag.models import DocumentIndexType
 from super_rag.models import IndexTaskResult, LocalDocumentInfo, ParsedDocumentData
 from super_rag.tasks.utils import parse_document_content
+from super_rag.index.wiki_index import wiki_indexer
 
 logger = logging.getLogger(__name__)
 

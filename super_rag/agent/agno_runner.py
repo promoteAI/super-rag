@@ -32,6 +32,7 @@ from agno.run.agent import (
     ToolCallStartedEvent,
 )
 from agno.tools.mcp import MCPTools, StreamableHTTPClientParams
+from super_rag.agent.wiki_tool import WikiTools
 
 from super_rag.agent.agent_message_queue import AgentMessageQueue
 from super_rag.agent.exceptions import AgentConfigurationError
@@ -467,6 +468,12 @@ async def run_agno_agent(
                 timeout_seconds=request_timeout_seconds,
                 tool_name_prefix=SUPER_RAG_PREFIX,
             ) as super_rag_tools:
+                # Add Wiki tools for agent self-organizing knowledge base
+                try:
+                    wiki_tools = WikiTools()
+                    tool_kits.append(wiki_tools)
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("Wiki tools not available: %s", e)
                 tool_kits: List[Any] = [super_rag_tools]
                 hindsight_tools_cm = None
                 if enable_hindsight:

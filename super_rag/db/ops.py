@@ -1,5 +1,4 @@
 import logging
-from re import A
 from super_rag.db.repositories.base import AsyncBaseRepository, SyncBaseRepository
 from super_rag.db.repositories.collection import (
     AsyncCollectionRepositoryMixin,
@@ -41,6 +40,10 @@ from super_rag.db.repositories.marketplace_collection import(
 from super_rag.db.repositories.api_key import(
     AsyncApiKeyRepositoryMixin,
 )
+from super_rag.db.repositories.wiki import(
+    AsyncWikiRepositoryMixin,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,6 +71,7 @@ class AsyncDatabaseOps(
     AsyncMarketplaceRepositoryMixin,
     AsyncMarketplaceCollectionRepositoryMixin,
     AsyncApiKeyRepositoryMixin,
+    AsyncWikiRepositoryMixin,
 ):
     pass
 

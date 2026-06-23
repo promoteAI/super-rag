@@ -96,6 +96,8 @@ class Collection(Base):
     status = Column(EnumColumn(CollectionStatus), nullable=False, index=True)  # Add index for status queries
     type = Column(EnumColumn(CollectionType), nullable=False)
     config = Column(Text, nullable=False)
+    wiki_config = Column(Text, nullable=True)  # Wiki configuration JSON
+    indexing_strategy = Column(Text, nullable=True)  # Indexing strategy JSON {vector_enabled, keyword_enabled, wiki_enabled, graph_enabled}
     gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_deleted = Column(DateTime(timezone=True), nullable=True, index=True)  # Add index for soft delete queries
@@ -419,6 +421,8 @@ class Agent(Base):
     description = Column(Text, nullable=True)
     status = Column(EnumColumn(AgentStatus), nullable=False, index=True)  # Add index for status queries
     config = Column(Text, nullable=False)
+    wiki_config = Column(Text, nullable=True)  # Wiki configuration JSON
+    indexing_strategy = Column(Text, nullable=True)  # Indexing strategy JSON {vector_enabled, keyword_enabled, wiki_enabled, graph_enabled}
     gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     gmt_deleted = Column(DateTime(timezone=True), nullable=True, index=True)  # Add index for soft delete queries
@@ -733,3 +737,92 @@ class UserCollectionSubscription(Base):
         return f"<UserCollectionSubscription(id={self.id}, user_id={self.user_id}, marketplace_id={self.collection_marketplace_id})>"
 
 
+
+
+
+# ==================== Wiki Models ====================
+
+class WikiPageStatus(str, Enum):
+    DRAFT = 'draft'
+    PUBLISHED = 'published'
+    ARCHIVED = 'archived'
+
+
+class WikiPageType(str, Enum):
+    SUMMARY = 'summary'
+    ENTITY = 'entity'
+    CONCEPT = 'concept'
+    INDEX = 'index'
+    LOG = 'log'
+    SYNTHESIS = 'synthesis'
+    COMPARISON = 'comparison'
+
+
+class WikiPage(Base):
+    __tablename__ = 'wiki_pages'
+
+    id = Column(String(36), primary_key=True, default=lambda: 'wiki_' + random_id()[:32])
+    collection_id = Column(String(24), nullable=False, index=True)
+    user_id = Column(String(24), nullable=False, index=True)
+    slug = Column(String(255), nullable=False)
+    title = Column(String(512), nullable=False, default='')
+    page_type = Column(EnumColumn(WikiPageType), nullable=False, default=WikiPageType.SUMMARY)
+    status = Column(EnumColumn(WikiPageStatus), nullable=False, default=WikiPageStatus.PUBLISHED)
+    content = Column(Text, nullable=False, default='')
+    summary = Column(Text, nullable=False, default='')
+    aliases = Column(JSON, nullable=True, default=list)
+    source_refs = Column(JSON, nullable=True, default=list)
+    chunk_refs = Column(JSON, nullable=True, default=list)
+    in_links = Column(JSON, nullable=True, default=list)
+    out_links = Column(JSON, nullable=True, default=list)
+    page_metadata = Column(JSON, nullable=True, default=dict)
+    version = Column(Integer, nullable=False, default=1)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_deleted = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index('idx_wiki_pages_collection_slug', 'collection_id', 'slug'),
+        Index('idx_wiki_pages_type', 'page_type'),
+        Index('idx_wiki_pages_status', 'status'),
+    )
+
+
+class WikiPageIssue(Base):
+    __tablename__ = 'wiki_page_issues'
+
+    id = Column(String(24), primary_key=True, default=lambda: 'issue_' + random_id()[:20])
+    collection_id = Column(String(24), nullable=False, index=True)
+    user_id = Column(String(24), nullable=False)
+    slug = Column(String(255), nullable=False, index=True)
+    issue_type = Column(String(50), nullable=False)
+    description = Column(Text, nullable=False)
+    suspected_collection_ids = Column(JSON, nullable=True, default=list)
+    status = Column(String(20), nullable=False, default='pending', index=True)
+    reported_by = Column(String(100), nullable=False)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_updated = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    gmt_deleted = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index('idx_wiki_issues_collection', 'collection_id'),
+        Index('idx_wiki_issues_status', 'status'),
+    )
+
+
+class WikiLogEntry(Base):
+    __tablename__ = 'wiki_log_entries'
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    collection_id = Column(String(24), nullable=False, index=True)
+    action = Column(String(50), nullable=False)
+    collection_ref = Column(String(36), nullable=True)
+    doc_title = Column(String(255), nullable=True)
+    summary = Column(Text, nullable=True)
+    pages_affected = Column(JSON, nullable=True, default=list)
+    gmt_created = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    __table_args__ = (
+        Index('idx_wiki_log_collection', 'collection_id'),
+        Index('idx_wiki_log_created', 'gmt_created'),
+    )

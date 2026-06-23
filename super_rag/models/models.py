@@ -20,6 +20,7 @@ class DocumentIndexType(str, Enum):
     GRAPH = "GRAPH"
     SUMMARY = "SUMMARY"
     VISION = "VISION"
+    WIKI = "WIKI"
 
 @dataclass
 class IndexTaskResult:
