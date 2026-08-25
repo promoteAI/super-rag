@@ -69,7 +69,7 @@ run-dev:
 	uvicorn super_rag.app:app --reload --reload-dir ./super_rag --host 0.0.0.0 --log-config scripts/uvicorn-log-config-dev.yaml 
 
 run-ui-dev:
-	cd super-rag-frontend/frontend && npm run dev
+	cd web && npm run dev
 
 run-ray:
 	uv run config/ray_schedule.py
