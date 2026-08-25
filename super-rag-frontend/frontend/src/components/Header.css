@@ -1,0 +1,251 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.25rem 1.25rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-nav-link {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.header-nav-link:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+.header-nav-link.active {
+  color: var(--accent-blue);
+  background-color: var(--bg-hover);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  color: var(--accent-blue);
+}
+
+.logo-text {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-subbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 0;
+  height: 38px;
+  border-top: 1px solid var(--border-color);
+}
+
+.workflow-scroll-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 0 0 auto;
+}
+
+.workflow-scroll-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.workflow-scroll-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.workflow-scroll-btn.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.workflow-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  height: 38px;
+  padding: 0;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.workflow-tabs::-webkit-scrollbar {
+  height: 0;
+}
+
+.workflow-tab {
+  display: inline-flex;
+  align-items: center;
+  max-width: 160px;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 0.4rem;
+}
+
+.workflow-tab:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+.workflow-tab.is-active {
+  color: var(--text-primary);
+  background-color: var(--bg-active);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.workflow-tab.is-loading,
+.workflow-tab.is-error {
+  cursor: default;
+  color: var(--text-secondary);
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.workflow-tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflow-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  color: inherit;
+  opacity: 0.5;
+  transition: all 0.2s;
+  flex: 0 0 auto;
+}
+
+.workflow-tab:hover .workflow-tab-close {
+  opacity: 0.9;
+}
+
+.workflow-tab-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.workflow-tab-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
+  color: var(--text-tertiary);
+  text-decoration: none;
+  background-color: transparent;
+  transition: all 0.2s;
+  flex: 0 0 auto;
+}
+
+.workflow-tab-add:hover {
+  background-color: var(--bg-hover);
+  color: var(--accent-blue);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.icon-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.icon-button:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: var(--error-red);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}

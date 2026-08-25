@@ -1,0 +1,74 @@
+/* 点击图表区域：指针样式 */
+.mermaid-diagram-wrapper {
+  cursor: pointer;
+}
+
+.mermaid-diagram-wrapper:focus-within {
+  outline: none;
+}
+
+/* 全屏遮罩：占满屏幕 */
+.mermaid-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: var(--bg-primary, #fff);
+  box-sizing: border-box;
+}
+
+/* 内容区：占满整个视口，点击不关闭 */
+.mermaid-fullscreen-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.mermaid-fullscreen-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mermaid-fullscreen-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 关闭按钮：始终在最上层 */
+.mermaid-fullscreen-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg-tertiary, #f0f0f0);
+  color: var(--text-primary, #333);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.mermaid-fullscreen-close:hover {
+  background: var(--bg-secondary, #e5e5e5);
+}
+
+.mermaid-fullscreen-close:focus {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+}

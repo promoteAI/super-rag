@@ -1,0 +1,117 @@
+.workflows-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  height: 100%;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+}
+
+.workflows-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.workflows-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.workflows-subtitle {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  max-width: 560px;
+}
+
+.workflows-primary-button {
+  border-radius: 999px;
+  padding: 10px 20px;
+  border: 1px solid var(--accent-blue);
+  background: var(--accent-blue-muted);
+  color: var(--accent-blue);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.workflows-primary-button:hover {
+  background: var(--bg-active);
+  border-color: var(--accent-blue);
+  color: var(--text-primary);
+}
+
+.workflows-templates {
+  padding: 20px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  position: relative;
+  padding: 16px 16px 18px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.template-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: var(--bg-hover);
+}
+
+.template-card h3 {
+  margin: 8px 0 6px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.template-card p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.template-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: var(--accent-blue-muted);
+  color: var(--accent-blue);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.template-card.disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+

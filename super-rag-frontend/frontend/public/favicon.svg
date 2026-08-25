@@ -1,0 +1,10 @@
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- SuperRAG logo -->
+  <circle cx="12" cy="12" r="8" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="7.5" cy="10" r="1.3" fill="#3b82f6"/>
+  <circle cx="16.5" cy="10" r="1.3" fill="#3b82f6"/>
+  <circle cx="12" cy="16" r="1.3" fill="#3b82f6"/>
+  <path d="M7.5 10L12 16L16.5 10" stroke="#3b82f6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 5L12 7.4" stroke="#3b82f6" stroke-width="1.6" stroke-linecap="round"/>
+  <circle cx="12" cy="4.2" r="0.9" fill="#3b82f6"/>
+</svg>

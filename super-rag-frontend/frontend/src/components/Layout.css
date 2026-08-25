@@ -1,0 +1,33 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.layout-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content > *:not(.chats-page):not(.workflow-editor-page) {
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.auth-layout {
+  min-height: 100vh;
+  background: var(--auth-bg);
+}
