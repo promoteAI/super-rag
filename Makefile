@@ -62,10 +62,10 @@ downgrade:
 
 # Local development services
 
-run-prod:
+run-prod: migrate
 	uvicorn super_rag.app:app --host 0.0.0.0 --log-config scripts/uvicorn-log-config-prod.yaml
 
-run-dev:
+run-dev: migrate
 	uvicorn super_rag.app:app --reload --reload-dir ./super_rag --host 0.0.0.0 --log-config scripts/uvicorn-log-config-dev.yaml 
 
 run-ui-dev:

@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from alembic import context
 from super_rag.config import settings as app_config
 
@@ -27,12 +27,43 @@ target_metadata = Base.metadata
 config.set_main_option("sqlalchemy.url", app_config.database_url)
 
 
+def _get_server_url():
+    """Build a MySQL/PostgreSQL server-level URL (no database) for creating the database."""
+    url = app_config.database_url
+    if url.startswith("mysql+aiomysql://"):
+        return url.replace("mysql+aiomysql://", "mysql+pymysql://").rsplit("/", 1)[0]
+    if url.startswith("postgresql+asyncpg://"):
+        return url.replace("postgresql+asyncpg://", "postgresql://").rsplit("/", 1)[0]
+    return None
+
+
+def _ensure_database_exists():
+    """Create the target database if it does not exist."""
+    server_url = _get_server_url()
+    if not server_url:
+        return
+
+    db_name = app_config.mysql_db
+    from sqlalchemy import create_engine
+
+    engine = create_engine(server_url)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS `{db_name}`"))
+        print(f"Database '{db_name}' is ready.")
+    except Exception as e:
+        print(f"Warning: could not auto-create database '{db_name}': {e}")
+    finally:
+        engine.dispose()
+
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode (non-async).
 
     This configures the context with just a URL and not an Engine,
     suitable for emitting SQL as text.
     """
+    _ensure_database_exists()
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -55,6 +86,7 @@ def do_run_migrations(connection):
 
 async def run_async_migrations_online():
     """Run migrations in 'online' mode using SQLAlchemy async engine."""
+    _ensure_database_exists()
     connectable = create_async_engine(
         config.get_main_option("sqlalchemy.url"),
         poolclass=pool.NullPool,
@@ -69,6 +101,7 @@ def run_migrations_online():
 
     from sqlalchemy.engine import engine_from_config
 
+    _ensure_database_exists()
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
