@@ -22,7 +22,7 @@
   flex-direction: column;
 }
 
-.main-content > *:not(.chats-page):not(.workflow-editor-page) {
+.main-content > *:not(.chats-page) {
   padding: 2rem;
   overflow-y: auto;
 }

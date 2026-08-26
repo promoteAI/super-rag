@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import type { Collection, CollectionViewList, CollectionCreate, CollectionUpdate, DocumentList, AvailableModelsResponse, BotViewList, BotView, DebugFlowRequest, ChatList, Chat, ChatView, ChatCreate, ChatCompletionRequest, ChatCompletionResponse, AgentConnectPayload, AGUIRunRequestBody, AGUIStreamEvent, ModelProviderList, ModelProvider, ModelProviderCreate, ModelProviderUpdate, ModelProviderModelsResponse, ModelProviderModel, ModelProviderModelCreate, RegisterRequest, RegisterResponse, LoginRequest, LoginResponse, ChangePasswordRequest, ChangePasswordResponse, WorkflowList, WorkflowRecord, WorkflowUpdate, KnowledgeGraph, GraphLabelsResponse, SharingStatusResponse, SharedCollectionList, SharedCollection } from '../types';
+import type { Collection, CollectionViewList, CollectionCreate, CollectionUpdate, DocumentList, AvailableModelsResponse, BotViewList, BotView, ChatList, Chat, ChatView, ChatCreate, ChatCompletionRequest, ChatCompletionResponse, AgentConnectPayload, AGUIRunRequestBody, AGUIStreamEvent, ModelProviderList, ModelProvider, ModelProviderCreate, ModelProviderUpdate, ModelProviderModelsResponse, ModelProviderModel, ModelProviderModelCreate, RegisterRequest, RegisterResponse, LoginRequest, LoginResponse, ChangePasswordRequest, ChangePasswordResponse, KnowledgeGraph, GraphLabelsResponse, SharingStatusResponse, SharedCollectionList, SharedCollection } from '../types';
 
 const apiClient = axios.create({
   baseURL: '/api/v1',
@@ -314,73 +314,6 @@ export const botsApi = {
   // 获取 Agent 详情
   get: async (agentId: string): Promise<BotView> => {
     const response = await apiClient.get<BotView>(`/agents/${agentId}`);
-    return response.data;
-  },
-  // 调试运行 Agent 的 flow（流式调试）
-  debugFlow: async (agentId: string, payload: DebugFlowRequest) => {
-    const response = await apiClient.post(`/agents/${agentId}/flow/debug`, payload);
-    return response.data;
-  },
-};
-
-// Workflows API
-export const workflowsApi = {
-  // 获取 Workflow 列表
-  list: async (limit: number = 100, offset: number = 0): Promise<WorkflowList> => {
-    const response = await apiClient.get<WorkflowList>('/workflows', {
-      params: { limit, offset },
-    });
-    return response.data;
-  },
-  // 获取 Workflow 详情
-  get: async (workflowId: string): Promise<WorkflowRecord> => {
-    const response = await apiClient.get<WorkflowRecord>(`/workflows/${workflowId}`);
-    return response.data;
-  },
-  // 更新 Workflow（Update Workflow View）
-  update: async (workflowId: string, data: WorkflowUpdate): Promise<WorkflowRecord> => {
-    const response = await apiClient.put<WorkflowRecord>(`/workflows/${workflowId}`, data);
-    return response.data;
-  },
-  // 删除 Workflow（Delete Workflow View）
-  delete: async (workflowId: string): Promise<void> => {
-    await apiClient.delete(`/workflows/${workflowId}`);
-  },
-  // 运行 Workflow（按 ID）
-  run: async (workflowId: string, payload: { input?: Record<string, any>; workflow_version?: number }) => {
-    const response = await apiClient.post(`/workflows/${workflowId}/run`, payload);
-    return response.data;
-  },
-};
-
-// Nodeflow 节点与节点包 API
-export type NodeflowNodeType = {
-  type: string;
-  label: string;
-  category: string;
-  input_schema: Record<string, unknown>;
-  output_schema: Record<string, unknown>;
-  description?: string;
-};
-
-export type NodeflowRegistryPackage = {
-  name: string;
-  description?: string;
-  repo_id: string;
-  builtin?: boolean;
-  install?: string;
-  node_types?: string[];
-};
-
-export const nodeflowApi = {
-  /** 当前已注册的节点类型（内置 + 已安装的 node pack） */
-  listNodeTypes: async (): Promise<{ node_types: NodeflowNodeType[] }> => {
-    const response = await apiClient.get<{ node_types: NodeflowNodeType[] }>('/nodeflow/node-types');
-    return response.data;
-  },
-  /** 注册表中可安装的节点包列表 */
-  listPacks: async (): Promise<{ packages: NodeflowRegistryPackage[] }> => {
-    const response = await apiClient.get<{ packages: NodeflowRegistryPackage[] }>('/nodeflow/packs');
     return response.data;
   },
 };

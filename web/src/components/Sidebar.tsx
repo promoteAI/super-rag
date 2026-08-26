@@ -7,7 +7,6 @@ import {
   History,
   Settings,
   LogOut,
-  LayoutGrid,
   Server,
   Trash2,
 } from 'lucide-react';
@@ -39,8 +38,6 @@ export default function Sidebar() {
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
-  const isWorkflowPanelOpen = location.pathname.startsWith('/workflows') &&
-    new URLSearchParams(location.search).get('panel') === '1';
 
   const loadChats = useCallback(async () => {
     try {
@@ -195,23 +192,6 @@ export default function Sidebar() {
           <FolderOpen size={20} />
         </Link>
 
-        <Link
-          to="/workflows?panel=1"
-          className={`nav-item ${isActive('/workflows') ? 'active' : ''}`}
-          title="Workflows"
-          onClick={(event) => {
-            if (!isActive('/workflows')) return;
-            event.preventDefault();
-            if (isWorkflowPanelOpen) {
-              navigate('/workflows');
-            } else {
-              navigate('/workflows?panel=1');
-            }
-          }}
-        >
-          <LayoutGrid size={20} />
-        </Link>
-        
         <Link
           to="/model-providers"
           className={`nav-item ${isActive('/model-providers') ? 'active' : ''}`}

@@ -169,76 +169,6 @@ export interface NodeUIProperties {
   [key: string]: any;
 }
 
-export interface WorkflowGraphNode {
-  id: string;
-  type: string;
-  data?: Record<string, any>;
-  ui_properties?: NodeUIProperties;
-}
-
-export interface WorkflowGraphEdge {
-  id?: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
-  ui_properties?: Record<string, any>;
-}
-
-export interface WorkflowGraph {
-  nodes: WorkflowGraphNode[];
-  edges: WorkflowGraphEdge[];
-}
-
-export interface WorkflowDefinition {
-  id?: string;
-  name?: string;
-  title?: string;
-  description?: string;
-  version?: string;
-  tags?: string[];
-  graph?: WorkflowGraph;
-}
-
-export interface WorkflowUpdate {
-  name?: string;
-  title?: string;
-  description?: string;
-  tags?: string[];
-  status?: string;
-  graph?: WorkflowGraph;
-  input_schema?: Record<string, any>;
-  output_schema?: Record<string, any>;
-}
-
-export interface WorkflowRecord {
-  id: string;
-  name: string;
-  title?: string;
-  description?: string;
-  tags?: string[];
-  status?: string;
-  graph: WorkflowGraph;
-  input_schema?: Record<string, any>;
-  output_schema?: Record<string, any>;
-  created?: string;
-  updated?: string;
-}
-
-export interface WorkflowList {
-  items?: WorkflowRecord[];
-}
-
-export interface BotConfig {
-  flow?: WorkflowDefinition;
-  [key: string]: any;
-}
-
-export interface DebugFlowRequest {
-  query: string;
-}
-
-// Bot 相关类型
 export interface Bot {
   id?: string;
   title?: string;
@@ -249,7 +179,7 @@ export interface Bot {
   owner_user_id?: string;
   is_published?: boolean;
   published_at?: string;
-  config?: BotConfig;
+  config?: any;
 }
 
 export interface BotView {
@@ -262,7 +192,7 @@ export interface BotView {
   owner_user_id?: string;
   is_published?: boolean;
   published_at?: string;
-  config?: BotConfig;
+  config?: any;
 }
 
 export interface BotViewList {

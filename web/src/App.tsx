@@ -8,9 +8,6 @@ import BotsPage from './pages/BotsPage';
 import AuthPage from './pages/AuthPage';
 import ModelProvidersPage from './pages/ModelProvidersPage';
 import ModelProviderModelsPage from './pages/ModelProviderModelsPage';
-import WorkflowsPage from './pages/WorkflowsPage';
-import WorkflowEditorPage from './pages/WorkflowEditorPage';
-import NodeManagerPage from './pages/NodeManagerPage';
 
 function App() {
   return (
@@ -29,9 +26,6 @@ function App() {
           <Route path="/chats/:chatId" element={<ChatsPage />} />
           <Route path="/model-providers" element={<ModelProvidersPage />} />
           <Route path="/model-providers/:providerName/models" element={<ModelProviderModelsPage />} />
-          <Route path="/workflows" element={<WorkflowsPage />} />
-          <Route path="/workflows/:id" element={<WorkflowEditorPage />} />
-          <Route path="/node-manager" element={<NodeManagerPage />} />
         </Routes>
       </Layout>
     </Router>
