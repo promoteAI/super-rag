@@ -89,7 +89,6 @@ export default function ChatsPage() {
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [isConversationsCollapsed, setIsConversationsCollapsed] = useState(false);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const modelDropdownRef = useRef<HTMLDivElement>(null);
@@ -1084,111 +1083,7 @@ export default function ChatsPage() {
 
   return (
     <div className="chats-page">
-      <div className="chats-layout">
-        <aside className={`chats-conversations${isConversationsCollapsed ? ' collapsed' : ''}`}>
-          <div className="conversations-header">
-            <span className="conversations-title">Conversations</span>
-            <div className="conversations-header-actions">
-              <button
-                type="button"
-                className="conversations-collapse-btn"
-                onClick={() => setIsConversationsCollapsed((prev) => !prev)}
-                title={isConversationsCollapsed ? 'Expand conversation list' : 'Collapse conversation list'}
-                aria-label={isConversationsCollapsed ? 'Expand conversation list' : 'Collapse conversation list'}
-              >
-                <Menu size={16} />
-              </button>
-              <button
-                type="button"
-                className="conversations-quick-new-btn"
-                onClick={() => navigate('/chats/new')}
-                title="New chat"
-                aria-label="New chat"
-              >
-                +
-              </button>
-            </div>
-          </div>
-          <div className="conversations-body">
-            <div className="conversations-search">
-              <input
-                type="text"
-                placeholder="Search threads..."
-                className="conversations-search-input"
-                disabled={chatListLoading}
-              />
-              <button
-                type="button"
-                className="conversations-new-btn"
-                onClick={() => navigate('/chats/new')}
-                title="New chat"
-              >
-                +
-              </button>
-            </div>
-            <div className="conversations-list">
-              {chatListLoading ? (
-                <div className="conversations-empty">加载会话...</div>
-              ) : chatList.length === 0 ? (
-                <div className="conversations-empty">暂无历史会话</div>
-              ) : (
-                (() => {
-                  const grouped = groupChatsByDate(chatList);
-                  const order = ['TODAY', 'YESTERDAY', 'OTHER'];
-                  return order.map(groupKey => {
-                    const chats = grouped[groupKey];
-                    if (!chats || chats.length === 0) return null;
-                    
-                    return (
-                      <div key={groupKey} className="conversations-group">
-                        <div className="conversations-group-header">{groupKey}</div>
-                        {chats.map((chat) => (
-                          <div
-                            key={chat.id}
-                            className={`conversations-item-wrapper ${
-                              chat.id && chat.id === chatId ? 'active' : ''
-                            }`}
-                            onMouseEnter={() => chat.id && setHoveredChatId(chat.id)}
-                            onMouseLeave={() => setHoveredChatId(null)}
-                          >
-                            <button
-                              type="button"
-                              className="conversations-item"
-                              onClick={() => chat.id && navigate(`/chats/${chat.id}`)}
-                              title={chat.title || chat.id || 'Chat'}
-                            >
-                              <div className="conversations-item-title">
-                                {chat.title || 'New Chat'}
-                              </div>
-                              {chat.updated && (
-                                <div className="conversations-item-time">
-                                  {formatRelativeTime(chat.updated)}
-                                </div>
-                              )}
-                            </button>
-                            {hoveredChatId === chat.id && chat.id && (
-                              <button
-                                type="button"
-                                className="conversations-item-delete"
-                                onClick={(e) => handleDeleteChat(chat.id!, e)}
-                                disabled={deletingChatId === chat.id}
-                                title="Delete conversation"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  });
-                })()
-              )}
-            </div>
-          </div>
-        </aside>
-
-        <div className="chats-main">
+      <div className="chats-layout"><div className="chats-main">
           <div className="chats-header">
             <h1 className="chats-title">{displayTitle}</h1>
           </div>
