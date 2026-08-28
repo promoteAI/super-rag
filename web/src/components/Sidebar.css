@@ -1,7 +1,18 @@
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(77, 142, 247, 0.15) 0%, transparent 40%, transparent 60%, rgba(77, 142, 247, 0.08) 100%);
+  pointer-events: none;
+}
 .sidebar {
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-secondary);
+  background: linear-gradient(180deg, rgba(13, 16, 32, 0.95) 0%, rgba(10, 12, 22, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-color);
   height: 100%;
   transition: width 0.2s ease;

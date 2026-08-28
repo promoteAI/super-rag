@@ -19,7 +19,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: var(--bg-secondary);
+  background: linear-gradient(180deg, rgba(13, 16, 32, 0.95) 0%, rgba(10, 12, 22, 0.98) 100%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   flex: 1;

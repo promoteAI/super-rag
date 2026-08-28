@@ -1,6 +1,7 @@
 .collection-card {
-  background-color: var(--bg-secondary);
+  background: linear-gradient(165deg, rgba(20, 24, 41, 0.9) 0%, rgba(13, 16, 32, 0.95) 100%);
   border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   display: flex;

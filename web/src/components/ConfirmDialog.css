@@ -9,6 +9,7 @@
 }
 
 .confirm-dialog {
+  backdrop-filter: blur(8px);
   width: 440px;
   max-width: 90%;
   background: var(--bg-secondary);
