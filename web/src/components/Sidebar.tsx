@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Store, FolderOpen, MessageSquare, Settings, LogOut, Server, PanelLeftClose, PanelLeftOpen, Plus, Trash2 } from 'lucide-react';
+import { Store, FolderOpen, MessageSquare, Settings, LogOut, Server, PanelLeftClose, PanelLeftOpen, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { authApi, botsApi, chatsApi } from '../api/client';
 import type { Chat } from '../types';
 import './Sidebar.css';
 
 const COLLAPSE_KEY = 'sidebar_collapsed';
+const RECENTS_EXPANDED_KEY = 'recents_expanded';
 
 function groupChatsByDate(chats: Chat[]): Record<string, Chat[]> {
   const now = new Date();
@@ -33,6 +34,9 @@ export default function Sidebar() {
   const [chatsLoading, setChatsLoading] = useState(false);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
+  const [recentsExpanded, setRecentsExpanded] = useState<boolean>(() => {
+    try { return localStorage.getItem(RECENTS_EXPANDED_KEY) !== '0'; } catch { return true; }
+  });
 
   useEffect(() => {
     const username = localStorage.getItem('user_username') || '';
@@ -85,6 +89,14 @@ export default function Sidebar() {
     } catch { navigate('/chats/new'); }
   }, [navigate]);
 
+  const toggleRecents = useCallback(() => {
+    setRecentsExpanded(prev => {
+      const next = !prev;
+      try { localStorage.setItem(RECENTS_EXPANDED_KEY, next ? '1' : '0'); } catch {}
+      return next;
+    });
+  }, []);
+
   const handleDeleteChat = useCallback(async (chatId: string, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
     if (deletingChatId || !chatId) return;
@@ -131,13 +143,20 @@ export default function Sidebar() {
           <div className='recents-section'>
             <div className='recents-header'>
               <span className='recents-title'>Recents</span>
-              <button className='recents-new-btn' onClick={handleCreateChat} title='New chat'><Plus size={14} /></button>
+              <button
+                className='recents-new-btn'
+                onClick={toggleRecents}
+                title={recentsExpanded ? 'Collapse chat history' : 'Expand chat history'}
+                aria-label={recentsExpanded ? 'Collapse chat history' : 'Expand chat history'}
+              >
+                {recentsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
             </div>
-            {chatsLoading ? (
+            {recentsExpanded && chatsLoading ? (
               <div className='recents-loading'>Loading...</div>
-            ) : chats.length === 0 ? (
+            ) : recentsExpanded && chats.length === 0 ? (
               <div className='recents-empty'>No recent chats</div>
-            ) : (
+            ) : recentsExpanded ? (
               <>
                 {['TODAY', 'YESTERDAY', 'OTHER'].map(groupKey => {
                   const groupChats = grouped[groupKey];
@@ -172,7 +191,7 @@ export default function Sidebar() {
                   );
                 })}
               </>
-            )}
+            ) : null}
           </div>
         )}
 
