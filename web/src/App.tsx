@@ -8,6 +8,7 @@ import BotsPage from './pages/BotsPage';
 import AuthPage from './pages/AuthPage';
 import ModelProvidersPage from './pages/ModelProvidersPage';
 import ModelProviderModelsPage from './pages/ModelProviderModelsPage';
+import DefaultModelsPage from './pages/DefaultModelsPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/chats/:chatId" element={<ChatsPage />} />
           <Route path="/model-providers" element={<ModelProvidersPage />} />
           <Route path="/model-providers/:providerName/models" element={<ModelProviderModelsPage />} />
+          <Route path="/settings" element={<DefaultModelsPage />} />
         </Routes>
       </Layout>
     </Router>

@@ -302,6 +302,32 @@ export const availableModelsApi = {
   },
 };
 
+// Default Models API
+export const defaultModelsApi = {
+  // 获取所有场景的默认模型配置
+  get: async (): Promise<{ items: Array<{
+    scenario: string;
+    provider_name?: string | null;
+    model?: string | null;
+    custom_llm_provider?: string | null;
+  }> }> => {
+    const response = await apiClient.get('/default_models');
+    return response.data;
+  },
+
+  // 更新所有场景的默认模型配置
+  update: async (data: {
+    defaults: Array<{
+      scenario: string;
+      provider_name?: string | null;
+      model?: string | null;
+      custom_llm_provider?: string | null;
+    }>;
+  }): Promise<void> => {
+    await apiClient.put('/default_models', data);
+  },
+};
+
 // Agents API（原 Bots API，路径已统一为 /api/v1/agents）
 export const botsApi = {
   // 获取 Agent 列表

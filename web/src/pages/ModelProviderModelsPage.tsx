@@ -32,9 +32,6 @@ export default function ModelProviderModelsPage() {
   const [apiMenuOpen, setApiMenuOpen] = useState(false);
   const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
   const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
-  const [agentToggles, setAgentToggles] = useState<Record<string, boolean>>({});
-  const [collectionToggles, setCollectionToggles] = useState<Record<string, boolean>>({});
-  const [toggleUpdatingKey, setToggleUpdatingKey] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingModel, setEditingModel] = useState<ModelProviderModel | null>(null);
@@ -79,19 +76,6 @@ export default function ModelProviderModelsPage() {
   }, [loadModels]);
 
   useEffect(() => {
-    const nextAgent: Record<string, boolean> = {};
-    const nextCollection: Record<string, boolean> = {};
-    models.forEach((model) => {
-      const key = `${model.provider_name}-${model.api}-${model.model}`;
-      const tags = model.tags ?? [];
-      nextAgent[key] = tags.includes('enable_for_agent');
-      nextCollection[key] = tags.includes('enable_for_collection');
-    });
-    setAgentToggles(nextAgent);
-    setCollectionToggles(nextCollection);
-  }, [models]);
-
-  useEffect(() => {
     if (!resolvedProviderName) return;
     setFormData((prev) => ({
       ...prev,
@@ -118,56 +102,6 @@ export default function ModelProviderModelsPage() {
   );
 
   const allSelected = filteredModelKeys.length > 0 && filteredModelKeys.every((key) => selectedModels.has(key));
-
-  const handleTagToggle = async (model: ModelProviderModel, target: 'agent' | 'collection') => {
-    if (!resolvedProviderName) return;
-    const key = `${model.provider_name}-${model.api}-${model.model}`;
-    const isCurrentlyOn = target === 'agent' ? agentToggles[key] : collectionToggles[key];
-    const enableTag = target === 'agent' ? 'enable_for_agent' : 'enable_for_collection';
-    const currentTags = model.tags ?? [];
-    const nextTags = isCurrentlyOn
-      ? currentTags.filter((tag) => tag !== enableTag)
-      : Array.from(new Set([...currentTags, enableTag]));
-
-    const payload = {
-      model: model.model,
-      api: model.api,
-      custom_llm_provider: model.custom_llm_provider || resolvedProviderName,
-      context_window: model.context_window ?? null,
-      max_input_tokens: model.max_input_tokens ?? null,
-      max_output_tokens: model.max_output_tokens ?? null,
-      tags: nextTags,
-    };
-
-    try {
-      setToggleUpdatingKey(`${key}-${target}`);
-      await modelProvidersApi.updateModel(
-        model.provider_name || resolvedProviderName,
-        model.api,
-        model.model,
-        payload
-      );
-      setModels((prev) =>
-        prev.map((m) =>
-          m.provider_name === model.provider_name &&
-          m.api === model.api &&
-          m.model === model.model
-            ? { ...m, tags: nextTags }
-            : m
-        )
-      );
-      if (target === 'agent') {
-        setAgentToggles((prev) => ({ ...prev, [key]: !isCurrentlyOn }));
-      } else {
-        setCollectionToggles((prev) => ({ ...prev, [key]: !isCurrentlyOn }));
-      }
-    } catch (error) {
-      console.error('Failed to update model tags:', error);
-      alert('Failed to update model tags. Please try again.');
-    } finally {
-      setToggleUpdatingKey(null);
-    }
-  };
 
   return (
     <div className="models-page">
@@ -274,8 +208,6 @@ export default function ModelProviderModelsPage() {
                 </th>
                 <th rowSpan={2}>Model Name</th>
                 <th colSpan={3} className="llm-params-header">LLM params</th>
-                <th rowSpan={2}>Agent</th>
-                <th rowSpan={2}>Collection</th>
                 <th rowSpan={2}>API Type</th>
                 <th rowSpan={2}></th>
               </tr>
@@ -288,7 +220,7 @@ export default function ModelProviderModelsPage() {
             <tbody>
               {filteredModels.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="empty-row">
+                  <td colSpan={7} className="empty-row">
                     No results.
                   </td>
                 </tr>
@@ -329,28 +261,6 @@ export default function ModelProviderModelsPage() {
                       <td className="llm-param">{model.context_window ?? '-'}</td>
                       <td className="llm-param">{model.max_input_tokens ?? '-'}</td>
                       <td className="llm-param">{model.max_output_tokens ?? '-'}</td>
-                      <td>
-                        <label className="toggle-switch">
-                          <input
-                            type="checkbox"
-                            checked={agentToggles[key] ?? false}
-                            onChange={() => handleTagToggle(model, 'agent')}
-                            disabled={toggleUpdatingKey === `${key}-agent`}
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </td>
-                      <td>
-                        <label className="toggle-switch">
-                          <input
-                            type="checkbox"
-                            checked={collectionToggles[key] ?? false}
-                            onChange={() => handleTagToggle(model, 'collection')}
-                            disabled={toggleUpdatingKey === `${key}-collection`}
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </td>
                       <td>
                         <span className="api-badge">{model.api || '-'}</span>
                       </td>

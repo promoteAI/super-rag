@@ -108,11 +108,11 @@ class DefaultModelService:
                     raise BusinessException(
                         ErrorCode.LLM_MODEL_NOT_FOUND, f"Provider '{config.provider_name}' not found"
                     )
-                if provider.user_id != "public":
-                    raise BusinessException(
-                        ErrorCode.PROVIDER_NOT_PUBLIC,
-                        f"Provider '{config.provider_name}' is not a public provider and cannot be set as default model",
-                    )
+                # if provider.user_id != "public":
+                #     raise BusinessException(
+                #         ErrorCode.PROVIDER_NOT_PUBLIC,
+                #         f"Provider '{config.provider_name}' is not a public provider and cannot be set as default model",
+                #     )
 
                 # Determine the API type based on scenario
                 api_type = self._get_api_type_from_scenario(config.scenario)
@@ -145,7 +145,7 @@ class DefaultModelService:
                         LLMProviderModel.provider_name == config.provider_name,
                         LLMProviderModel.api == api_type,
                         LLMProviderModel.model == config.model,
-                        LLMProvider.user_id == "public",
+                        # LLMProvider.user_id == "public",
                     )
                 )
 
