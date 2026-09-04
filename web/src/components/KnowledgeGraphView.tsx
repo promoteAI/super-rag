@@ -323,7 +323,7 @@ export default function KnowledgeGraphView({ collectionId }: Props) {
       return ids;
     }
     return null;
-  }, [searchQuery, filterType, rawGraph]); // eslint-disable-line
+  }, [searchQuery, filterType, rawGraph]);
 
   // Force simulation + render loop
   useEffect(() => {
