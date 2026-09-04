@@ -385,7 +385,7 @@ export const chatsApi = {
 // Model Providers API (LLM Configuration)
 export const modelProvidersApi = {
   // 获取 LLM 配置（模型供应商列表）
-  list: async (): Promise<ModelProviderList> => {
+  list: async (_page?: number, _pageSize?: number): Promise<ModelProviderList> => {
     const response = await apiClient.get<ModelProviderList>('/llm_configuration');
     return response.data;
   },

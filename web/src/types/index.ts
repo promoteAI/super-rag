@@ -8,6 +8,7 @@ export interface Collection {
   updated?: string;
   is_published?: boolean;
   published_at?: string;
+  config?: object;
 }
 
 export interface CollectionView {
@@ -491,6 +492,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   message?: string;
+  id?: string;
   user_id?: string;
   username?: string;
   email?: string;

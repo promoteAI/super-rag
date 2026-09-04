@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { modelProvidersApi } from '../api/client';
-import type { ModelProviderView } from '../types';
+import type { ModelProvider } from '../types';
 import { Plus, Search, MoreVertical } from 'lucide-react';
 import './ProvidersPage.css';
 
 export default function ProvidersPage() {
-  const [providers, setProviders] = useState<ModelProviderView[]>([]);
+  const [providers, setProviders] = useState<ModelProvider[]>([]);
+  const [modelCounts, setModelCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -19,8 +20,12 @@ export default function ProvidersPage() {
       setLoading(true);
       setErrorMessage('');
       const data = await modelProvidersApi.list(currentPage, pageSize);
-      setProviders(data.items || []);
-      setTotalCount(data.pageResult?.count || 0);
+      setProviders(data.providers || []);
+      setTotalCount(data.providers?.length || 0);
+      setModelCounts((data.models || []).reduce<Record<string, number>>((counts, model) => {
+        counts[model.provider_name] = (counts[model.provider_name] || 0) + 1;
+        return counts;
+      }, {}));
     } catch (error) {
       console.error('Failed to load model providers:', error);
       setErrorMessage('加载模型供应商失败，请刷新重试。');
@@ -42,13 +47,13 @@ export default function ProvidersPage() {
     const query = searchQuery.toLowerCase();
     return providers.filter((provider) => (
       provider.name?.toLowerCase().includes(query) ||
-      provider.api_base_url?.toLowerCase().includes(query)
+      provider.base_url?.toLowerCase().includes(query)
     ));
   }, [providers, searchQuery]);
 
   const handleToggleEnabled = useCallback(async (providerId: string, enabled: boolean) => {
     try {
-      await modelProvidersApi.toggleEnabled(providerId, !enabled);
+      await modelProvidersApi.update(providerId, { status: enabled ? 'disable' : 'enable' });
       await loadProviders();
     } catch (error) {
       console.error('Failed to toggle provider status:', error);
@@ -122,24 +127,28 @@ export default function ProvidersPage() {
                 </thead>
                 <tbody>
                   {filteredProviders.map((provider) => (
-                    <tr key={provider.id}>
+                    <tr key={provider.name}>
                       <td>
                         <input type="checkbox" className="table-checkbox" />
                       </td>
-                      <td className="provider-name">{provider.name}</td>
-                      <td className="provider-api">{provider.api_base_url}</td>
-                      <td className="provider-count">{provider.model_count || 0}</td>
+                      <td className="provider-name">{provider.label || provider.name}</td>
+                      <td className="provider-api">{provider.base_url}</td>
+                      <td className="provider-count">
+                        {modelCounts[provider.name] || 0}
+                      </td>
                       <td>
-                        <span className={`visibility-badge ${provider.visibility?.toLowerCase()}`}>
-                          {provider.visibility === 'PRIVATE' ? '私有' : '公开'}
+                        <span className="visibility-badge private">
+                          私有
                         </span>
                       </td>
                       <td>
                         <label className="toggle-switch">
                           <input
                             type="checkbox"
-                            checked={provider.enabled}
-                            onChange={() => handleToggleEnabled(provider.id!, provider.enabled!)}
+                            checked={Boolean(provider.api_key)}
+                            disabled={!provider.api_key}
+                            title={provider.api_key ? '禁用供应商' : '请先配置 API 密钥以启用供应商'}
+                            onChange={() => handleToggleEnabled(provider.name, Boolean(provider.api_key))}
                           />
                           <span className="toggle-slider"></span>
                         </label>
